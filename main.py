@@ -1,7 +1,9 @@
 from model.entity import School
-from db.connection import active_connection, connect
+import db.connection, db.query
 
 if __name__ == '__main__':
-    connect()
+    db.connection.connect()
     school = School()
-
+    print (db.connection.active_connection)
+    db.query.get_schools()
+    db.connection.unconnect()

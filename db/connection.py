@@ -21,6 +21,7 @@ def config(filename='database.ini', section='postgresql'):
     return db
 
 def connect():
+    global active_connection
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
@@ -34,7 +35,7 @@ def connect():
         # create a cursor
         cur = conn.cursor()
         
-	# execute a statement
+	    # execute a statement
         print('PostgreSQL database version:')
         cur.execute('SELECT version()')
 
@@ -42,16 +43,18 @@ def connect():
         db_version = cur.fetchone()
         print(db_version)
        
-	# close the communication with the PostgreSQL
+	    # close the communication with the PostgreSQL
         cur.close()
 
         active_connection = conn
         print ('Database connected')
-        
+        print (active_connection)
+
     except (Exception, psycopg.DatabaseError) as error:
         print(error)
 
 def unconnect():
+    global active_connection
     if active_connection is not None:
         active_connection.close()
         print('Database connection closed.')
