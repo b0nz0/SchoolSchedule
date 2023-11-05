@@ -1,7 +1,9 @@
 import psycopg
+from psycopg.rows import dict_row
 from configparser import ConfigParser
 
 active_connection = None
+connection_parameters = None
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -22,18 +24,31 @@ def config(filename='database.ini', section='postgresql'):
 
 def connect():
     global active_connection
+    global connection_parameters
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
-        # read connection parameters
-        params = config()
+        if connection_parameters == None:
+            # read connection parameters
+            connection_parameters = config()
 
         # connect to the PostgreSQL server
         print('Connecting to the PostgreSQL database...')
-        conn = psycopg.connect(**params)
-		
+        conn = psycopg.connect(**connection_parameters, row_factory=dict_row)
+	
+        active_connection = conn
+        print ('Database connected')
+        print (active_connection)
+        return conn
+
+    except (Exception, psycopg.DatabaseError) as error:
+        print(error)
+
+def print_connection_status():
+    global active_connection
+    try:
         # create a cursor
-        cur = conn.cursor()
+        cur = active_connection.cursor()
         
 	    # execute a statement
         print('PostgreSQL database version:')
@@ -45,10 +60,6 @@ def connect():
        
 	    # close the communication with the PostgreSQL
         cur.close()
-
-        active_connection = conn
-        print ('Database connected')
-        print (active_connection)
 
     except (Exception, psycopg.DatabaseError) as error:
         print(error)

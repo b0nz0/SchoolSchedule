@@ -1,0 +1,1 @@
+psql school-schedule < /home/b0nz0/workspace/SchoolSchedule/sql/backup_svi

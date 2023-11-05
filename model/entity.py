@@ -35,7 +35,7 @@ class Base:
         return self._active
     
     @active.setter
-    def end_date(self, active):
+    def active(self, active):
         self._active = active
 
     @property
@@ -54,6 +54,16 @@ class Base:
         _log_user = None
 
 class School(Base):
+    _name = None
+
+    @property
+    def name(self):
+        return self._name
+    
+    @name.setter
+    def name(self, name):
+        self._name = name
+
     def __init__(self) -> None:
         super(School, self).__init__()
 

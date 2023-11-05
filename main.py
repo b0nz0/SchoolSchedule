@@ -3,7 +3,16 @@ import db.connection, db.query
 
 if __name__ == '__main__':
     db.connection.connect()
-    school = School()
     print (db.connection.active_connection)
-    db.query.get_schools()
+    db.connection.print_connection_status()
     db.connection.unconnect()
+    schools = db.query.get_schools()
+    print(schools)
+
+    s = School()
+    s.name="Morgagni"
+    db.query.write_school(s, "Fede")
+    s.name = "New Morgagni"
+    db.query.write_school(s, "Fede")
+
+
