@@ -5,7 +5,7 @@
 -- Dumped from database version 16.0 (Ubuntu 16.0-1.pgdg22.04+1)
 -- Dumped by pg_dump version 16.0 (Ubuntu 16.0-1.pgdg22.04+1)
 
--- Started on 2023-11-06 14:20:05 CET
+-- Started on 2023-11-06 16:05:22 CET
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -333,7 +333,7 @@ CREATE TRIGGER tr_school_history AFTER UPDATE ON public.school FOR EACH ROW EXEC
 CREATE TRIGGER tr_start_datetime BEFORE INSERT OR UPDATE ON public.school FOR EACH ROW EXECUTE FUNCTION public.tr_fn_update_start_datetime();
 
 
--- Completed on 2023-11-06 14:20:05 CET
+-- Completed on 2023-11-06 16:05:24 CET
 
 --
 -- PostgreSQL database dump complete

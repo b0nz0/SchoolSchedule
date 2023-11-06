@@ -1,1 +1,2 @@
-psql school-schedule < /home/b0nz0/workspace/SchoolSchedule/sql/backup_svi
+#!/bin/bash
+sudo su - postgres -c '/usr/bin//psql school_schedule < sql/backup_svi.sql'
