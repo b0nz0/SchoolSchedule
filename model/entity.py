@@ -3,7 +3,6 @@ class Base:
     _object_id = 0
     _start_date = None
     _end_date = None
-    _active = True
     _log_user = None
 
     @property
@@ -29,14 +28,6 @@ class Base:
     @end_date.setter
     def end_date(self, end_date):
         self._end_date = end_date
-
-    @property
-    def active(self):
-        return self._active
-    
-    @active.setter
-    def active(self, active):
-        self._active = active
 
     @property
     def log_user(self):
@@ -66,8 +57,6 @@ class School(Base):
 
     def __init__(self) -> None:
         super(School, self).__init__()
-
-    
         
 class SchoolYear(Base):
 
