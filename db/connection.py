@@ -2,8 +2,11 @@ import psycopg
 from psycopg.rows import dict_row
 from configparser import ConfigParser
 
+from sqlalchemy import create_engine
+
 active_connection = None
 connection_parameters = None
+active_engine = None
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -25,12 +28,19 @@ def config(filename='database.ini', section='postgresql'):
 def connect():
     global active_connection
     global connection_parameters
+    global active_engine
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
         if connection_parameters == None:
             # read connection parameters
             connection_parameters = config()
+
+        active_engine = create_engine("postgresql+psycopg://" + connection_parameters['user'] + \
+                                ":" + connection_parameters['password'] + \
+                                "@" + connection_parameters['host'] + \
+                                ":" + connection_parameters['port'] + \
+                                "/" + connection_parameters['dbname'], echo=True)
 
         # connect to the PostgreSQL server
         print('Connecting to the PostgreSQL database...')

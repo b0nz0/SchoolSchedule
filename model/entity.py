@@ -1,6 +1,6 @@
 class Base:
 
-    _object_id = 0
+    _object_id = None
     _start_date = None
     _end_date = None
     _log_user = None

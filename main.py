@@ -11,8 +11,8 @@ if __name__ == '__main__':
 
     s = School()
     s.name="Morgagni"
-    db.query.write_school(s, "Fede")
+    s = db.query.write_school(s, "Fede")
     s.name = "New Morgagni"
-    db.query.write_school(s, "Fede")
+    s = db.query.write_school(s, "Fede")
 
 
