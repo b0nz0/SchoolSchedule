@@ -3,10 +3,12 @@ from psycopg.rows import dict_row
 from configparser import ConfigParser
 
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 active_connection = None
 connection_parameters = None
 active_engine = None
+active_session = None
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -26,9 +28,9 @@ def config(filename='database.ini', section='postgresql'):
     return db
 
 def connect():
-    global active_connection
     global connection_parameters
     global active_engine
+    global active_session
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
@@ -41,15 +43,7 @@ def connect():
                                 "@" + connection_parameters['host'] + \
                                 ":" + connection_parameters['port'] + \
                                 "/" + connection_parameters['dbname'], echo=True)
-
-        # connect to the PostgreSQL server
-        print('Connecting to the PostgreSQL database...')
-        conn = psycopg.connect(**connection_parameters, row_factory=dict_row)
-	
-        active_connection = conn
-        print ('Database connected')
-        print (active_connection)
-        return conn
+        active_session = sessionmaker(active_engine, expire_on_commit=False)
 
     except (Exception, psycopg.DatabaseError) as error:
         print(error)

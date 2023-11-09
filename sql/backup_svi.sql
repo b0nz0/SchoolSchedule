@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.9 (Ubuntu 14.9-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.9 (Ubuntu 14.9-0ubuntu0.22.04.1)
+-- Dumped from database version 16.0 (Ubuntu 16.0-1.pgdg22.04+1)
+-- Dumped by pg_dump version 16.0 (Ubuntu 16.0-1.pgdg22.04+1)
 
--- Started on 2023-11-08 17:21:50 CET
+-- Started on 2023-11-09 17:12:11 CET
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -20,11 +20,11 @@ SET row_security = off;
 
 DROP DATABASE IF EXISTS school_schedule;
 --
--- TOC entry 3398 (class 1262 OID 16510)
+-- TOC entry 3452 (class 1262 OID 16533)
 -- Name: school_schedule; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE school_schedule WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'it_IT.UTF-8';
+CREATE DATABASE school_schedule WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'it_IT.UTF-8';
 
 
 ALTER DATABASE school_schedule OWNER TO postgres;
@@ -43,7 +43,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 220 (class 1255 OID 16511)
+-- TOC entry 232 (class 1255 OID 16534)
 -- Name: tr_fn_school_history(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -59,7 +59,25 @@ END;$$;
 ALTER FUNCTION public.tr_fn_school_history() OWNER TO postgres;
 
 --
--- TOC entry 221 (class 1255 OID 16512)
+-- TOC entry 234 (class 1255 OID 16577)
+-- Name: tr_fn_school_year_history(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.tr_fn_school_year_history() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+ INSERT INTO school_year_history (object_id, start_datetime, end_datetime, identifier, school_id, log_user)
+	  VALUES (OLD.id, OLD.start_datetime, now(), OLD.identifier, OLD.school_id, OLD.log_user);
+ RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION public.tr_fn_school_year_history() OWNER TO postgres;
+
+--
+-- TOC entry 233 (class 1255 OID 16535)
 -- Name: tr_fn_update_start_datetime(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -78,7 +96,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- TOC entry 212 (class 1259 OID 16531)
+-- TOC entry 215 (class 1259 OID 16536)
 -- Name: school; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -93,23 +111,23 @@ CREATE TABLE public.school (
 ALTER TABLE public.school OWNER TO postgres;
 
 --
--- TOC entry 215 (class 1259 OID 16558)
+-- TOC entry 216 (class 1259 OID 16541)
 -- Name: active_schools; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.active_schools AS
- SELECT school.id,
-    school.start_datetime,
-    school.log_user,
-    school.name
+ SELECT id,
+    start_datetime,
+    log_user,
+    name
    FROM public.school
-  ORDER BY school.id;
+  ORDER BY id;
 
 
-ALTER TABLE public.active_schools OWNER TO postgres;
+ALTER VIEW public.active_schools OWNER TO postgres;
 
 --
--- TOC entry 211 (class 1259 OID 16526)
+-- TOC entry 217 (class 1259 OID 16545)
 -- Name: base; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -122,7 +140,7 @@ CREATE TABLE public.base (
 ALTER TABLE public.base OWNER TO postgres;
 
 --
--- TOC entry 209 (class 1259 OID 16513)
+-- TOC entry 218 (class 1259 OID 16550)
 -- Name: base_history; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -138,7 +156,39 @@ CREATE TABLE public.base_history (
 ALTER TABLE public.base_history OWNER TO postgres;
 
 --
--- TOC entry 210 (class 1259 OID 16517)
+-- TOC entry 231 (class 1259 OID 16603)
+-- Name: class; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.class (
+    id integer NOT NULL,
+    start_datetime timestamp with time zone,
+    log_user character varying,
+    school_year_id integer NOT NULL,
+    year_id integer NOT NULL,
+    section_id integer NOT NULL
+);
+
+
+ALTER TABLE public.class OWNER TO postgres;
+
+--
+-- TOC entry 230 (class 1259 OID 16602)
+-- Name: class_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.class ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.class_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 219 (class 1259 OID 16554)
 -- Name: school_history; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -155,7 +205,7 @@ CREATE TABLE public.school_history (
 ALTER TABLE public.school_history OWNER TO postgres;
 
 --
--- TOC entry 213 (class 1259 OID 16536)
+-- TOC entry 220 (class 1259 OID 16559)
 -- Name: school_history_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -170,7 +220,7 @@ ALTER TABLE public.school_history ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTI
 
 
 --
--- TOC entry 214 (class 1259 OID 16537)
+-- TOC entry 221 (class 1259 OID 16560)
 -- Name: school_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -185,7 +235,7 @@ ALTER TABLE public.school ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 216 (class 1259 OID 16562)
+-- TOC entry 222 (class 1259 OID 16561)
 -- Name: school_year; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -201,7 +251,7 @@ CREATE TABLE public.school_year (
 ALTER TABLE public.school_year OWNER TO postgres;
 
 --
--- TOC entry 217 (class 1259 OID 16567)
+-- TOC entry 223 (class 1259 OID 16566)
 -- Name: school_year_history; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -212,14 +262,14 @@ CREATE TABLE public.school_year_history (
     end_datetime timestamp with time zone,
     log_user character varying(256),
     identifier character varying(256),
-    school_id integer NOT NULL
+    school_id integer
 );
 
 
 ALTER TABLE public.school_year_history OWNER TO postgres;
 
 --
--- TOC entry 218 (class 1259 OID 16572)
+-- TOC entry 224 (class 1259 OID 16571)
 -- Name: school_year_history_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -234,7 +284,7 @@ ALTER TABLE public.school_year_history ALTER COLUMN id ADD GENERATED ALWAYS AS I
 
 
 --
--- TOC entry 219 (class 1259 OID 16573)
+-- TOC entry 225 (class 1259 OID 16572)
 -- Name: school_year_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -249,48 +299,106 @@ ALTER TABLE public.school_year ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY 
 
 
 --
--- TOC entry 3385 (class 0 OID 16526)
--- Dependencies: 211
+-- TOC entry 229 (class 1259 OID 16596)
+-- Name: section; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.section (
+    id integer NOT NULL,
+    start_datetime timestamp with time zone,
+    log_user character varying,
+    identifier character varying(256),
+    school_id integer NOT NULL
+);
+
+
+ALTER TABLE public.section OWNER TO postgres;
+
+--
+-- TOC entry 228 (class 1259 OID 16595)
+-- Name: section_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.section ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.section_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 227 (class 1259 OID 16582)
+-- Name: year; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.year (
+    id integer NOT NULL,
+    start_datetime timestamp with time zone,
+    log_user character varying,
+    identifier character varying(256),
+    school_id integer NOT NULL
+);
+
+
+ALTER TABLE public.year OWNER TO postgres;
+
+--
+-- TOC entry 226 (class 1259 OID 16581)
+-- Name: year_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.year ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.year_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 3432 (class 0 OID 16545)
+-- Dependencies: 217
 -- Data for Name: base; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3383 (class 0 OID 16513)
--- Dependencies: 209
+-- TOC entry 3433 (class 0 OID 16550)
+-- Dependencies: 218
 -- Data for Name: base_history; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
 
 --
--- TOC entry 3386 (class 0 OID 16531)
--- Dependencies: 212
+-- TOC entry 3446 (class 0 OID 16603)
+-- Dependencies: 231
+-- Data for Name: class; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.class OVERRIDING SYSTEM VALUE VALUES (7, '2023-11-09 17:09:58.209703+01', 'Fede', 9, 7, 7);
+INSERT INTO public.class OVERRIDING SYSTEM VALUE VALUES (8, '2023-11-09 17:09:58.214302+01', 'Fede', 9, 7, 8);
+INSERT INTO public.class OVERRIDING SYSTEM VALUE VALUES (9, '2023-11-09 17:09:58.218508+01', 'Fede', 9, 8, 7);
+
+
+--
+-- TOC entry 3431 (class 0 OID 16536)
+-- Dependencies: 215
 -- Data for Name: school; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (1, '2023-11-08 16:37:54.461834+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (2, '2023-11-08 16:39:44.08809+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (3, '2023-11-08 16:39:44.099655+01', 'Fede', 'New Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (4, '2023-11-08 16:41:47.56457+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (5, '2023-11-08 16:41:47.575906+01', 'Fede', 'New Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (6, '2023-11-08 16:47:08.462737+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (7, '2023-11-08 16:56:33.733158+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (8, '2023-11-08 17:00:34.003919+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (9, '2023-11-08 17:02:13.082652+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (10, '2023-11-08 17:05:59.591494+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (11, '2023-11-08 17:09:11.799032+01', 'Fede', 'Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (12, '2023-11-08 17:10:10.679371+01', 'Fede', 'New Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (13, '2023-11-08 17:10:56.435342+01', 'Fede', 'New Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (14, '2023-11-08 17:17:44.514653+01', 'Fede', 'New Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (15, '2023-11-08 17:19:01.697595+01', 'Fede', 'New Morgagni');
-INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (16, '2023-11-08 17:19:33.693634+01', 'Fede', 'New Morgagni');
+INSERT INTO public.school OVERRIDING SYSTEM VALUE VALUES (37, '2023-11-09 17:09:58.156269+01', 'Fede', 'Morgagni');
 
 
 --
--- TOC entry 3384 (class 0 OID 16517)
--- Dependencies: 210
+-- TOC entry 3434 (class 0 OID 16554)
+-- Dependencies: 219
 -- Data for Name: school_history; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -299,62 +407,150 @@ INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (2, 13, '2023-1
 INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (3, 14, '2023-11-08 17:17:44.464797+01', '2023-11-08 17:17:44.514653+01', 'Fede', 'Morgagni');
 INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (4, 15, '2023-11-08 17:19:01.674651+01', '2023-11-08 17:19:01.697595+01', 'Fede', 'Morgagni');
 INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (5, 16, '2023-11-08 17:19:33.665426+01', '2023-11-08 17:19:33.693634+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (6, 17, '2023-11-09 09:08:43.433973+01', '2023-11-09 09:08:43.452406+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (7, 18, '2023-11-09 09:17:50.193759+01', '2023-11-09 09:17:50.210703+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (8, 19, '2023-11-09 09:45:40.13624+01', '2023-11-09 09:45:40.147493+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (9, 20, '2023-11-09 09:48:13.061723+01', '2023-11-09 09:48:13.076769+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (10, 21, '2023-11-09 09:50:04.556696+01', '2023-11-09 09:50:04.570063+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (11, 22, '2023-11-09 09:50:38.950669+01', '2023-11-09 09:50:38.978078+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (12, 23, '2023-11-09 11:15:45.25343+01', '2023-11-09 11:15:45.270998+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (13, 24, '2023-11-09 11:18:37.858564+01', '2023-11-09 11:18:37.871648+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (14, 25, '2023-11-09 11:43:55.509153+01', '2023-11-09 11:43:55.530915+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (15, 26, '2023-11-09 11:45:45.623123+01', '2023-11-09 11:45:45.65779+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (16, 27, '2023-11-09 11:46:07.368061+01', '2023-11-09 11:46:07.376358+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (17, 28, '2023-11-09 11:46:26.174365+01', '2023-11-09 11:46:26.189891+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (18, 29, '2023-11-09 11:46:39.932899+01', '2023-11-09 11:46:39.950876+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (19, 30, '2023-11-09 11:47:43.877857+01', '2023-11-09 11:47:43.88529+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (20, 31, '2023-11-09 11:51:55.251276+01', '2023-11-09 11:51:55.259649+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (21, 32, '2023-11-09 11:56:10.84718+01', '2023-11-09 11:56:10.861796+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (22, 33, '2023-11-09 11:58:06.628129+01', '2023-11-09 11:58:06.647957+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (23, 34, '2023-11-09 12:19:48.326436+01', '2023-11-09 12:19:48.341197+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (24, 35, '2023-11-09 12:20:12.841249+01', '2023-11-09 12:20:12.858754+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (25, 36, '2023-11-09 12:29:18.860409+01', '2023-11-09 12:29:18.873682+01', 'Fede', 'Morgagni');
+INSERT INTO public.school_history OVERRIDING SYSTEM VALUE VALUES (26, 36, '2023-11-09 12:29:18.873682+01', '2023-11-09 13:00:23.400897+01', 'Fede', 'New Morgagni');
 
 
 --
--- TOC entry 3389 (class 0 OID 16562)
--- Dependencies: 216
+-- TOC entry 3437 (class 0 OID 16561)
+-- Dependencies: 222
 -- Data for Name: school_year; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.school_year OVERRIDING SYSTEM VALUE VALUES (9, '2023-11-09 17:09:58.170981+01', 'Fede', '2023/24', 37);
 
 
 --
--- TOC entry 3390 (class 0 OID 16567)
--- Dependencies: 217
+-- TOC entry 3438 (class 0 OID 16566)
+-- Dependencies: 223
 -- Data for Name: school_year_history; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.school_year_history OVERRIDING SYSTEM VALUE VALUES (2, 2, '2023-11-09 11:18:37.880338+01', '2023-11-09 11:18:37.889264+01', 'Fede', '2023/24', 24);
+INSERT INTO public.school_year_history OVERRIDING SYSTEM VALUE VALUES (3, 3, '2023-11-09 11:43:55.539736+01', '2023-11-09 11:43:55.54663+01', 'Fede', '2023/24', 25);
+INSERT INTO public.school_year_history OVERRIDING SYSTEM VALUE VALUES (4, 4, '2023-11-09 11:45:45.670623+01', '2023-11-09 11:45:45.680751+01', 'Fede', '2023/24', 26);
+INSERT INTO public.school_year_history OVERRIDING SYSTEM VALUE VALUES (5, 5, '2023-11-09 11:46:07.387068+01', '2023-11-09 11:46:07.393274+01', 'Fede', '2023/24', 27);
+INSERT INTO public.school_year_history OVERRIDING SYSTEM VALUE VALUES (6, 6, '2023-11-09 11:46:26.198575+01', '2023-11-09 11:46:26.208118+01', 'Fede', '2023/24', 28);
+INSERT INTO public.school_year_history OVERRIDING SYSTEM VALUE VALUES (7, 7, '2023-11-09 11:46:39.95864+01', '2023-11-09 11:46:39.96721+01', 'Fede', '2023/24', 29);
 
 
 --
--- TOC entry 3399 (class 0 OID 0)
--- Dependencies: 213
+-- TOC entry 3444 (class 0 OID 16596)
+-- Dependencies: 229
+-- Data for Name: section; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.section OVERRIDING SYSTEM VALUE VALUES (7, '2023-11-09 17:09:58.198114+01', 'Fede', 'A', 37);
+INSERT INTO public.section OVERRIDING SYSTEM VALUE VALUES (8, '2023-11-09 17:09:58.202617+01', 'Fede', 'B', 37);
+INSERT INTO public.section OVERRIDING SYSTEM VALUE VALUES (9, '2023-11-09 17:09:58.205633+01', 'Fede', 'C', 37);
+
+
+--
+-- TOC entry 3442 (class 0 OID 16582)
+-- Dependencies: 227
+-- Data for Name: year; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.year OVERRIDING SYSTEM VALUE VALUES (7, '2023-11-09 17:09:58.176439+01', 'Fede', 'I', 37);
+INSERT INTO public.year OVERRIDING SYSTEM VALUE VALUES (8, '2023-11-09 17:09:58.181222+01', 'Fede', 'II', 37);
+INSERT INTO public.year OVERRIDING SYSTEM VALUE VALUES (9, '2023-11-09 17:09:58.185954+01', 'Fede', 'III', 37);
+INSERT INTO public.year OVERRIDING SYSTEM VALUE VALUES (10, '2023-11-09 17:09:58.190394+01', 'Fede', 'IV', 37);
+INSERT INTO public.year OVERRIDING SYSTEM VALUE VALUES (11, '2023-11-09 17:09:58.193467+01', 'Fede', 'V', 37);
+
+
+--
+-- TOC entry 3453 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: class_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.class_id_seq', 9, true);
+
+
+--
+-- TOC entry 3454 (class 0 OID 0)
+-- Dependencies: 220
 -- Name: school_history_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.school_history_id_seq', 5, true);
+SELECT pg_catalog.setval('public.school_history_id_seq', 26, true);
 
 
 --
--- TOC entry 3400 (class 0 OID 0)
--- Dependencies: 214
+-- TOC entry 3455 (class 0 OID 0)
+-- Dependencies: 221
 -- Name: school_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.school_id_seq', 16, true);
+SELECT pg_catalog.setval('public.school_id_seq', 37, true);
 
 
 --
--- TOC entry 3401 (class 0 OID 0)
--- Dependencies: 218
+-- TOC entry 3456 (class 0 OID 0)
+-- Dependencies: 224
 -- Name: school_year_history_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.school_year_history_id_seq', 1, false);
+SELECT pg_catalog.setval('public.school_year_history_id_seq', 7, true);
 
 
 --
--- TOC entry 3402 (class 0 OID 0)
--- Dependencies: 219
+-- TOC entry 3457 (class 0 OID 0)
+-- Dependencies: 225
 -- Name: school_year_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.school_year_id_seq', 1, false);
+SELECT pg_catalog.setval('public.school_year_id_seq', 9, true);
 
 
 --
--- TOC entry 3240 (class 2606 OID 16545)
+-- TOC entry 3458 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: section_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.section_id_seq', 9, true);
+
+
+--
+-- TOC entry 3459 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: year_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.year_id_seq', 11, true);
+
+
+--
+-- TOC entry 3279 (class 2606 OID 16612)
+-- Name: class class_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.class
+    ADD CONSTRAINT class_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3269 (class 2606 OID 16574)
 -- Name: school_history school_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -363,7 +559,60 @@ ALTER TABLE ONLY public.school_history
 
 
 --
--- TOC entry 3242 (class 2620 OID 16548)
+-- TOC entry 3267 (class 2606 OID 16610)
+-- Name: school school_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.school
+    ADD CONSTRAINT school_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3273 (class 2606 OID 16616)
+-- Name: school_year_history school_year_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.school_year_history
+    ADD CONSTRAINT school_year_history_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3271 (class 2606 OID 16614)
+-- Name: school_year school_year_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.school_year
+    ADD CONSTRAINT school_year_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3277 (class 2606 OID 16618)
+-- Name: section section_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.section
+    ADD CONSTRAINT section_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3275 (class 2606 OID 16620)
+-- Name: year year_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.year
+    ADD CONSTRAINT year_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3286 (class 2620 OID 16608)
+-- Name: class tr_class_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER tr_class_start_datetime BEFORE INSERT OR UPDATE ON public.class FOR EACH ROW EXECUTE FUNCTION public.tr_fn_update_start_datetime();
+
+
+--
+-- TOC entry 3280 (class 2620 OID 16575)
 -- Name: school tr_school_history; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -371,14 +620,46 @@ CREATE TRIGGER tr_school_history AFTER UPDATE ON public.school FOR EACH ROW EXEC
 
 
 --
--- TOC entry 3241 (class 2620 OID 16549)
--- Name: school tr_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 3281 (class 2620 OID 16576)
+-- Name: school tr_school_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER tr_start_datetime BEFORE INSERT OR UPDATE ON public.school FOR EACH ROW EXECUTE FUNCTION public.tr_fn_update_start_datetime();
+CREATE TRIGGER tr_school_start_datetime BEFORE INSERT OR UPDATE ON public.school FOR EACH ROW EXECUTE FUNCTION public.tr_fn_update_start_datetime();
 
 
--- Completed on 2023-11-08 17:21:50 CET
+--
+-- TOC entry 3282 (class 2620 OID 16580)
+-- Name: school_year tr_school_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER tr_school_start_datetime BEFORE INSERT OR UPDATE ON public.school_year FOR EACH ROW EXECUTE FUNCTION public.tr_fn_update_start_datetime();
+
+
+--
+-- TOC entry 3283 (class 2620 OID 16578)
+-- Name: school_year tr_school_year_history; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER tr_school_year_history AFTER UPDATE ON public.school_year FOR EACH ROW EXECUTE FUNCTION public.tr_fn_school_year_history();
+
+
+--
+-- TOC entry 3285 (class 2620 OID 16601)
+-- Name: section tr_section_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER tr_section_start_datetime BEFORE INSERT OR UPDATE ON public.section FOR EACH ROW EXECUTE FUNCTION public.tr_fn_update_start_datetime();
+
+
+--
+-- TOC entry 3284 (class 2620 OID 16594)
+-- Name: year tr_year_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER tr_year_start_datetime BEFORE INSERT OR UPDATE ON public.year FOR EACH ROW EXECUTE FUNCTION public.tr_fn_update_start_datetime();
+
+
+-- Completed on 2023-11-09 17:12:11 CET
 
 --
 -- PostgreSQL database dump complete
