@@ -12,6 +12,16 @@ def get_schools() -> List[db.model.School]:
     except (Exception) as error:
         traceback.print_exc()
 
+def get_schoolyears(school_id) -> List[db.model.SchoolYear]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.SchoolYear).\
+                where(db.model.SchoolYear.school_id == school_id).\
+                    order_by(db.model.SchoolYear.id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
 def get(entityclass, id):
     try:
         with db.connection.active_session() as session:
