@@ -1,6 +1,7 @@
 from db.model import School, SchoolYear, Year, Section, Class
 import db.connection, db.query
 import gui.setup, gui.screen
+from tkinter import *
 
 def populate_DB():
     s = School()
@@ -85,6 +86,11 @@ if __name__ == '__main__':
 #    populate_DB()
     s = db.query.get(School, 36)
     print(s)
-    gui.setup.startup()
-    gui.screen.main_screen()
-    gui.setup.show()
+    ui = gui.setup.SchoolSchedulerGUI()
+    ui.startup()
+    gui.screen.school_select_screen()
+    root = ui.root
+    root.title("Scuola")
+    root.geometry('800x400')
+    root.resizable(width=TRUE, height=TRUE)
+    ui.show()

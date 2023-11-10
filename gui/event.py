@@ -1,6 +1,8 @@
-import gui.screen
+import gui.setup
 
 def school_selected(event):
+    ui = gui.setup.SchoolSchedulerGUI()
     print(event)
-    print(gui.screen.schools_combo.get())
-    print(gui.screen.school_dict[gui.screen.schools_combo.get()])
+    print(ui.widgets['schools_combo'].get())
+    print(ui.variables['school_dict'][ui.widgets['schools_combo'].get()])
+    
