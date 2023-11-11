@@ -22,6 +22,36 @@ def get_schoolyears(school_id) -> List[db.model.SchoolYear]:
     except (Exception) as error:
         traceback.print_exc()
 
+def get_years(school_id) -> List[db.model.Year]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.Year).\
+                where(db.model.Year.school_id == school_id).\
+                    order_by(db.model.Year.id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def get_sections(school_id) -> List[db.model.Section]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.Section).\
+                where(db.model.Section.school_id == school_id).\
+                    order_by(db.model.Section.id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def get_classes(schoolyear_id) -> List[db.model.Class]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.Class).\
+                where(db.model.Class.schoolyear_id == schoolyear_id).\
+                    order_by(db.model.Class.id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
 def get(entityclass, id):
     try:
         with db.connection.active_session() as session:

@@ -85,7 +85,8 @@ def school_select_screen():
     schoolyear_reset_button.grid(column=14, row=1, sticky=(N, E, W, S))
     schoolyear_reset_button.state(['disabled'])
 
-    classes_mgmt_button = ttk.Button(frame, text=MANAGE_CLASSES_LABEL)
+    classes_mgmt_button = ttk.Button(frame, text=MANAGE_CLASSES_LABEL, command=lambda: gui.event.switch_frame(\
+        "school_select_frame", "schoolyear_configure_frame"))
     classes_mgmt_button.grid(column=0, row=10, columnspan=2, sticky=(N, E, W, S))
     classes_mgmt_button.state(['disabled'])
     
@@ -151,6 +152,7 @@ def school_select_screen():
     ui.widgets['schoolyear_delete_button'] = schoolyear_delete_button
     ui.widgets['schoolyear_duplicate_button'] = schoolyear_duplicate_button
     ui.widgets['schoolyear_reset_button'] = schoolyear_reset_button
+    ui.widgets['classes_mgmt_button'] = classes_mgmt_button
 
     gui.event.populate_school_combo()
 
@@ -202,5 +204,5 @@ def configure_schoolyear_screen():
     ui.frames['schoolyear_configure_frame'] = frame
     ui.widgets['years_listbox'] = years_listbox
 
-    gui.event.populate_schoolyear_cofiguration()
+    gui.event.populate_school_configuration()
 
