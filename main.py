@@ -91,6 +91,6 @@ if __name__ == '__main__':
     gui.screen.school_select_screen()
     root = ui.root
     root.title("Scuola")
-    root.geometry('800x400')
+    root.geometry('1200x400')
     root.resizable(width=TRUE, height=TRUE)
     ui.show()

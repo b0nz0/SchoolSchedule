@@ -22,6 +22,8 @@ def school_selected(event):
         ui.widgets['schoolyears_label'].grid()
         ui.widgets['schoolyear_add_button'].grid()
         ui.widgets['schoolyear_delete_button'].grid()
+        ui.widgets['schoolyear_duplicate_button'].grid()
+        ui.widgets['schoolyear_reset_button'].grid()
         ui.widgets['schoolyears_combo']['values'] = list([s.identifier for s in schoolyears]) 
         ui.widgets['school_delete_button'].state(['!disabled'])
 
@@ -34,6 +36,8 @@ def school_add():
 def schoolyear_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     ui.widgets['schoolyear_delete_button'].state(['!disabled'])
+    ui.widgets['schoolyear_duplicate_button'].state(['!disabled'])
+    ui.widgets['schoolyear_reset_button'].state(['!disabled'])
     
 def schoolyear_delete():
     pass
@@ -42,8 +46,7 @@ def schoolyear_add():
     pass
 
 def year_selected(event):
-    ui = gui.setup.SchoolSchedulerGUI()
-    ui.widgets['schoolyear_delete_button'].state(['!disabled'])
+    pass
     
 def year_delete():
     pass
