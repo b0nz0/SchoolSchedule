@@ -1,8 +1,14 @@
 import gui.setup, gui.screen
 import db.query, db.model
+from operator import itemgetter
 
 school_dict = {}
 schoolyears_dict = {}
+school_selected_dict = {}
+schoolyear_selected_dict = {}
+years_dict = {}
+sections_dict = {}
+classes_dict = {}
 
 def populate_school_combo():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -12,16 +18,38 @@ def populate_school_combo():
 
 def populate_school_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
-    if 'schools_combo' in ui.widgets:
-        choice = ui.widgets['schools_combo'].get()
-        school = db.query.get(db.model.School, school_dict[choice])
-        years = db.query.get_years(school_id=school.id)
 
+    years = db.query.get_years(school_id=school_selected_dict['id'])
+    years_list = []
+    for identifier, id in [(y.identifier, y.id) for y in years]:
+        years_list.append((identifier, id))
+    for (identifier, id) in sorted(years_list, key=itemgetter(0)):
+        years_dict[identifier] = id
+        ui.widgets['years_listbox'].insert(parent="", index="end", text=identifier, iid=id) 
+
+    sections = db.query.get_sections(school_id=school_selected_dict['id'])
+    sections_list = []
+    for identifier, id in [(y.identifier, y.id) for y in sections]:
+        sections_list.append((identifier, id))
+    for (identifier, id) in sorted(sections_list, key=itemgetter(0)):
+        sections_dict[identifier] = id
+        ui.widgets['sections_listbox'].insert(parent="", index="end", text=identifier, iid=id) 
+
+    classes = db.query.get_classes(school_id=schoolyear_selected_dict['id'])
+    classes_list = []
+    for year, section, id in [(c.year, c.section, c.id) for c in classes]:
+        classes_list.append((year, section, id))
+    #TODO
+    for (identifier, id) in sorted(classes_list, key=itemgetter(0)):
+        classes_dict[identifier] = id
+        ui.widgets['classes_listbox'].insert(parent="", index="end", text=identifier, iid=id) 
 
 def school_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     choice = ui.widgets['schools_combo'].get()
     school = db.query.get(db.model.School, school_dict[choice])
+    school_selected_dict['name'] = choice
+    school_selected_dict['id'] = school_dict[choice]
     schoolyears = db.query.get_schoolyears(school_id=school.id)
     ui.widgets['schoolyears_combo'].grid()
     ui.widgets['schoolyears_label'].grid()
@@ -60,6 +88,27 @@ def year_delete():
     pass
 
 def year_add():
+    pass
+
+def section_selected(event):
+    pass
+    
+def section_delete():
+    pass
+
+def section_add():
+    pass
+
+def class_selected(event):
+    pass
+    
+def class_delete():
+    pass
+
+def class_create():
+    pass
+
+def return_home():
     pass
 
 def switch_frame(from_name, to_name):

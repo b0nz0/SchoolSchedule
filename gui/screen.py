@@ -4,16 +4,19 @@ import gui.setup, gui.event
 import db.query
 
 NEW_COMBO_LABEL = "<Nuovo>"
+RETURN_HOME = "Ritorna alla home"
 SCHOOL_SELECT_LABEL = "Seleziona scuola"
 SCHOOLYEAR_SELECT_LABEL = "Seleziona anno scolastico"
 ADD_SCHOOL_LABEL = "Aggiungi scuola"
 ADD_SCHOOLYEAR_LABEL = "Aggiungi anno scolastico"
 ADD_YEAR_LABEL = "Aggiungi anno"
 ADD_SECTION_LABEL = "Aggiungi sezione"
+CREATE_CLASS_LABEL = "Crea classi da anni e sezioni"
 DELETE_SCHOOL_LABEL = "Elimina scuola"
 DELETE_SCHOOLYEAR_LABEL = "Elimina anno scolastico"
 DELETE_YEAR_LABEL = "Elimina anno"
 DELETE_SECTION_LABEL = "Elimina sezione"
+DELETE_CLASS_LABEL = "Elimina classe"
 DUPLICATE_SCHOOL_LABEL = "Duplica scuola"
 DUPLICATE_SCHOOLYEAR_LABEL = "Duplica anno scolastico"
 RESET_SCHOOLYEAR_LABEL = "Ripristina anno scolastico"
@@ -27,11 +30,13 @@ PROCESS_LABEL = "Elabora calendari"
 
 YEAR_SELECT_LABEL = "Anni"
 SECTION_SELECT_LABEL = "Sezioni"
+CLASS_SELECT_LABEL = "Classi"
 
 
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
+    root.geometry('1200x400')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
     frame.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -159,6 +164,7 @@ def school_select_screen():
 def configure_schoolyear_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
+    root.geometry('800x600')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
     frame.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -167,24 +173,67 @@ def configure_schoolyear_screen():
 
     #year selection
     year_label = ttk.Label(frame, text=YEAR_SELECT_LABEL)
-    year_label.grid(column=0, row=2, sticky=(N, E, W, S))
+    year_label.grid(column=0, row=0, sticky=(E, W))
 
-    years_listbox = ttk.Treeview(frame, show="tree")
+    years_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=5)
     scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=years_listbox.yview)
     years_listbox.configure(yscroll=scrollbar.set)
-    years_listbox.grid(column=1, row=2, sticky=(N, W, E, S))
+    years_listbox.grid(column=1, row=0, rowspan=2, sticky=(N, W, E, S))
     scrollbar.configure(command=years_listbox.yview)
-    scrollbar.grid(column=2, row=2, sticky='ns')
+    scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
     years_listbox.bind('<<TreeviewSelect>>', gui.event.year_selected)
 
     year_add_button = ttk.Button(frame, text=ADD_YEAR_LABEL, command=gui.event.year_add)
-    year_add_button.grid(column=11, row=2, sticky=(E, W))
+    year_add_button.grid(column=11, row=0, sticky=(E, W))
     year_add_button.state(['!disabled'])
 
     year_delete_button = ttk.Button(frame, text=DELETE_YEAR_LABEL, command=gui.event.year_delete)
-    year_delete_button.grid(column=12, row=2, sticky=(E, W))
+    year_delete_button.grid(column=11, row=1, sticky=(E, W))
     year_delete_button.state(['disabled'])
 
+    #section selection
+    section_label = ttk.Label(frame, text=SECTION_SELECT_LABEL)
+    section_label.grid(column=0, row=2, sticky=(E, W))
+
+    sections_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=5)
+    scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=sections_listbox.yview)
+    sections_listbox.configure(yscroll=scrollbar.set)
+    sections_listbox.grid(column=1, row=2, rowspan=2, sticky=(N, W, E, S))
+    scrollbar.configure(command=sections_listbox.yview)
+    scrollbar.grid(column=2, row=2, rowspan=2, sticky=(N, S))
+    sections_listbox.bind('<<TreeviewSelect>>', gui.event.section_selected)
+
+    section_add_button = ttk.Button(frame, text=ADD_SECTION_LABEL, command=gui.event.section_add)
+    section_add_button.grid(column=11, row=2, sticky=(E, W))
+    section_add_button.state(['!disabled'])
+
+    section_delete_button = ttk.Button(frame, text=DELETE_SECTION_LABEL, command=gui.event.section_delete)
+    section_delete_button.grid(column=11, row=3, sticky=(E, W))
+    section_delete_button.state(['disabled'])
+
+    #classes selection
+    class_label = ttk.Label(frame, text=CLASS_SELECT_LABEL)
+    class_label.grid(column=0, row=4, sticky=(E, W))
+
+    classes_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=15)
+    scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=sections_listbox.yview)
+    classes_listbox.configure(yscroll=scrollbar.set)
+    classes_listbox.grid(column=1, row=4, rowspan=2, sticky=(N, W, E, S))
+    scrollbar.configure(command=classes_listbox.yview)
+    scrollbar.grid(column=2, row=4, rowspan=4, sticky=(N, S))
+    classes_listbox.bind('<<TreeviewSelect>>', gui.event.class_selected)
+
+    class_create_button = ttk.Button(frame, text=CREATE_CLASS_LABEL, command=gui.event.class_create)
+    class_create_button.grid(column=11, row=4, sticky=(E, W))
+    class_create_button.state(['disabled'])
+
+    class_delete_button = ttk.Button(frame, text=DELETE_CLASS_LABEL, command=gui.event.class_delete)
+    class_delete_button.grid(column=11, row=5, sticky=(E, W))
+    class_delete_button.state(['disabled'])
+
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=gui.event.return_home)
+    return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
+    return_button.state(['!disabled'])
 
     heights = []
     widths = []
@@ -203,6 +252,14 @@ def configure_schoolyear_screen():
 
     ui.frames['schoolyear_configure_frame'] = frame
     ui.widgets['years_listbox'] = years_listbox
+    ui.widgets['year_add_button'] = year_add_button
+    ui.widgets['year_delete_button'] = year_delete_button
+    ui.widgets['sections_listbox'] = sections_listbox
+    ui.widgets['section_add_button'] = section_add_button
+    ui.widgets['section_delete_button'] = section_delete_button
+    ui.widgets['classes_listbox'] = classes_listbox
+    ui.widgets['class_create_button'] = class_create_button
+    ui.widgets['class_delete_button'] = class_delete_button
 
     gui.event.populate_school_configuration()
 
