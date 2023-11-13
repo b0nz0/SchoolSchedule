@@ -35,14 +35,23 @@ def populate_school_configuration():
         sections_dict[identifier] = id
         ui.widgets['sections_listbox'].insert(parent="", index="end", text=identifier, iid=id) 
 
-    classes = db.query.get_classes(school_id=schoolyear_selected_dict['id'])
+    classes = db.query.get_classes(schoolyear_id=schoolyear_selected_dict['id'])
     classes_list = []
     for year, section, id in [(c.year, c.section, c.id) for c in classes]:
-        classes_list.append((year, section, id))
-    #TODO
-    for (identifier, id) in sorted(classes_list, key=itemgetter(0)):
+        classes_list.append((year.identifier, section.identifier, id))
+
+    for (year, section, id) in sorted(classes_list, key=itemgetter(1)):
+        if not ui.widgets['classes_listbox'].exists(str(section)): 
+            ui.widgets['classes_listbox'].insert(parent="", index="end", text=str(section), iid=str(section)) 
+
+    for (year, section, id) in sorted(sorted(classes_list, key=itemgetter(1)), key=itemgetter(0)):
+        identifier = str(year) + " " + str(section)
         classes_dict[identifier] = id
-        ui.widgets['classes_listbox'].insert(parent="", index="end", text=identifier, iid=id) 
+        ui.widgets['classes_listbox'].insert(parent=str(section), index="end", text=identifier, iid=id) 
+
+def populate_room_configuration():
+    ui = gui.setup.SchoolSchedulerGUI()
+
 
 def school_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -70,10 +79,15 @@ def school_add():
 
 def schoolyear_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
+    choice = ui.widgets['schoolyears_combo'].get()
+    schoolyear = db.query.get(db.model.SchoolYear, schoolyears_dict[choice])
+    schoolyear_selected_dict['name'] = choice
+    schoolyear_selected_dict['id'] = schoolyears_dict[choice]
     ui.widgets['schoolyear_delete_button'].state(['!disabled'])
     ui.widgets['schoolyear_duplicate_button'].state(['!disabled'])
     ui.widgets['schoolyear_reset_button'].state(['!disabled'])
     ui.widgets['classes_mgmt_button'].state(['!disabled'])
+    ui.widgets['rooms_mgmt_button'].state(['!disabled'])
     
 def schoolyear_delete():
     pass
@@ -100,7 +114,10 @@ def section_add():
     pass
 
 def class_selected(event):
-    pass
+    ui = gui.setup.SchoolSchedulerGUI()
+    selected = ui.widgets['classes_listbox'].selection()
+    for item in selected:
+        pass
     
 def class_delete():
     pass
@@ -108,8 +125,17 @@ def class_delete():
 def class_create():
     pass
 
-def return_home():
+def room_selected(event):
     pass
+
+def room_delete():
+    pass
+
+def room_create():
+    pass
+
+def return_home():
+    switch_frame(None, 'school_select_frame')
 
 def switch_frame(from_name, to_name):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -124,4 +150,8 @@ def switch_frame(from_name, to_name):
     else:
         if to_name == "schoolyear_configure_frame":
             gui.screen.configure_schoolyear_screen()
+        elif to_name == "room_configure_frame":
+            gui.screen.configure_room_screen()
+    ui.root.geometry(gui.screen.geometries[to_name])
+
     

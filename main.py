@@ -1,4 +1,4 @@
-from db.model import School, SchoolYear, Year, Section, Class
+from db.model import *
 import db.connection, db.query
 import gui.setup, gui.screen
 from tkinter import *
@@ -74,6 +74,32 @@ def populate_DB():
     l.year = r2
     db.query.save(l, "Fede")
     print(l)
+    
+    room1 = Room()
+    room1.identifier = "101"
+    room1.room_type = RoomEnum.AULA
+    room1.school = s
+    db.query.save(room1, "Fede")
+    
+    room2 = Room()
+    room2.identifier = "102"
+    room2.room_type = RoomEnum.AULA
+    room2.school = s
+    db.query.save(room2, "Fede")
+    
+    room3 = Room()
+    room3.identifier = "Palestra Grande"
+    room3.room_type = RoomEnum.PALESTRA
+    room3.school = s
+    db.query.save(room3, "Fede")
+    
+    room4 = Room()
+    room4.identifier = "Laboratorio di Informatica"
+    room4.room_type = RoomEnum.LABORATORIO
+    room4.school = s
+    db.query.save(room4, "Fede")
+    
+
 
 if __name__ == '__main__':
     db.connection.connect()
@@ -84,7 +110,7 @@ if __name__ == '__main__':
 #    for s in schools:
 #        print(s.name)
 #    populate_DB()
-    s = db.query.get(School, 36)
+    s = db.query.get(School, 37)
     print(s)
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()

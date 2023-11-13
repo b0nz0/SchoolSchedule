@@ -1,7 +1,9 @@
+import enum
 from typing import List
 from typing import Optional
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy import Enum
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -21,6 +23,8 @@ class School(Base):
     years: Mapped[List["Year"]] = relationship(
                  back_populates="school", cascade="all, delete-orphan")
     sections: Mapped[List["Section"]] = relationship(
+                 back_populates="school", cascade="all, delete-orphan")
+    rooms: Mapped[List["Room"]] = relationship(
                  back_populates="school", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
@@ -68,10 +72,26 @@ class Class(Base):
     school_year_id: Mapped[int] = mapped_column(ForeignKey("school_year.id"))
     school_year: Mapped["SchoolYear"] = relationship(back_populates="classes")
     year_id: Mapped[int] = mapped_column(ForeignKey("year.id"))
-    year: Mapped["Year"] = relationship(back_populates="classes")
+    year: Mapped["Year"] = relationship(back_populates="classes", lazy="joined")
     section_id: Mapped[int] = mapped_column(ForeignKey("section.id"))
-    section: Mapped["Section"] = relationship(back_populates="classes")
+    section: Mapped["Section"] = relationship(back_populates="classes", lazy="joined")
 
     def __repr__(self) -> str:
         return f"class {self.year.identifier} {self.section.identifier} {self.school_year.identifier}"
     
+class RoomEnum(enum.Enum):
+    AULA = "Aula"
+    PALESTRA = "Palestra"
+    LABORATORIO = "Laboratorio"
+    ALTRO = "Altro"
+    
+class Room(Base):
+    __tablename__ = "room"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    identifier: Mapped[str]
+    room_type: Mapped[RoomEnum]
+    school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
+    school: Mapped["School"] = relationship(back_populates="rooms")
+    
+    def __repr__(self) -> str:
+        return f"{self.identifier} ({self.room_type})"

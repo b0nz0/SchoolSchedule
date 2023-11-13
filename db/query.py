@@ -46,7 +46,7 @@ def get_classes(schoolyear_id) -> List[db.model.Class]:
     try:
         with db.connection.active_session() as session:
             stmt = select(db.model.Class).\
-                where(db.model.Class.schoolyear_id == schoolyear_id).\
+                where(db.model.Class.school_year_id == schoolyear_id).\
                     order_by(db.model.Class.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:

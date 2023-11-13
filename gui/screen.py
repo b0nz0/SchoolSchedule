@@ -28,14 +28,21 @@ MANAGE_TIMETABLE_LABEL = "Gestisci date/ore"
 MANAGE_RESTRICTIONS_LABEL = "Gestisci vincoli"
 PROCESS_LABEL = "Elabora calendari"
 
+geometries = {}
+
 YEAR_SELECT_LABEL = "Anni"
 SECTION_SELECT_LABEL = "Sezioni"
 CLASS_SELECT_LABEL = "Classi"
 
+ROOM_SELECT_LABEL = "Spazi"
+ADD_ROOM_LABEL = "Aggiungi spazio"
+DELETE_ROOM_LABEL = "Elimina spazio"
 
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
+    global geometries
+    geometries['school_select_frame'] = '1200x400'
     root.geometry('1200x400')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
@@ -95,7 +102,8 @@ def school_select_screen():
     classes_mgmt_button.grid(column=0, row=10, columnspan=2, sticky=(N, E, W, S))
     classes_mgmt_button.state(['disabled'])
     
-    lgst_mgmt_button = ttk.Button(frame, text=MANAGE_LOGISTIC_LABEL)
+    lgst_mgmt_button = ttk.Button(frame, text=MANAGE_LOGISTIC_LABEL, command=lambda: gui.event.switch_frame(\
+        "school_select_frame", "room_configure_frame"))
     lgst_mgmt_button.grid(column=11, row=10, columnspan=2, sticky=(N, E, W, S))
     lgst_mgmt_button.state(['disabled'])
     
@@ -158,12 +166,15 @@ def school_select_screen():
     ui.widgets['schoolyear_duplicate_button'] = schoolyear_duplicate_button
     ui.widgets['schoolyear_reset_button'] = schoolyear_reset_button
     ui.widgets['classes_mgmt_button'] = classes_mgmt_button
+    ui.widgets['rooms_mgmt_button'] = lgst_mgmt_button
 
     gui.event.populate_school_combo()
 
 def configure_schoolyear_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
+    global geometries
+    geometries['schoolyear_configure_frame'] = '800x600'
     root.geometry('800x600')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
@@ -231,7 +242,8 @@ def configure_schoolyear_screen():
     class_delete_button.grid(column=11, row=5, sticky=(E, W))
     class_delete_button.state(['disabled'])
 
-    return_button = ttk.Button(frame, text=RETURN_HOME, command=gui.event.return_home)
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(\
+        "schoolyear_configure_frame", "school_select_frame"))
     return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
     return_button.state(['!disabled'])
 
@@ -262,4 +274,63 @@ def configure_schoolyear_screen():
     ui.widgets['class_delete_button'] = class_delete_button
 
     gui.event.populate_school_configuration()
+
+def configure_room_screen():
+    ui = gui.setup.SchoolSchedulerGUI()
+    root = ui.root
+    global geometries
+    geometries['room_configure_frame'] = '800x400'
+    root.geometry('800x400')
+
+    frame = ttk.Frame(root, padding="3 3 12 12")
+    frame.grid(column=0, row=0, sticky=(N, W, E, S))
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+
+    #year selection
+    room_label = ttk.Label(frame, text=ROOM_SELECT_LABEL)
+    room_label.grid(column=0, row=0, sticky=(E, W))
+
+    rooms_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=5)
+    scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=rooms_listbox.yview)
+    rooms_listbox.configure(yscroll=scrollbar.set)
+    rooms_listbox.grid(column=1, row=0, rowspan=2, sticky=(N, W, E, S))
+    scrollbar.configure(command=rooms_listbox.yview)
+    scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
+    rooms_listbox.bind('<<TreeviewSelect>>', gui.event.room_selected)
+
+    room_add_button = ttk.Button(frame, text=ADD_YEAR_LABEL, command=gui.event.year_add)
+    room_add_button.grid(column=11, row=0, sticky=(E, W))
+    room_add_button.state(['!disabled'])
+
+    room_delete_button = ttk.Button(frame, text=DELETE_YEAR_LABEL, command=gui.event.year_delete)
+    room_delete_button.grid(column=11, row=1, sticky=(E, W))
+    room_delete_button.state(['disabled'])
+
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(\
+        "room_configure_frame", "school_select_frame"))    
+    return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
+    return_button.state(['!disabled'])
+
+    heights = []
+    widths = []
+    for child in frame.winfo_children():
+        child.grid_configure(padx=5, pady=5)
+        heights.append([child.winfo_reqheight()])
+        widths.append([child.winfo_reqwidth()])
+
+    height = 40
+    width = max(widths)
+
+    frame.rowconfigure(0, minsize=height)
+    frame.rowconfigure(1, minsize=height)
+    frame.columnconfigure(0, minsize=width)
+    frame.columnconfigure(1, minsize=width)
+
+    ui.frames['room_configure_frame'] = frame
+    ui.widgets['rooms_listbox'] = rooms_listbox
+    ui.widgets['room_add_button'] = room_add_button
+    ui.widgets['room_delete_button'] = room_delete_button
+
+    gui.event.populate_room_configuration()
 
