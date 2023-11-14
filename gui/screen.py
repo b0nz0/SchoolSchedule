@@ -236,7 +236,7 @@ def configure_schoolyear_screen():
 
     class_create_button = ttk.Button(frame, text=CREATE_CLASS_LABEL, command=gui.event.class_create)
     class_create_button.grid(column=11, row=4, sticky=(E, W))
-    class_create_button.state(['disabled'])
+    class_create_button.state(['!disabled'])
 
     class_delete_button = ttk.Button(frame, text=DELETE_CLASS_LABEL, command=gui.event.class_delete)
     class_delete_button.grid(column=11, row=5, sticky=(E, W))
