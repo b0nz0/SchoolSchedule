@@ -230,7 +230,21 @@ def class_create():
     confirm = tkinter.messagebox.askokcancel("Creazione classi", \
             "Confermi di creare le classi per l'Anno Scolastico " + ui.widgets['schoolyears_combo'].get() + ":\n" + \
             "Anni: " + year_string + ", Sezioni: " + section_string +"?")
-        
+    
+    created = 0
+    for year_id in year_ids:
+        for section_id in section_ids:
+            c = db.model.Class()
+            c.school_year_id = int(schoolyear_id)
+            c.year_id = int(year_id)
+            c.section_id = int(section_id)
+            if db.query.get_class(c) == None:
+                db.query.save(c)
+                created = created + 1
+    
+    tkinter.messagebox.showinfo("Creazione classi", "Create " + str(created) + " classi")
+    populate_school_configuration()    
+    
     
 
 def room_selected(event):
