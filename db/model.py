@@ -26,6 +26,10 @@ class School(Base):
                  back_populates="school", cascade="all, delete-orphan")
     rooms: Mapped[List["Room"]] = relationship(
                  back_populates="school", cascade="all, delete-orphan")
+    persons: Mapped[List["Person"]] = relationship(
+                 back_populates="school", cascade="all, delete-orphan")
+    subjects: Mapped[List["Subject"]] = relationship(
+                 back_populates="school", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"school(id={self.id!r}, name={self.name!r})"
@@ -80,10 +84,10 @@ class Class(Base):
         return f"class {self.year.identifier} {self.section.identifier} {self.school_year.identifier}"
     
 class RoomEnum(enum.Enum):
-    AULA = "Aula"
-    PALESTRA = "Palestra"
-    LABORATORIO = "Laboratorio"
-    ALTRO = "Altro"
+    AULA = "aula"
+    PALESTRA = "palestra"
+    LABORATORIO = "laboratorio"
+    ALTRO = "altro"
     
 class Room(Base):
     __tablename__ = "room"
@@ -95,3 +99,33 @@ class Room(Base):
     
     def __repr__(self) -> str:
         return f"{self.identifier} ({self.room_type})"
+
+class PersonEnum(enum.Enum):
+    DOCENTE = "docente"
+    COLLABORATORE = "collaboratore"
+    LETTORE = "lettore"
+    ALTRO = "altro"
+    
+class Person(Base):
+    __tablename__ = "person"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    firstname: Mapped[str]
+    lastname: Mapped[str]
+    title: Mapped[str]
+    is_impersonal: Mapped[bool]
+    person_type: Mapped[RoomEnum]
+    school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
+    school: Mapped["School"] = relationship(back_populates="persons")
+    
+    def __repr__(self) -> str:
+        return f"{self.title} {self.firstname} {self.lastname}"
+    
+class Subject(Base):
+    __tablename__ = "subject"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    identifier: Mapped[str]
+    school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
+    school: Mapped["School"] = relationship(back_populates="persons")
+    
+    def __repr__(self) -> str:
+        return f"{self.identifier}"

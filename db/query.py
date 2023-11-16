@@ -71,7 +71,7 @@ def get_school(school: db.model.School):
                 stmt = select(db.model.School).\
                     where(db.model.School.name == school.name)
                 return session.execute(stmt).first()
-        except (Exception, psycopg.DatabaseError) as error:
+        except (Exception) as error:
             traceback.print_exc()
     else:
         return False
@@ -85,7 +85,7 @@ def get_schoolyear(schoolyear: db.model.SchoolYear):
                 stmt = select(db.model.SchoolYear).\
                     where(db.model.SchoolYear.identifier == schoolyear.identifier)
                 return session.execute(stmt).first()
-        except (Exception, psycopg.DatabaseError) as error:
+        except (Exception) as error:
             traceback.print_exc()
     else:
         return False
@@ -99,7 +99,7 @@ def get_year(year: db.model.Year):
                 stmt = select(db.model.Year).\
                     where(db.model.Year.identifier == year.identifier)
                 return session.execute(stmt).first()
-        except (Exception, psycopg.DatabaseError) as error:
+        except (Exception) as error:
             traceback.print_exc()
     else:
         return False
@@ -113,37 +113,37 @@ def get_section(section: db.model.Section):
                 stmt = select(db.model.Section).\
                     where(db.model.Section.identifier == section.identifier)
                 return session.execute(stmt).first()
-        except (Exception, psycopg.DatabaseError) as error:
+        except (Exception) as error:
             traceback.print_exc()
     else:
         return False
 
-def get_class(class0: db.model.Class):
-    if class0.id != None and class0.id != 0:
-        return get(db.model.Section, class0.id)
-    elif class0.school_year_id != None and class0.school_year_id != 0 and \
-            class0.year_id != None and class0.year_id != 0 and \
-            class0.section_id != None and class0.section_id != 0:
+def get_class(classe: db.model.Class):
+    if classe.id != None and classe.id != 0:
+        return get(db.model.Section, classe.id)
+    elif classe.school_year_id != None and classe.school_year_id != 0 and \
+            classe.year_id != None and classe.year_id != 0 and \
+            classe.section_id != None and classe.section_id != 0:
         try:
             with db.connection.active_session() as session:
                 stmt = select(db.model.Class).\
-                    where(db.model.Class.school_year_id == class0.school_year_id and \
-                        db.model.Class.year_id == class0.year_id and
-                        db.model.Class.section_id == class0.section_id)
+                    where(db.model.Class.school_year_id == classe.school_year_id, 
+                        db.model.Class.year_id == classe.year_id, 
+                        db.model.Class.section_id == classe.section_id)
                 return session.execute(stmt).first()
-        except (Exception, psycopg.DatabaseError) as error:
+        except (Exception) as error:
             traceback.print_exc()
-    elif class0.school_year != None and \
-            class0.year != None and \
-            class0.section != None:
+    elif classe.school_year != None and \
+            classe.year != None and \
+            classe.section != None:
         try:
             with db.connection.active_session() as session:
                 stmt = select(db.model.Class).\
-                    where(db.model.Class.school_year == class0.school_year and \
-                        db.model.Class.year == class0.year and
-                        db.model.Class.section == class0.section)
+                    where(db.model.Class.school_year == classe.school_year, 
+                        db.model.Class.year == classe.year, 
+                        db.model.Class.section == classe.section)
                 return session.execute(stmt).first()
-        except (Exception, psycopg.DatabaseError) as error:
+        except (Exception) as error:
             traceback.print_exc()
     else:
         return False
@@ -152,7 +152,7 @@ def get(entityclass, id: int):
     try:
         with db.connection.active_session() as session:
             return session.get(entityclass, id)
-    except (Exception, psycopg.DatabaseError) as error:
+    except (Exception) as error:
         traceback.print_exc()
 
 def delete(entityclass, id: int):
@@ -160,7 +160,7 @@ def delete(entityclass, id: int):
         with db.connection.active_session() as session:
             session.delete(session.get(entityclass, id))
             session.commit()
-    except (Exception, psycopg.DatabaseError) as error:
+    except (Exception) as error:
         traceback.print_exc()
 
 def save(entity, log_user="-"):
@@ -170,6 +170,6 @@ def save(entity, log_user="-"):
             session.add(entity)
             session.commit()
             return entity
-    except (Exception, psycopg.DatabaseError) as error:
+    except (Exception) as error:
         traceback.print_exc()
 
