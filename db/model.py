@@ -71,7 +71,7 @@ class Section(Base):
         return f"year(id={self.id!r}, identifier={self.identifier!r}, school={self.school.name})"
     
 class Class(Base):
-    __tablename__ = "class"
+    __tablename__ = "class_"
     id: Mapped[int] = mapped_column(primary_key=True)
     school_year_id: Mapped[int] = mapped_column(ForeignKey("school_year.id"))
     school_year: Mapped["SchoolYear"] = relationship(back_populates="classes")
@@ -109,8 +109,7 @@ class PersonEnum(enum.Enum):
 class Person(Base):
     __tablename__ = "person"
     id: Mapped[int] = mapped_column(primary_key=True)
-    firstname: Mapped[str]
-    lastname: Mapped[str]
+    fullname: Mapped[str]
     title: Mapped[str]
     is_impersonal: Mapped[bool]
     person_type: Mapped[RoomEnum]
@@ -125,7 +124,21 @@ class Subject(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     identifier: Mapped[str]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
-    school: Mapped["School"] = relationship(back_populates="persons")
-    
+    school: Mapped["School"] = relationship(back_populates="subjects")
+
     def __repr__(self) -> str:
         return f"{self.identifier}"
+
+class SubjectInClass(Base):
+    __tablename__ = "subject_in_class"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hours_total: Mapped[int]
+    max_hours_per_day: Mapped[int]
+    
+    class_id: Mapped[int] = mapped_column(ForeignKey("class_.id"))
+    class_: Mapped["Class"] = relationship(lazy="joined")  
+    subject_id: Mapped[int] = mapped_column(ForeignKey("subject.id"))
+    subject: Mapped["Subject"] = relationship(lazy="joined")
+    
+    def __repr__(self) -> str:
+        return f"{self.subject.identifier} in {self.class_.year.identifier} {self.class_.section.identifier}"
