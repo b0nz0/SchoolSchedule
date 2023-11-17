@@ -105,6 +105,12 @@ def populate_DB():
     pers1.school = s
     db.query.save(pers1)
     
+    pers2 = Person()
+    pers2.fullname = "Eleonora"
+    pers2.is_impersonal = False
+    pers2.school = s
+    db.query.save(pers2)
+    
     subj1 = Subject()
     subj1.identifier = "Italiano"
     subj1.school = s
@@ -119,13 +125,15 @@ def populate_DB():
     sic1.subject = subj1
     sic1.hours_total = 6
     sic1.max_hours_per_day = 2
+    sic1.persons = [pers1, pers2]
+    sic1.room = room1
     db.query.save(sic1)
     sic2 = SubjectInClass()
     sic2.class_ = l
     sic2.subject = subj2
     sic2.hours_total = 4
     sic2.max_hours_per_day = 2
-    db.query.save(sic2)
+    sic2 = db.query.save(sic2)
     
     
 
@@ -138,7 +146,7 @@ if __name__ == '__main__':
 #    schools = db.query.get_schools()
 #    for s in schools:
 #        print(s.name)
-#    populate_DB()
+    populate_DB()
     s = db.query.get(School, 37)
     print(s)
     ui = gui.setup.SchoolSchedulerGUI()
