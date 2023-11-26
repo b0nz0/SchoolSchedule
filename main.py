@@ -134,6 +134,33 @@ def populate_DB():
     sic2.hours_total = 4
     sic2.max_hours_per_day = 2
     sic2 = db.query.save(sic2)
+
+    h1 = Hour()
+    h1.start = time(8, 0)
+    h1.minutes = 60
+    h1.school = s
+    db.query.save(h1)
+    h2 = Hour()
+    h2.start = time(9, 0)
+    h2.minutes = 60
+    h2.school = s
+    db.query.save(h2)
+    h3 = Hour()
+    h3.start = time(10, 0)
+    h3.minutes = 60
+    h3.school = s
+    db.query.save(h3)
+    h4 = Hour()
+    h4.start = time(11, 0)
+    h4.minutes = 60
+    h4.school = s
+    db.query.save(h4)
+    h5 = Hour()
+    h5.start = time(12, 0)
+    h5.minutes = 60
+    h5.school = s
+    db.query.save(h5)
+
     
     
 
@@ -146,8 +173,8 @@ if __name__ == '__main__':
 #    schools = db.query.get_schools()
 #    for s in schools:
 #        print(s.name)
-    populate_DB()
-    s = db.query.get(School, 37)
+#    populate_DB()
+    s = db.query.get(School, 1)
     print(s)
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()

@@ -8,7 +8,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, time
 
 class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -29,6 +29,8 @@ class School(Base):
     persons: Mapped[List["Person"]] = relationship(
                  back_populates="school", cascade="all, delete-orphan")
     subjects: Mapped[List["Subject"]] = relationship(
+                 back_populates="school", cascade="all, delete-orphan")
+    hours: Mapped[List["Hour"]] = relationship(
                  back_populates="school", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
@@ -116,7 +118,7 @@ class Person(Base):
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="persons")
 
-    subjects: Mapped[List["SubjectInClass"]] = relationship(secondary="person_to_subject_in_class", back_populates="persons", lazy="joined")
+#    subjects_in_class: Mapped[List["SubjectInClass"]] = relationship(secondary="person_to_subject_in_class", lazy="joined")
     
     def __repr__(self) -> str:
         return f"{self.title} {self.firstname} {self.lastname}"
@@ -144,8 +146,8 @@ class SubjectInClass(Base):
     room_id: Mapped[int] = mapped_column(ForeignKey("room.id"))
     room: Mapped[Optional["Room"]] = relationship(lazy="joined")
     
-    persons: Mapped[List["Person"]] = relationship(secondary="person_to_subject_in_class", back_populates="subjects", lazy="joined")
-    room: Mapped["Room"] = relationship()
+#    persons: Mapped[List["Person"]] = relationship(secondary="person_to_subject_in_class",  lazy="joined")
+    #room: Mapped["Room"] = relationship()
     
     def __repr__(self) -> str:
         return f"{self.subject.identifier} in {self.class_.year.identifier} {self.class_.section.identifier}"
@@ -161,4 +163,17 @@ class PersonToSubjectInClassAssociation(Base):
     
     def __repr__(self) -> str:
         return f"{self.person.fullname} as {self.subject_in_class.subject.identifier} in {self.class_.year.identifier} {self.class_.section.identifier}"
+    
+class Hour(Base):
+    __tablename__ = "hour"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
+    school: Mapped["School"] = relationship(back_populates="hours")
+    
+    start: Mapped[time] 
+    minutes: Mapped[int]
+
+    def __repr__(self) -> str:
+        return f"{self.start}: {self.minutes}m"
     
