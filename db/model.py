@@ -32,6 +32,8 @@ class School(Base):
                  back_populates="school", cascade="all, delete-orphan")
     hours: Mapped[List["Hour"]] = relationship(
                  back_populates="school", cascade="all, delete-orphan")
+    plans: Mapped[List["Plan"]] = relationship(
+                 back_populates="school", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"school(id={self.id!r}, name={self.name!r})"
@@ -111,10 +113,11 @@ class PersonEnum(enum.Enum):
 class Person(Base):
     __tablename__ = "person"
     id: Mapped[int] = mapped_column(primary_key=True)
+
     fullname: Mapped[str]
     title: Mapped[str]
     is_impersonal: Mapped[bool]
-    person_type: Mapped[RoomEnum]
+    person_type: Mapped[PersonEnum]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="persons")
 
@@ -176,4 +179,57 @@ class Hour(Base):
 
     def __repr__(self) -> str:
         return f"{self.start}: {self.minutes}m"
+    
+class Plan(Base):
+    __tablename__ = "plan"    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
+    school: Mapped["School"] = relationship(back_populates="plans")
+    
+    identifier: Mapped[str]
+    daily_hours: Mapped[List["DailyHour"]] = relationship(
+                 back_populates="plan", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"{self.identifier}"
+    
+class WeekDayEnum(enum.Enum):
+    MONDAY = "lunedì"
+    TUESDAY = "martedì"
+    WEDNESDAY = "mercoledì"
+    THURSDAY = "giovedì"
+    FRIDAY = "venerdì"
+    SATURDAY = "sabato"
+    SUNDAY = "domenica"
+    
+class DailyHour(Base):
+    __tablename__ = "daily_hour"    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    plan_id: Mapped[int] = mapped_column(ForeignKey("plan.id"))
+    plan: Mapped["Plan"] = relationship(back_populates="daily_hours")
+    
+    week_day: Mapped[WeekDayEnum]
+    hour_id: Mapped[int] = mapped_column(ForeignKey("hour.id"))
+    hour: Mapped["Hour"] = relationship(lazy="joined")
+
+    def __repr__(self) -> str:
+        return f"{self.week_day}: {self.hour}"
+    
+class ClassPlan(Base):
+    __tablename__ = "class_plan"    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    plan_id: Mapped[int] = mapped_column(ForeignKey("plan.id"))
+    plan: Mapped["Plan"] = relationship(lazy="joined")
+    
+    class_id: Mapped[int] = mapped_column(ForeignKey("class_.id"))
+    class_: Mapped["Class"] = relationship(lazy="joined")
+
+    def __repr__(self) -> str:
+        return f"{self.class_}-{self.plan}"
+    
+    
+    
     

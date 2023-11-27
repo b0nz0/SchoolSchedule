@@ -79,10 +79,10 @@ def populate_room_configuration():
     
     for identifier, room_type, id in [(r.identifier, r.room_type, r.id) for r in rooms]:
         rooms_list.append((identifier, room_type, id))
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.AULA, iid=1)
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.LABORATORIO, iid=2)
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.PALESTRA, iid=3)
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.ALTRO, iid=4)
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.AULA.value, iid=1)
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.LABORATORIO.value, iid=2)
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.PALESTRA.value, iid=3)
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.ALTRO.value, iid=4)
 
     for (identifier, room_type, id) in sorted(rooms_list, key=itemgetter(0)):
         rooms_dict[identifier] = id

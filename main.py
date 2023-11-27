@@ -2,6 +2,7 @@ from db.model import *
 import db.connection, db.query
 import gui.setup, gui.screen
 from tkinter import *
+import pickle
 
 def populate_DB():
     s = School()
@@ -101,12 +102,14 @@ def populate_DB():
     
     pers1 = Person()
     pers1.fullname = "Federico"
+    pers1.person_type = PersonEnum.DOCENTE
     pers1.is_impersonal = False
     pers1.school = s
     db.query.save(pers1)
     
     pers2 = Person()
     pers2.fullname = "Eleonora"
+    pers2.person_type = PersonEnum.DOCENTE
     pers2.is_impersonal = False
     pers2.school = s
     db.query.save(pers2)
@@ -160,9 +163,150 @@ def populate_DB():
     h5.minutes = 60
     h5.school = s
     db.query.save(h5)
+    
+    plan = Plan()
+    plan.identifier = "Calendario 1"
+    plan.school = s
+    db.query.save(plan)
+    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.MONDAY
+    d.plan = plan
+    d.hour = h1
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.MONDAY
+    d.plan = plan
+    d.hour = h2
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.MONDAY
+    d.plan = plan
+    d.hour = h3
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.MONDAY
+    d.plan = plan
+    d.hour = h4
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.MONDAY
+    d.plan = plan
+    d.hour = h5
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.TUESDAY
+    d.plan = plan
+    d.hour = h1
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.TUESDAY
+    d.plan = plan
+    d.hour = h2
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.TUESDAY
+    d.plan = plan
+    d.hour = h3
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.TUESDAY
+    d.plan = plan
+    d.hour = h4
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.TUESDAY
+    d.plan = plan
+    d.hour = h5
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.WEDNESDAY
+    d.plan = plan
+    d.hour = h1
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.WEDNESDAY
+    d.plan = plan
+    d.hour = h2
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.WEDNESDAY
+    d.plan = plan
+    d.hour = h3
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.WEDNESDAY
+    d.plan = plan
+    d.hour = h4
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.WEDNESDAY
+    d.plan = plan
+    d.hour = h5
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.THURSDAY
+    d.plan = plan
+    d.hour = h1
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.THURSDAY
+    d.plan = plan
+    d.hour = h2
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.THURSDAY
+    d.plan = plan
+    d.hour = h3
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.THURSDAY
+    d.plan = plan
+    d.hour = h4
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.THURSDAY
+    d.plan = plan
+    d.hour = h5
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.FRIDAY
+    d.plan = plan
+    d.hour = h1
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.FRIDAY
+    d.plan = plan
+    d.hour = h2
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.FRIDAY
+    d.plan = plan
+    d.hour = h3
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.FRIDAY
+    d.plan = plan
+    d.hour = h4
+    db.query.save(d)    
+    d = DailyHour()
+    d.week_day = WeekDayEnum.FRIDAY
+    d.plan = plan
+    d.hour = h5
+    db.query.save(d)    
 
-    
-    
+    cp = ClassPlan()
+    cp.plan = plan
+    cp.class_ = l
+    db.query.save(cp)
+    cp = ClassPlan()
+    cp.plan = plan
+    cp.class_ = l2
+    db.query.save(cp)
+    cp = ClassPlan()
+    cp.plan = plan
+    cp.class_ = l3
+    db.query.save(cp)
 
 
 if __name__ == '__main__':
@@ -176,6 +320,8 @@ if __name__ == '__main__':
 #    populate_DB()
     s = db.query.get(School, 1)
     print(s)
+    with open("test_ser_school.ser", "wb") as outfile:
+        pickle.dump(s, outfile)
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
     gui.screen.school_select_screen()
