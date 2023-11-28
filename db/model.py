@@ -149,9 +149,9 @@ class SubjectInClass(Base):
     room_id: Mapped[int] = mapped_column(ForeignKey("room.id"))
     room: Mapped[Optional["Room"]] = relationship(lazy="joined")
     
-#    persons: Mapped[List["Person"]] = relationship(secondary="person_to_subject_in_class",  lazy="joined")
+    persons: Mapped[List["Person"]] = relationship(secondary="person_to_subject_in_class",  lazy="joined")
     #room: Mapped["Room"] = relationship()
-    
+
     def __repr__(self) -> str:
         return f"{self.subject.identifier} in {self.class_.year.identifier} {self.class_.section.identifier}"
     
@@ -160,12 +160,10 @@ class PersonToSubjectInClassAssociation(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     
     subject_in_class_id: Mapped[int] = mapped_column(ForeignKey("subject_in_class.id"))
-    subject_in_class: Mapped["SubjectInClass"] = relationship(lazy="joined")  
     person_id: Mapped[int] = mapped_column(ForeignKey("person.id"))
-    person: Mapped["Person"] = relationship(lazy="joined")
     
     def __repr__(self) -> str:
-        return f"{self.person.fullname} as {self.subject_in_class.subject.identifier} in {self.class_.year.identifier} {self.class_.section.identifier}"
+        return f"M-N relationship"
     
 class Hour(Base):
     __tablename__ = "hour"

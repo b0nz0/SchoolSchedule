@@ -7,136 +7,222 @@ import pickle
 def populate_DB():
     s = School()
     s.name="Morgagni"
-    db.query.save(s, "Fede")
+    db.query.save(s)
     print("school:" + s.name)
     print(s)
 
     y = SchoolYear()
     y.identifier = "2023/24"
     y.school = s
-    db.query.save(y, "Fede")
+    db.query.save(y)
 
     r1 = Year()
     r1.identifier = "I"
     r1.school = s
-    db.query.save(r1, "Fede")
+    db.query.save(r1)
 
     r2 = Year()
     r2.identifier = "II"
     r2.school = s
-    db.query.save(r2, "Fede")
+    db.query.save(r2)
 
     r3 = Year()
     r3.identifier = "III"
     r3.school = s
-    db.query.save(r3, "Fede")
+    db.query.save(r3)
 
     r4 = Year()
     r4.identifier = "IV"
     r4.school = s
-    db.query.save(r4, "Fede")
+    db.query.save(r4)
 
     r5 = Year()
     r5.identifier = "V"
     r5.school = s
-    db.query.save(r5, "Fede")
+    db.query.save(r5)
 
 
     ca = Section()
     ca.identifier = "A"
     ca.school = s
-    db.query.save(ca, "Fede")
+    db.query.save(ca)
 
     cb = Section()
     cb.identifier = "B"
     cb.school = s
-    db.query.save(cb, "Fede")
+    db.query.save(cb)
 
     cc = Section()
     cc.identifier = "C"
     cc.school = s
-    db.query.save(cc, "Fede")
+    db.query.save(cc)
 
     l = Class()
     l.school_year = y
     l.section = ca
     l.year = r1
-    db.query.save(l, "Fede")
+    db.query.save(l)
     print(l)
     l2 = Class()
     l2.school_year = y
     l2.section = cb
     l2.year = r1
-    db.query.save(l2, "Fede")
+    db.query.save(l2)
     print(l2)
     l3 = Class()
     l3.school_year = y
     l3.section = ca
     l3.year = r2
-    db.query.save(l3, "Fede")
+    db.query.save(l3)
     print(l3)
     
     room1 = Room()
     room1.identifier = "101"
     room1.room_type = RoomEnum.AULA
     room1.school = s
-    db.query.save(room1, "Fede")
+    db.query.save(room1)
     
     room2 = Room()
     room2.identifier = "102"
     room2.room_type = RoomEnum.AULA
     room2.school = s
-    db.query.save(room2, "Fede")
+    db.query.save(room2)
     
     room3 = Room()
     room3.identifier = "Palestra Grande"
     room3.room_type = RoomEnum.PALESTRA
     room3.school = s
-    db.query.save(room3, "Fede")
+    db.query.save(room3)
     
     room4 = Room()
     room4.identifier = "Laboratorio di Informatica"
     room4.room_type = RoomEnum.LABORATORIO
     room4.school = s
-    db.query.save(room4, "Fede")
+    db.query.save(room4)
+
+    profs = {}
     
-    pers1 = Person()
-    pers1.fullname = "Federico"
-    pers1.person_type = PersonEnum.DOCENTE
-    pers1.is_impersonal = False
-    pers1.school = s
-    db.query.save(pers1)
+    for i in range(1, 15):
+        pers = Person()
+        pers.fullname = "Prof. " + str(i)
+        pers.person_type = PersonEnum.DOCENTE
+        pers.is_impersonal = False
+        pers.school = s
+        db.query.save(pers)
+        profs[i] = pers
     
-    pers2 = Person()
-    pers2.fullname = "Eleonora"
-    pers2.person_type = PersonEnum.DOCENTE
-    pers2.is_impersonal = False
-    pers2.school = s
-    db.query.save(pers2)
+    lettore = Person()
+    lettore.fullname = "Lettore Inglese"
+    lettore.person_type = PersonEnum.LETTORE
+    lettore.is_impersonal = False
+    lettore.school = s
+    db.query.save(lettore)
     
-    subj1 = Subject()
-    subj1.identifier = "Italiano"
-    subj1.school = s
-    db.query.save(subj1)
-    subj2 = Subject()
-    subj2.identifier = "Matematica"
-    subj2.school = s
-    db.query.save(subj2)
+    subj_italiano = Subject()
+    subj_italiano.identifier = "Italiano"
+    subj_italiano.school = s
+    db.query.save(subj_italiano)
+    subj_matematica = Subject()
+    subj_matematica.identifier = "Matematica"
+    subj_matematica.school = s
+    db.query.save(subj_matematica)
+    subj_inglese = Subject()
+    subj_inglese.identifier = "Inglese"
+    subj_inglese.school = s
+    db.query.save(subj_inglese)
+    subj_fisica = Subject()
+    subj_fisica.identifier = "Fisica"
+    subj_fisica.school = s
+    db.query.save(subj_fisica)
+    subj_latino = Subject()
+    subj_latino.identifier = "Latino"
+    subj_latino.school = s
+    db.query.save(subj_latino)
+    subj_edfisica = Subject()
+    subj_edfisica.identifier = "Ed. Fisica"
+    subj_edfisica.school = s
+    db.query.save(subj_edfisica)
+    subj_religione = Subject()
+    subj_religione.identifier = "Religione"
+    subj_religione.school = s
+    db.query.save(subj_religione)
+    subj_storia = Subject()
+    subj_storia.identifier = "Storia"
+    subj_storia.school = s
+    db.query.save(subj_storia)
+    subj_filosofia = Subject()
+    subj_filosofia.identifier = "Filosofia"
+    subj_filosofia.school = s
+    db.query.save(subj_filosofia)
+    subj_arte = Subject()
+    subj_arte.identifier = "St. dell'Arte"
+    subj_arte.school = s
+    db.query.save(subj_arte)
     
-    sic1 = SubjectInClass()
-    sic1.class_ = l
-    sic1.subject = subj1
-    sic1.hours_total = 6
-    sic1.max_hours_per_day = 2
-    sic1.persons = [pers1, pers2]
-    sic1.room = room1
-    db.query.save(sic1)
-    sic2 = SubjectInClass()
-    sic2.class_ = l
-    sic2.subject = subj2
-    sic2.hours_total = 4
-    sic2.max_hours_per_day = 2
-    sic2 = db.query.save(sic2)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_matematica
+    sic.hours_total = 5
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[1]]
+    sic.room = room1
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_italiano
+    sic.hours_total = 5
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[2]]
+    sic.room = room1
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_inglese
+    sic.hours_total = 4
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[3], lettore]
+    sic.room = room1
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_arte
+    sic.hours_total = 2
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[4]]
+    sic.room = room1
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_edfisica
+    sic.hours_total = 2
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[5]]
+    sic.room = room3
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_fisica
+    sic.hours_total = 3
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[1]]
+    sic.room = room1
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_latino
+    sic.hours_total = 3
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[6]]
+    sic.room = room1
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l
+    sic.subject = subj_religione
+    sic.hours_total = 1
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[7]]
+    sic.room = room1
+    db.query.save(sic)
 
     h1 = Hour()
     h1.start = time(8, 0)
