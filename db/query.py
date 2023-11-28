@@ -3,6 +3,7 @@ from typing import List
 import psycopg
 import db.connection
 from sqlalchemy import select
+import db.model
 
 def get_schools() -> List[db.model.School]:
     try:
@@ -58,6 +59,16 @@ def get_rooms(school_id) -> List[db.model.Room]:
             stmt = select(db.model.Room).\
                 where(db.model.Room.school_id == school_id).\
                     order_by(db.model.Room.id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def get_plans(school_id) -> List[db.model.Plan]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.Plan).\
+                where(db.model.Plan.school_id == school_id).\
+                    order_by(db.model.Plan.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -173,3 +184,39 @@ def save(entity, log_user="-"):
     except (Exception) as error:
         traceback.print_exc()
 
+def get_plan(id = 0, name = None):
+    try:
+        with db.connection.active_session() as session:
+            if name:
+                stmt = select(db.model.Plan).\
+                    where(db.model.Plan.identifier == name)
+                plan = session.execute(stmt).scalar()
+            else:
+                plan = get(db.model.Plan, id=id)
+            if not plan:
+                    return None
+            id = plan.id
+            
+            stmt = select(db.model.DailyHour).\
+                    where(db.model.DailyHour.plan_id == id)
+            daily_hours = session.execute(stmt).scalars().all()    
+            
+            days = {}
+            days[db.model.WeekDayEnum.MONDAY] = []
+            days[db.model.WeekDayEnum.TUESDAY] = []
+            days[db.model.WeekDayEnum.WEDNESDAY] = []
+            days[db.model.WeekDayEnum.THURSDAY] = []
+            days[db.model.WeekDayEnum.FRIDAY] = []
+            days[db.model.WeekDayEnum.SATURDAY] = []
+            days[db.model.WeekDayEnum.SUNDAY] = []
+            for daily_hour in daily_hours:
+                newday = list([h for h in days[daily_hour.week_day] if h.start < daily_hour.hour.start])
+                newday.append(daily_hour.hour)
+                rest = [h for h in days[daily_hour.week_day] if h.start > daily_hour.hour.start]
+                if len(rest) > 0:
+                    newday.append(rest)
+                days[daily_hour.week_day] = newday
+            return days
+
+    except (Exception) as error:
+        traceback.print_exc()

@@ -11,6 +11,7 @@ years_dict = {}
 sections_dict = {}
 classes_dict = {}
 rooms_dict = {}
+timetable_dict = {}
 
 def populate_school_combo():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -95,6 +96,13 @@ def populate_room_configuration():
         elif room_type == db.model.RoomEnum.ALTRO:
             ui.widgets['rooms_listbox'].insert(parent=4, index="end", text=identifier, iid=id)
 
+def populate_timetable_combo():
+    ui = gui.setup.SchoolSchedulerGUI()
+    for plan in db.query.get_plans(school_id=school_selected_dict['id']):
+        timetable_dict[plan.identifier] = plan.id
+    ui.widgets['timetables_combo']['values'] = list(timetable_dict.keys()) 
+
+
 def school_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     choice = ui.widgets['schools_combo'].get()
@@ -141,6 +149,7 @@ def schoolyear_selected(event):
     ui.widgets['schoolyear_reset_button'].state(['!disabled'])
     ui.widgets['classes_mgmt_button'].state(['!disabled'])
     ui.widgets['rooms_mgmt_button'].state(['!disabled'])
+    ui.widgets['time_mgmt_button'].state(['!disabled'])
     
 def schoolyear_delete():
     pass
@@ -257,6 +266,12 @@ def room_delete():
 def room_create():
     pass
 
+def timetable_selected(event):
+    ui = gui.setup.SchoolSchedulerGUI()
+    choice = ui.widgets['timetables_combo'].get()
+    plan = db.query.get_plan(timetable_dict[choice])
+    
+
 def return_home():
     switch_frame(None, 'school_select_frame')
 
@@ -275,6 +290,8 @@ def switch_frame(from_name, to_name):
             gui.screen.configure_schoolyear_screen()
         elif to_name == "room_configure_frame":
             gui.screen.configure_room_screen()
+        elif to_name == "timetable_configure_frame":
+            gui.screen.configure_timetable_screen()
     ui.root.geometry(gui.screen.geometries[to_name])
 
     

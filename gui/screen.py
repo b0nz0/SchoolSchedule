@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import gui.setup, gui.event
-import db.query
+import db.query, db.model
 
 NEW_COMBO_LABEL = "<Nuovo>"
 RETURN_HOME = "Ritorna alla home"
@@ -24,7 +24,7 @@ MANAGE_CLASSES_LABEL = "Gestisci classi"
 MANAGE_LOGISTIC_LABEL = "Gestisci spazi"
 MANAGE_SUBJECTS_LABEL = "Gestisci materie"
 MANAGE_PERSONS_LABEL = "Gestisci docenti"
-MANAGE_TIMETABLE_LABEL = "Gestisci date/ore"
+MANAGE_TIMETABLE_LABEL = "Gestisci piani orari"
 MANAGE_RESTRICTIONS_LABEL = "Gestisci vincoli"
 PROCESS_LABEL = "Elabora calendari"
 
@@ -37,6 +37,8 @@ CLASS_SELECT_LABEL = "Classi"
 ROOM_SELECT_LABEL = "Spazi"
 ADD_ROOM_LABEL = "Aggiungi spazio"
 DELETE_ROOM_LABEL = "Elimina spazio"
+
+TIMETABLE_SELECT_LABEL = "Piani orari"
 
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -115,7 +117,8 @@ def school_select_screen():
     pers_mgmt_button.grid(column=0, row=11, columnspan=2, sticky=(N, E, W, S))
     pers_mgmt_button.state(['disabled'])
     
-    time_mgmt_button = ttk.Button(frame, text=MANAGE_TIMETABLE_LABEL)
+    time_mgmt_button = ttk.Button(frame, text=MANAGE_TIMETABLE_LABEL, command=lambda: gui.event.switch_frame(\
+        "school_select_frame", "timetable_configure_frame"))
     time_mgmt_button.grid(column=11, row=11, columnspan=2, sticky=(N, E, W, S))
     time_mgmt_button.state(['disabled'])
     
@@ -167,6 +170,7 @@ def school_select_screen():
     ui.widgets['schoolyear_reset_button'] = schoolyear_reset_button
     ui.widgets['classes_mgmt_button'] = classes_mgmt_button
     ui.widgets['rooms_mgmt_button'] = lgst_mgmt_button
+    ui.widgets['time_mgmt_button'] = time_mgmt_button
 
     gui.event.populate_school_combo()
 
@@ -334,3 +338,46 @@ def configure_room_screen():
 
     gui.event.populate_room_configuration()
 
+def configure_timetable_screen():
+    ui = gui.setup.SchoolSchedulerGUI()
+    root = ui.root
+    global geometries
+    geometries['timetable_configure_frame'] = '800x400'
+    root.geometry('800x400')
+
+    frame = ttk.Frame(root, padding="3 3 12 12")
+    frame.grid(column=0, row=0, sticky=(N, W, E, S))
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+    
+    #plan selection
+    time_label = ttk.Label(frame, text=TIMETABLE_SELECT_LABEL)
+    time_label.grid(column=0, row=0, sticky=(E, W))
+
+    timetables_var = StringVar()
+    timetables_combo = ttk.Combobox(frame, textvariable=timetables_var)
+    timetables_combo.grid(column=1, row=0, sticky=(N, W, E, S))
+    timetables_combo.bind('<<ComboboxSelected>>', gui.event.timetable_selected)
+    timetables_combo['values'] = ['']
+    
+    s = ttk.Style()
+    # Create style for the first frame
+    s.configure('TTFrame.TFrame', background='white', bordercolor='black', border=1, borderwidth=1)
+    s.configure('TTFrame.TLabel', background='white')
+    
+    timetable_grid_frame = ttk.Frame(frame, padding="12 12 12 12", style='TTFrame.TFrame')
+    timetable_grid_frame.grid(column=0, row=1, columnspan=2, sticky=(N, W, E, S))
+
+    curr_row = 0
+    for day in db.model.WeekDayEnum:
+        l = ttk.Label(timetable_grid_frame, text=day.value, style='TTFrame.TLabel')
+        l.grid(column=0, row=curr_row, sticky=(N, W, E, S))
+        curr_row = curr_row + 1
+    
+# ADD GRID
+
+    ui.frames['timetable_configure_frame'] = frame
+    ui.frames['timetable_grid_frame'] = timetable_grid_frame
+    ui.widgets['timetables_combo'] = timetables_combo
+    
+    gui.event.populate_timetable_combo()
