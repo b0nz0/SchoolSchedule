@@ -2,6 +2,7 @@ import gui.setup, gui.screen
 import db.query, db.model
 from operator import itemgetter
 import tkinter.simpledialog, tkinter.messagebox
+import datetime
 
 school_dict = {}
 schoolyears_dict = {}
@@ -270,6 +271,27 @@ def timetable_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     choice = ui.widgets['timetables_combo'].get()
     plan = db.query.get_plan(timetable_dict[choice])
+
+    d = 1
+    for day in [db.model.WeekDayEnum.MONDAY,
+                db.model.WeekDayEnum.TUESDAY,
+                db.model.WeekDayEnum.WEDNESDAY,
+                db.model.WeekDayEnum.THURSDAY,
+                db.model.WeekDayEnum.FRIDAY,
+                db.model.WeekDayEnum.SATURDAY,
+                db.model.WeekDayEnum.SUNDAY,
+                ]:
+        i = 1
+        for hour in plan[day]:
+            var_start = ui.variables[f'timetable_hour_{d}_{i}_start']
+            var_start.set(hour.start.strftime('%H:%M'))
+            var_end = ui.variables[f'timetable_hour_{d}_{i}_end']
+            dt = datetime.datetime(1970, 1, 1, hour=hour.start.hour, minute=hour.start.minute)
+            tt = dt + datetime.timedelta(minutes=hour.minutes)
+            var_end.set(tt.strftime('%H:%M'))
+            i = i + 1
+        d = d + 1
+        
     
 
 def return_home():

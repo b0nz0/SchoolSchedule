@@ -39,6 +39,7 @@ ADD_ROOM_LABEL = "Aggiungi spazio"
 DELETE_ROOM_LABEL = "Elimina spazio"
 
 TIMETABLE_SELECT_LABEL = "Piani orari"
+START_END = "IN/FI"
 
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -366,14 +367,34 @@ def configure_timetable_screen():
     s.configure('TTFrame.TLabel', background='white')
     
     timetable_grid_frame = ttk.Frame(frame, padding="12 12 12 12", style='TTFrame.TFrame')
-    timetable_grid_frame.grid(column=0, row=1, columnspan=2, sticky=(N, W, E, S))
+    timetable_grid_frame.grid(column=0, row=1, columnspan=3, sticky=(N, W, E, S))
 
-    curr_row = 0
+    for i in range(1, 11):
+        l = ttk.Label(timetable_grid_frame, text=str(i), style='TTFrame.TLabel', padding="5 5 5 5")
+        l.grid(column=i, row=0, sticky=(N, W, E, S))
+
+    d = 1
+    curr_row = 1
     for day in db.model.WeekDayEnum:
-        l = ttk.Label(timetable_grid_frame, text=day.value, style='TTFrame.TLabel')
-        l.grid(column=0, row=curr_row, sticky=(N, W, E, S))
-        curr_row = curr_row + 1
-    
+        l = ttk.Label(timetable_grid_frame, text=day.value, style='TTFrame.TLabel', padding="5 5 5 5")
+        l.grid(column=0, row=curr_row, rowspan=2, sticky=(N, W, E, S))
+        for i in range(1, 11):
+            var = StringVar(timetable_grid_frame, value="00:00")
+            l = ttk.Entry(timetable_grid_frame, textvariable=var, state=DISABLED, width=5)
+            l.grid(column=i, row=curr_row, rowspan=1, sticky=(N, W, E, S))
+            ui.variables[f'timetable_hour_{d}_{i}_start'] = var
+            var = StringVar(timetable_grid_frame, value="00:00")
+            l = ttk.Entry(timetable_grid_frame, textvariable=var, state=DISABLED, width=5)
+            l.grid(column=i, row=curr_row+1, rowspan=1, sticky=(N, W, E, S))
+            ui.variables[f'timetable_hour_{d}_{i}_end'] = var
+        curr_row = curr_row + 3
+        d = d + 1
+    timetable_grid_frame.rowconfigure(3, minsize=5)
+    timetable_grid_frame.rowconfigure(6, minsize=5)
+    timetable_grid_frame.rowconfigure(9, minsize=5)
+    timetable_grid_frame.rowconfigure(12, minsize=5)
+    timetable_grid_frame.rowconfigure(15, minsize=5)
+    timetable_grid_frame.rowconfigure(18, minsize=5)
 # ADD GRID
 
     ui.frames['timetable_configure_frame'] = frame

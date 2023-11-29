@@ -40,7 +40,7 @@ class School(Base):
 
 class SchoolYear(Base):
     __tablename__ = "school_year"
-    id: Mapped[int] = mapped_column(primary_key=True)
+
     identifier: Mapped[str]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="schoolyears")
@@ -52,7 +52,7 @@ class SchoolYear(Base):
     
 class Year(Base):
     __tablename__ = "year"
-    id: Mapped[int] = mapped_column(primary_key=True)
+
     identifier: Mapped[str]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="years")
@@ -64,7 +64,7 @@ class Year(Base):
     
 class Section(Base):
     __tablename__ = "section"
-    id: Mapped[int] = mapped_column(primary_key=True)
+
     identifier: Mapped[str]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="sections")
@@ -76,7 +76,7 @@ class Section(Base):
     
 class Class(Base):
     __tablename__ = "class_"
-    id: Mapped[int] = mapped_column(primary_key=True)
+
     school_year_id: Mapped[int] = mapped_column(ForeignKey("school_year.id"))
     school_year: Mapped["SchoolYear"] = relationship(back_populates="classes")
     year_id: Mapped[int] = mapped_column(ForeignKey("year.id"))
@@ -95,7 +95,7 @@ class RoomEnum(enum.Enum):
     
 class Room(Base):
     __tablename__ = "room"
-    id: Mapped[int] = mapped_column(primary_key=True)
+
     identifier: Mapped[str]
     room_type: Mapped[RoomEnum]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
@@ -112,7 +112,6 @@ class PersonEnum(enum.Enum):
     
 class Person(Base):
     __tablename__ = "person"
-    id: Mapped[int] = mapped_column(primary_key=True)
 
     fullname: Mapped[str]
     title: Mapped[str]
@@ -128,7 +127,7 @@ class Person(Base):
     
 class Subject(Base):
     __tablename__ = "subject"
-    id: Mapped[int] = mapped_column(primary_key=True)
+
     identifier: Mapped[str]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="subjects")
@@ -138,7 +137,7 @@ class Subject(Base):
 
 class SubjectInClass(Base):
     __tablename__ = "subject_in_class"
-    id: Mapped[int] = mapped_column(primary_key=True)
+
     hours_total: Mapped[int]
     max_hours_per_day: Mapped[int]
     
@@ -157,7 +156,6 @@ class SubjectInClass(Base):
     
 class PersonToSubjectInClassAssociation(Base):
     __tablename__ = "person_to_subject_in_class"
-    id: Mapped[int] = mapped_column(primary_key=True)
     
     subject_in_class_id: Mapped[int] = mapped_column(ForeignKey("subject_in_class.id"))
     person_id: Mapped[int] = mapped_column(ForeignKey("person.id"))
@@ -167,7 +165,6 @@ class PersonToSubjectInClassAssociation(Base):
     
 class Hour(Base):
     __tablename__ = "hour"
-    id: Mapped[int] = mapped_column(primary_key=True)
     
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="hours")
@@ -180,7 +177,6 @@ class Hour(Base):
     
 class Plan(Base):
     __tablename__ = "plan"    
-    id: Mapped[int] = mapped_column(primary_key=True)
     
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="plans")
@@ -203,7 +199,6 @@ class WeekDayEnum(enum.Enum):
     
 class DailyHour(Base):
     __tablename__ = "daily_hour"    
-    id: Mapped[int] = mapped_column(primary_key=True)
     
     plan_id: Mapped[int] = mapped_column(ForeignKey("plan.id"))
     plan: Mapped["Plan"] = relationship(back_populates="daily_hours")
@@ -217,7 +212,6 @@ class DailyHour(Base):
     
 class ClassPlan(Base):
     __tablename__ = "class_plan"    
-    id: Mapped[int] = mapped_column(primary_key=True)
     
     plan_id: Mapped[int] = mapped_column(ForeignKey("plan.id"))
     plan: Mapped["Plan"] = relationship(lazy="joined")
