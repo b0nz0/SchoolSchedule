@@ -406,6 +406,7 @@ if __name__ == '__main__':
 #    populate_DB()
     s = db.query.get(School, 1)
     print(s)
+    print(db.query.dump_school_year(id=1))
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
     ui = gui.setup.SchoolSchedulerGUI()

@@ -8,7 +8,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -78,14 +78,14 @@ class Class(Base):
     __tablename__ = "class_"
 
     school_year_id: Mapped[int] = mapped_column(ForeignKey("school_year.id"))
-    school_year: Mapped["SchoolYear"] = relationship(back_populates="classes")
+    school_year: Mapped["SchoolYear"] = relationship(back_populates="classes", lazy="joined")
     year_id: Mapped[int] = mapped_column(ForeignKey("year.id"))
     year: Mapped["Year"] = relationship(back_populates="classes", lazy="joined")
     section_id: Mapped[int] = mapped_column(ForeignKey("section.id"))
     section: Mapped["Section"] = relationship(back_populates="classes", lazy="joined")
 
     def __repr__(self) -> str:
-        return f"class {self.year.identifier} {self.section.identifier} {self.school_year.identifier}"
+        return f"{self.year.identifier} {self.section.identifier} {self.school_year.identifier}"
     
 class RoomEnum(enum.Enum):
     AULA = "aula"
@@ -172,8 +172,13 @@ class Hour(Base):
     start: Mapped[time] 
     minutes: Mapped[int]
 
+    def get_end(self) -> time:    
+        dt = datetime(1970, 1, 1, hour=self.start.hour, minute=self.start.minute)
+        tt = dt + timedelta(minutes=self.minutes)
+        return time(hour=tt.hour, minute=tt.minute)
+
     def __repr__(self) -> str:
-        return f"{self.start}: {self.minutes}m"
+        return f"{self.start} ({self.minutes}m)"
     
 class Plan(Base):
     __tablename__ = "plan"    

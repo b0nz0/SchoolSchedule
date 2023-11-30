@@ -220,3 +220,64 @@ def get_plan(id = 0, name = None):
 
     except (Exception) as error:
         traceback.print_exc()
+
+def get_classes_in_plan(id: int):
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.ClassPlan).\
+                    where(db.model.ClassPlan.plan_id == id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def get_subjects_in_class(id: int):
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.SubjectInClass).\
+                    where(db.model.SubjectInClass.class_id == id)
+            return session.execute(stmt).unique().scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def dump_school_year(id: int) -> str:
+    try:
+        out = str()
+        with db.connection.active_session() as session:
+            schoolyear = get(db.model.SchoolYear, id=id)
+            out = out + f'Anno scolastico {schoolyear.identifier}\nClassi:'
+            session.add(schoolyear)
+            classes = get_classes(id)
+            for classe in classes:
+                out = out + dump_class(classe.id)
+                for subject_in_class in get_subjects_in_class(classe.id):
+                    out = out + dump_subject_in_class(subject_in_class.id)
+        return out    
+    except (Exception) as error:
+        traceback.print_exc()
+    
+def dump_class(id: int) -> str:
+    try:
+        out = str()
+        with db.connection.active_session() as session:
+            class_ = get(db.model.Class, id=id)
+            session.add(class_)
+            out = out + f'Classe {class_.year.identifier} {class_.section.identifier}\n'
+            return out
+            
+    except (Exception) as error:
+        traceback.print_exc()
+
+def dump_subject_in_class(id: int) -> str:
+    try:
+        out = str()
+        with db.connection.active_session() as session:
+            sic = get(db.model.SubjectInClass, id=id)
+            session.add(sic)
+            out = out + f'{sic.subject.identifier} ('
+            out = out + ','.join([person.fullname for person in sic.persons])
+            out = out + ')\n'
+            return out
+            
+    except (Exception) as error:
+        traceback.print_exc()
+        
