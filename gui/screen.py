@@ -17,6 +17,7 @@ DELETE_SCHOOLYEAR_LABEL = "Elimina anno scolastico"
 DELETE_YEAR_LABEL = "Elimina anno"
 DELETE_SECTION_LABEL = "Elimina sezione"
 DELETE_CLASS_LABEL = "Elimina classe"
+MATCH_CLASS_TIMETABLE_LABEL = "Abbina classi al piano orario"
 DUPLICATE_SCHOOL_LABEL = "Duplica scuola"
 DUPLICATE_SCHOOLYEAR_LABEL = "Duplica anno scolastico"
 RESET_SCHOOLYEAR_LABEL = "Ripristina anno scolastico"
@@ -40,6 +41,7 @@ DELETE_ROOM_LABEL = "Elimina spazio"
 
 TIMETABLE_SELECT_LABEL = "Piani orari"
 START_END = "IN/FI"
+PLAN_USED_IN = "Piano usato in"
 
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -234,7 +236,7 @@ def configure_schoolyear_screen():
     classes_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=15)
     scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=sections_listbox.yview)
     classes_listbox.configure(yscroll=scrollbar.set)
-    classes_listbox.grid(column=1, row=4, rowspan=2, sticky=(N, W, E, S))
+    classes_listbox.grid(column=1, row=4, rowspan=3, sticky=(N, W, E, S))
     scrollbar.configure(command=classes_listbox.yview)
     scrollbar.grid(column=2, row=4, rowspan=4, sticky=(N, S))
     classes_listbox.bind('<<TreeviewSelect>>', gui.event.class_selected)
@@ -243,8 +245,12 @@ def configure_schoolyear_screen():
     class_create_button.grid(column=11, row=4, sticky=(E, W))
     class_create_button.state(['!disabled'])
 
+    class_create_button = ttk.Button(frame, text=MATCH_CLASS_TIMETABLE_LABEL, command=gui.event.add_class_in_plan)
+    class_create_button.grid(column=11, row=5, sticky=(E, W))
+    class_create_button.state(['!disabled'])
+
     class_delete_button = ttk.Button(frame, text=DELETE_CLASS_LABEL, command=gui.event.class_delete)
-    class_delete_button.grid(column=11, row=5, sticky=(E, W))
+    class_delete_button.grid(column=11, row=6, sticky=(E, W))
     class_delete_button.state(['disabled'])
 
     return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(\
@@ -343,8 +349,8 @@ def configure_timetable_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
     global geometries
-    geometries['timetable_configure_frame'] = '800x400'
-    root.geometry('800x400')
+    geometries['timetable_configure_frame'] = '800x700'
+    root.geometry('800x700')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
     frame.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -361,13 +367,15 @@ def configure_timetable_screen():
     timetables_combo.bind('<<ComboboxSelected>>', gui.event.timetable_selected)
     timetables_combo['values'] = ['']
     
+    frame.rowconfigure(1, minsize=10)
+        
     s = ttk.Style()
-    # Create style for the first frame
+    # Create style for the inner frame
     s.configure('TTFrame.TFrame', background='white', bordercolor='black', border=1, borderwidth=1)
     s.configure('TTFrame.TLabel', background='white')
-    
+
     timetable_grid_frame = ttk.Frame(frame, padding="12 12 12 12", style='TTFrame.TFrame')
-    timetable_grid_frame.grid(column=0, row=1, columnspan=3, sticky=(N, W, E, S))
+    timetable_grid_frame.grid(column=0, row=2, columnspan=2, sticky=(N, W, E, S))
 
     for i in range(1, 11):
         l = ttk.Label(timetable_grid_frame, text=str(i), style='TTFrame.TLabel', padding="5 5 5 5")
@@ -395,10 +403,28 @@ def configure_timetable_screen():
     timetable_grid_frame.rowconfigure(12, minsize=5)
     timetable_grid_frame.rowconfigure(15, minsize=5)
     timetable_grid_frame.rowconfigure(18, minsize=5)
-# ADD GRID
 
+    frame.rowconfigure(9, minsize=10)
+
+    l = ttk.Label(frame, text=PLAN_USED_IN, padding= "5 5 5 5")
+    l.grid(column=0, row=10, sticky=(N, W, E, S))
+    lwidth = l.winfo_reqwidth() * 2
+    text_plan_classes = Text(frame, height=8, width=10)
+    text_plan_classes.grid(column=1, row=10, columnspan=1, sticky=(W, E))
+    scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=text_plan_classes.yview)
+    text_plan_classes.configure(yscroll=scrollbar.set)
+    scrollbar.grid(column=1, row=10, sticky=(N, S, E))
+
+    frame.rowconfigure(20, minsize=10)
+
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(\
+        "timetable_configure_frame", "school_select_frame"))    
+    return_button.grid(column=0, row=100, columnspan=2, sticky=(N, S))
+    return_button.state(['!disabled'])
+        
     ui.frames['timetable_configure_frame'] = frame
     ui.frames['timetable_grid_frame'] = timetable_grid_frame
     ui.widgets['timetables_combo'] = timetables_combo
+    ui.widgets['text_plan_classes'] = text_plan_classes
     
     gui.event.populate_timetable_combo()

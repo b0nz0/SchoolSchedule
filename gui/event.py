@@ -218,6 +218,16 @@ def class_selected(event):
     for item in selected:
         pass
     
+def add_class_in_plan():
+    ui = gui.setup.SchoolSchedulerGUI()
+    schoolyear_id = schoolyear_selected_dict['id']
+
+    class_ids = ui.widgets['classes_listbox'].selection()
+    class_string = str()
+    for class_id in class_ids:
+        class_string = class_string + classes_dict[int(class_id)] +", "
+    class_string = class_string[:-2]
+
 def class_delete():
     pass
 
@@ -286,12 +296,16 @@ def timetable_selected(event):
             var_start = ui.variables[f'timetable_hour_{d}_{i}_start']
             var_start.set(hour.start.strftime('%H:%M'))
             var_end = ui.variables[f'timetable_hour_{d}_{i}_end']
-            dt = datetime.datetime(1970, 1, 1, hour=hour.start.hour, minute=hour.start.minute)
-            tt = dt + datetime.timedelta(minutes=hour.minutes)
-            var_end.set(tt.strftime('%H:%M'))
+            var_end.set(hour.get_end().strftime('%H:%M'))
             i = i + 1
         d = d + 1
-        
+    
+    l = ui.widgets['text_plan_classes']
+    classes_str = str()
+    for classe in db.query.get_classes_in_plan(timetable_dict[choice]):
+        classes_str = classes_str + str(classe.class_) + '\n'
+    l.insert("1.0", classes_str)
+
     
 
 def return_home():
