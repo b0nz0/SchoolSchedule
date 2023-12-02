@@ -259,126 +259,151 @@ def populate_DB():
     d.week_day = WeekDayEnum.MONDAY
     d.plan = plan
     d.hour = h1
+    d.ordinal = 1
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.MONDAY
     d.plan = plan
     d.hour = h2
+    d.ordinal = 2
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.MONDAY
     d.plan = plan
     d.hour = h3
+    d.ordinal = 3
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.MONDAY
     d.plan = plan
     d.hour = h4
+    d.ordinal = 4
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.MONDAY
     d.plan = plan
     d.hour = h5
+    d.ordinal = 5
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.TUESDAY
     d.plan = plan
     d.hour = h1
+    d.ordinal = 1
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.TUESDAY
     d.plan = plan
     d.hour = h2
+    d.ordinal = 2
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.TUESDAY
     d.plan = plan
     d.hour = h3
+    d.ordinal = 3
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.TUESDAY
     d.plan = plan
     d.hour = h4
+    d.ordinal = 4
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.TUESDAY
     d.plan = plan
     d.hour = h5
+    d.ordinal = 5
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.WEDNESDAY
     d.plan = plan
     d.hour = h1
+    d.ordinal = 1
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.WEDNESDAY
     d.plan = plan
     d.hour = h2
+    d.ordinal = 2
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.WEDNESDAY
     d.plan = plan
     d.hour = h3
+    d.ordinal = 3
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.WEDNESDAY
     d.plan = plan
     d.hour = h4
+    d.ordinal = 4
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.WEDNESDAY
     d.plan = plan
     d.hour = h5
+    d.ordinal = 5
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.THURSDAY
     d.plan = plan
     d.hour = h1
+    d.ordinal = 1
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.THURSDAY
     d.plan = plan
     d.hour = h2
+    d.ordinal = 2
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.THURSDAY
     d.plan = plan
     d.hour = h3
+    d.ordinal = 3
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.THURSDAY
     d.plan = plan
     d.hour = h4
+    d.ordinal = 4
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.THURSDAY
     d.plan = plan
     d.hour = h5
+    d.ordinal = 5
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.FRIDAY
     d.plan = plan
     d.hour = h1
+    d.ordinal = 1
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.FRIDAY
     d.plan = plan
     d.hour = h2
+    d.ordinal = 2
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.FRIDAY
     d.plan = plan
     d.hour = h3
+    d.ordinal = 3
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.FRIDAY
     d.plan = plan
     d.hour = h4
+    d.ordinal = 4
     db.query.save(d)    
     d = DailyHour()
     d.week_day = WeekDayEnum.FRIDAY
     d.plan = plan
     d.hour = h5
+    d.ordinal = 5
     db.query.save(d)    
 
     cp = ClassPlan()

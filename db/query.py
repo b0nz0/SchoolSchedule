@@ -198,7 +198,7 @@ def get_plan(id = 0, name = None):
             id = plan.id
             
             stmt = select(db.model.DailyHour).\
-                    where(db.model.DailyHour.plan_id == id)
+                    where(db.model.DailyHour.plan_id == id).order_by(db.model.DailyHour.ordinal)
             daily_hours = session.execute(stmt).scalars().all()    
             
             days = {}
@@ -210,12 +210,13 @@ def get_plan(id = 0, name = None):
             days[db.model.WeekDayEnum.SATURDAY] = []
             days[db.model.WeekDayEnum.SUNDAY] = []
             for daily_hour in daily_hours:
-                newday = list([h for h in days[daily_hour.week_day] if h.start < daily_hour.hour.start])
-                newday.append(daily_hour.hour)
-                rest = [h for h in days[daily_hour.week_day] if h.start > daily_hour.hour.start]
-                if len(rest) > 0:
-                    newday.append(rest)
-                days[daily_hour.week_day] = newday
+                # newday = list([h for h in days[daily_hour.week_day] if h.start < daily_hour.hour.start])
+                # newday.append(daily_hour.hour)
+                # rest = [h for h in days[daily_hour.week_day] if h.start > daily_hour.hour.start]
+                # if len(rest) > 0:
+                #     newday.append(rest)
+                # days[daily_hour.week_day] = newday
+                days[daily_hour.week_day].append(daily_hour.hour)
             return days
 
     except (Exception) as error:
