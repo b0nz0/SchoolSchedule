@@ -81,21 +81,21 @@ def populate_room_configuration():
     
     for identifier, room_type, id in [(r.identifier, r.room_type, r.id) for r in rooms]:
         rooms_list.append((identifier, room_type, id))
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.AULA.value, iid=1)
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.LABORATORIO.value, iid=2)
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.PALESTRA.value, iid=3)
-    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.ALTRO.value, iid=4)
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.AULA.value, iid="A")
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.LABORATORIO.value, iid="B")
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.PALESTRA.value, iid="C")
+    ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.ALTRO.value, iid="D")
 
     for (identifier, room_type, id) in sorted(rooms_list, key=itemgetter(0)):
         rooms_dict[identifier] = id
         if room_type == db.model.RoomEnum.AULA:
-            ui.widgets['rooms_listbox'].insert(parent=1, index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="A", index="end", text=identifier, iid=id)
         elif room_type == db.model.RoomEnum.LABORATORIO:
-            ui.widgets['rooms_listbox'].insert(parent=2, index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="B", index="end", text=identifier, iid=id)
         elif room_type == db.model.RoomEnum.PALESTRA:
-            ui.widgets['rooms_listbox'].insert(parent=3, index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="C", index="end", text=identifier, iid=id)
         elif room_type == db.model.RoomEnum.ALTRO:
-            ui.widgets['rooms_listbox'].insert(parent=4, index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="D", index="end", text=identifier, iid=id)
 
 def populate_timetable_combo():
     ui = gui.setup.SchoolSchedulerGUI()

@@ -5,17 +5,20 @@ from tkinter import *
 import pickle
 
 def populate_DB():
+    # one school
     s = School()
     s.name="Morgagni"
     db.query.save(s)
     print("school:" + s.name)
     print(s)
 
+    # a school year
     y = SchoolYear()
     y.identifier = "2023/24"
     y.school = s
     db.query.save(y)
 
+    # 5 years
     r1 = Year()
     r1.identifier = "I"
     r1.school = s
@@ -41,7 +44,7 @@ def populate_DB():
     r5.school = s
     db.query.save(r5)
 
-
+    # 3 sections
     ca = Section()
     ca.identifier = "A"
     ca.school = s
@@ -57,6 +60,7 @@ def populate_DB():
     cc.school = s
     db.query.save(cc)
 
+    # classes
     l = Class()
     l.school_year = y
     l.section = ca
@@ -76,6 +80,7 @@ def populate_DB():
     db.query.save(l3)
     print(l3)
     
+    # rooms
     room1 = Room()
     room1.identifier = "101"
     room1.room_type = RoomEnum.AULA
@@ -100,6 +105,7 @@ def populate_DB():
     room4.school = s
     db.query.save(room4)
 
+    # professors
     profs = {}
     
     for i in range(1, 15):
@@ -118,6 +124,7 @@ def populate_DB():
     lettore.school = s
     db.query.save(lettore)
     
+    # subjects
     subj_italiano = Subject()
     subj_italiano.identifier = "Italiano"
     subj_italiano.school = s
@@ -159,6 +166,7 @@ def populate_DB():
     subj_arte.school = s
     db.query.save(subj_arte)
     
+    # map subject in classes, hours, professors and rooms
     sic = SubjectInClass()
     sic.class_ = l
     sic.subject = subj_matematica
@@ -224,6 +232,7 @@ def populate_DB():
     sic.room = room1
     db.query.save(sic)
 
+    # 5 hours each day
     h1 = Hour()
     h1.start = time(8, 0)
     h1.minutes = 60
@@ -249,7 +258,8 @@ def populate_DB():
     h5.minutes = 60
     h5.school = s
     db.query.save(h5)
-    
+
+    # plan with 5 hours each day    
     plan = Plan()
     plan.identifier = "Calendario 1"
     plan.school = s
@@ -406,6 +416,7 @@ def populate_DB():
     d.ordinal = 5
     db.query.save(d)    
 
+    # assign plan to classes
     cp = ClassPlan()
     cp.plan = plan
     cp.class_ = l
