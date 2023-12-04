@@ -302,7 +302,7 @@ def configure_room_screen():
     room_label = ttk.Label(frame, text=ROOM_SELECT_LABEL)
     room_label.grid(column=0, row=0, sticky=(E, W))
 
-    rooms_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=5)
+    rooms_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=10)
     scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=rooms_listbox.yview)
     rooms_listbox.configure(yscroll=scrollbar.set)
     rooms_listbox.grid(column=1, row=0, rowspan=2, sticky=(N, W, E, S))

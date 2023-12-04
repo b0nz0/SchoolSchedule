@@ -9,6 +9,9 @@ class Assignment:
     
     def __init__(self, id) -> None:
         self._id = id
+        self._subject_in_class_id = 0
+        self._data = dict()
+        self._score = 0
     
     
     def as_copy(self, from_assignment):

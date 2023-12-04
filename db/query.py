@@ -198,7 +198,7 @@ def get_plan(plan_id = 0, name = None):
             plan_id = plan.id
             
             stmt = select(db.model.DailyHour).\
-                    where(db.model.DailyHour.plan_id == plan_id)
+                    where(db.model.DailyHour.plan_id == id).order_by(db.model.DailyHour.ordinal)
             daily_hours = session.execute(stmt).scalars().all()    
             
             days = {}
@@ -210,12 +210,13 @@ def get_plan(plan_id = 0, name = None):
             days[db.model.WeekDayEnum.SATURDAY] = []
             days[db.model.WeekDayEnum.SUNDAY] = []
             for daily_hour in daily_hours:
-                newday = list([h for h in days[daily_hour.week_day] if h.start < daily_hour.hour.start])
-                newday.append(daily_hour.hour)
-                rest = [h for h in days[daily_hour.week_day] if h.start > daily_hour.hour.start]
-                if len(rest) > 0:
-                    newday.append(rest)
-                days[daily_hour.week_day] = newday
+                # newday = list([h for h in days[daily_hour.week_day] if h.start < daily_hour.hour.start])
+                # newday.append(daily_hour.hour)
+                # rest = [h for h in days[daily_hour.week_day] if h.start > daily_hour.hour.start]
+                # if len(rest) > 0:
+                #     newday.append(rest)
+                # days[daily_hour.week_day] = newday
+                days[daily_hour.week_day].append(daily_hour.hour)
             return days
 
     except (Exception) as error:
@@ -260,6 +261,23 @@ def dump_school_year(id: int) -> str:
                 out = out + dump_class(classe.id)
                 for subject_in_class in get_subjects_in_class(classe.id):
                     out = out + dump_subject_in_class(subject_in_class.id)
+                out = out + '\nTimetable:\n'
+                stmt = select(db.model.ClassPlan).\
+                        where(db.model.ClassPlan.class_id == classe.id)
+                classplan = session.execute(stmt).scalar()
+                plan = get_plan(classplan.plan_id)
+                for day in [db.model.WeekDayEnum.MONDAY,
+                    db.model.WeekDayEnum.TUESDAY,
+                    db.model.WeekDayEnum.WEDNESDAY,
+                    db.model.WeekDayEnum.THURSDAY,
+                    db.model.WeekDayEnum.FRIDAY,
+                    db.model.WeekDayEnum.SATURDAY,
+                    db.model.WeekDayEnum.SUNDAY,
+                    ]:
+                    out = out + str(day.value) + ": \t"
+                    for hour in plan[day]:
+                        out = out + hour.start.strftime('%H:%M') + "-" + hour.get_end().strftime('%H:%M') + " ; "
+                    out = out + "\n"
         return out    
     except (Exception) as error:
         traceback.print_exc()
@@ -270,7 +288,7 @@ def dump_class(id: int) -> str:
         with db.connection.active_session() as session:
             class_ = get(db.model.Class, id=id)
             session.add(class_)
-            out = out + f'Classe {class_.year.identifier} {class_.section.identifier}\n'
+            out = out + f'\nClasse {class_.year.identifier} {class_.section.identifier}\n'
             return out
             
     except (Exception) as error:
@@ -284,7 +302,7 @@ def dump_subject_in_class(id: int) -> str:
             session.add(sic)
             out = out + f'{sic.subject.identifier} ('
             out = out + ','.join([person.fullname for person in sic.persons])
-            out = out + ')\n'
+            out = out + f') {sic.hours_total} ore\n'
             return out
             
     except (Exception) as error:

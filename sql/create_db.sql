@@ -5,7 +5,7 @@
 -- Dumped from database version 14.9 (Ubuntu 14.9-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.9 (Ubuntu 14.9-0ubuntu0.22.04.1)
 
--- Started on 2023-11-27 13:11:52 CET
+-- Started on 2023-12-02 19:25:33 CET
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -188,7 +188,7 @@ ALTER TABLE public.class_ ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 243 (class 1259 OID 17634)
+-- TOC entry 241 (class 1259 OID 17634)
 -- Name: class_plan; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -204,7 +204,7 @@ CREATE TABLE public.class_plan (
 ALTER TABLE public.class_plan OWNER TO postgres;
 
 --
--- TOC entry 242 (class 1259 OID 17633)
+-- TOC entry 240 (class 1259 OID 17633)
 -- Name: class_plan_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -219,7 +219,7 @@ ALTER TABLE public.class_plan ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 215 (class 1259 OID 17400)
+-- TOC entry 243 (class 1259 OID 17655)
 -- Name: daily_hour; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -228,6 +228,7 @@ CREATE TABLE public.daily_hour (
     start_datetime timestamp with time zone,
     log_user character varying,
     week_day character varying(24),
+    ordinal smallint,
     plan_id integer NOT NULL,
     hour_id integer NOT NULL
 );
@@ -236,7 +237,7 @@ CREATE TABLE public.daily_hour (
 ALTER TABLE public.daily_hour OWNER TO postgres;
 
 --
--- TOC entry 216 (class 1259 OID 17405)
+-- TOC entry 242 (class 1259 OID 17654)
 -- Name: daily_hour_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -251,7 +252,7 @@ ALTER TABLE public.daily_hour ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 217 (class 1259 OID 17406)
+-- TOC entry 215 (class 1259 OID 17406)
 -- Name: hour; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -268,7 +269,7 @@ CREATE TABLE public.hour (
 ALTER TABLE public.hour OWNER TO postgres;
 
 --
--- TOC entry 218 (class 1259 OID 17411)
+-- TOC entry 216 (class 1259 OID 17411)
 -- Name: hour_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -283,7 +284,7 @@ ALTER TABLE public.hour ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 219 (class 1259 OID 17412)
+-- TOC entry 217 (class 1259 OID 17412)
 -- Name: person; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -302,7 +303,7 @@ CREATE TABLE public.person (
 ALTER TABLE public.person OWNER TO postgres;
 
 --
--- TOC entry 220 (class 1259 OID 17417)
+-- TOC entry 218 (class 1259 OID 17417)
 -- Name: person_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -317,7 +318,7 @@ ALTER TABLE public.person ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 221 (class 1259 OID 17418)
+-- TOC entry 219 (class 1259 OID 17418)
 -- Name: person_to_subject_in_class; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -333,7 +334,7 @@ CREATE TABLE public.person_to_subject_in_class (
 ALTER TABLE public.person_to_subject_in_class OWNER TO postgres;
 
 --
--- TOC entry 222 (class 1259 OID 17423)
+-- TOC entry 220 (class 1259 OID 17423)
 -- Name: person_to_subject_in_class_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -348,7 +349,7 @@ ALTER TABLE public.person_to_subject_in_class ALTER COLUMN id ADD GENERATED ALWA
 
 
 --
--- TOC entry 223 (class 1259 OID 17424)
+-- TOC entry 221 (class 1259 OID 17424)
 -- Name: plan; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -364,7 +365,7 @@ CREATE TABLE public.plan (
 ALTER TABLE public.plan OWNER TO postgres;
 
 --
--- TOC entry 224 (class 1259 OID 17429)
+-- TOC entry 222 (class 1259 OID 17429)
 -- Name: plan_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -379,7 +380,7 @@ ALTER TABLE public.plan ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 225 (class 1259 OID 17430)
+-- TOC entry 223 (class 1259 OID 17430)
 -- Name: room; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -396,7 +397,7 @@ CREATE TABLE public.room (
 ALTER TABLE public.room OWNER TO postgres;
 
 --
--- TOC entry 226 (class 1259 OID 17435)
+-- TOC entry 224 (class 1259 OID 17435)
 -- Name: room_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -411,7 +412,7 @@ ALTER TABLE public.room ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 227 (class 1259 OID 17436)
+-- TOC entry 225 (class 1259 OID 17436)
 -- Name: school_history; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -428,7 +429,7 @@ CREATE TABLE public.school_history (
 ALTER TABLE public.school_history OWNER TO postgres;
 
 --
--- TOC entry 228 (class 1259 OID 17441)
+-- TOC entry 226 (class 1259 OID 17441)
 -- Name: school_history_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -443,7 +444,7 @@ ALTER TABLE public.school_history ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTI
 
 
 --
--- TOC entry 229 (class 1259 OID 17442)
+-- TOC entry 227 (class 1259 OID 17442)
 -- Name: school_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -458,7 +459,7 @@ ALTER TABLE public.school ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 230 (class 1259 OID 17443)
+-- TOC entry 228 (class 1259 OID 17443)
 -- Name: school_year; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -474,7 +475,7 @@ CREATE TABLE public.school_year (
 ALTER TABLE public.school_year OWNER TO postgres;
 
 --
--- TOC entry 231 (class 1259 OID 17448)
+-- TOC entry 229 (class 1259 OID 17448)
 -- Name: school_year_history; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -492,7 +493,7 @@ CREATE TABLE public.school_year_history (
 ALTER TABLE public.school_year_history OWNER TO postgres;
 
 --
--- TOC entry 232 (class 1259 OID 17453)
+-- TOC entry 230 (class 1259 OID 17453)
 -- Name: school_year_history_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -507,7 +508,7 @@ ALTER TABLE public.school_year_history ALTER COLUMN id ADD GENERATED ALWAYS AS I
 
 
 --
--- TOC entry 233 (class 1259 OID 17454)
+-- TOC entry 231 (class 1259 OID 17454)
 -- Name: school_year_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -522,7 +523,7 @@ ALTER TABLE public.school_year ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY 
 
 
 --
--- TOC entry 234 (class 1259 OID 17455)
+-- TOC entry 232 (class 1259 OID 17455)
 -- Name: section; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -538,7 +539,7 @@ CREATE TABLE public.section (
 ALTER TABLE public.section OWNER TO postgres;
 
 --
--- TOC entry 235 (class 1259 OID 17460)
+-- TOC entry 233 (class 1259 OID 17460)
 -- Name: section_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -553,7 +554,7 @@ ALTER TABLE public.section ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 236 (class 1259 OID 17461)
+-- TOC entry 234 (class 1259 OID 17461)
 -- Name: subject; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -569,7 +570,7 @@ CREATE TABLE public.subject (
 ALTER TABLE public.subject OWNER TO postgres;
 
 --
--- TOC entry 237 (class 1259 OID 17466)
+-- TOC entry 235 (class 1259 OID 17466)
 -- Name: subject_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -584,7 +585,7 @@ ALTER TABLE public.subject ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 238 (class 1259 OID 17467)
+-- TOC entry 236 (class 1259 OID 17467)
 -- Name: subject_in_class; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -603,7 +604,7 @@ CREATE TABLE public.subject_in_class (
 ALTER TABLE public.subject_in_class OWNER TO postgres;
 
 --
--- TOC entry 239 (class 1259 OID 17472)
+-- TOC entry 237 (class 1259 OID 17472)
 -- Name: subject_in_class_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -618,7 +619,7 @@ ALTER TABLE public.subject_in_class ALTER COLUMN id ADD GENERATED ALWAYS AS IDEN
 
 
 --
--- TOC entry 240 (class 1259 OID 17473)
+-- TOC entry 238 (class 1259 OID 17473)
 -- Name: year; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -634,7 +635,7 @@ CREATE TABLE public.year (
 ALTER TABLE public.year OWNER TO postgres;
 
 --
--- TOC entry 241 (class 1259 OID 17478)
+-- TOC entry 239 (class 1259 OID 17478)
 -- Name: year_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -658,7 +659,7 @@ ALTER TABLE ONLY public.class_
 
 
 --
--- TOC entry 3349 (class 2606 OID 17640)
+-- TOC entry 3345 (class 2606 OID 17640)
 -- Name: class_plan class_plan_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -667,7 +668,7 @@ ALTER TABLE ONLY public.class_plan
 
 
 --
--- TOC entry 3308 (class 2606 OID 17482)
+-- TOC entry 3349 (class 2606 OID 17661)
 -- Name: daily_hour daily_hour_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -676,7 +677,7 @@ ALTER TABLE ONLY public.daily_hour
 
 
 --
--- TOC entry 3313 (class 2606 OID 17484)
+-- TOC entry 3309 (class 2606 OID 17484)
 -- Name: hour hour_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -685,7 +686,7 @@ ALTER TABLE ONLY public.hour
 
 
 --
--- TOC entry 3316 (class 2606 OID 17486)
+-- TOC entry 3312 (class 2606 OID 17486)
 -- Name: person person_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -694,7 +695,7 @@ ALTER TABLE ONLY public.person
 
 
 --
--- TOC entry 3320 (class 2606 OID 17488)
+-- TOC entry 3316 (class 2606 OID 17488)
 -- Name: person_to_subject_in_class person_to_subject_in_class_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -703,7 +704,7 @@ ALTER TABLE ONLY public.person_to_subject_in_class
 
 
 --
--- TOC entry 3323 (class 2606 OID 17490)
+-- TOC entry 3319 (class 2606 OID 17490)
 -- Name: plan plan_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -712,7 +713,7 @@ ALTER TABLE ONLY public.plan
 
 
 --
--- TOC entry 3326 (class 2606 OID 17492)
+-- TOC entry 3322 (class 2606 OID 17492)
 -- Name: room room_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -721,7 +722,7 @@ ALTER TABLE ONLY public.room
 
 
 --
--- TOC entry 3328 (class 2606 OID 17494)
+-- TOC entry 3324 (class 2606 OID 17494)
 -- Name: school_history school_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -739,7 +740,7 @@ ALTER TABLE ONLY public.school
 
 
 --
--- TOC entry 3333 (class 2606 OID 17498)
+-- TOC entry 3329 (class 2606 OID 17498)
 -- Name: school_year_history school_year_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -748,7 +749,7 @@ ALTER TABLE ONLY public.school_year_history
 
 
 --
--- TOC entry 3331 (class 2606 OID 17500)
+-- TOC entry 3327 (class 2606 OID 17500)
 -- Name: school_year school_year_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -757,7 +758,7 @@ ALTER TABLE ONLY public.school_year
 
 
 --
--- TOC entry 3336 (class 2606 OID 17502)
+-- TOC entry 3332 (class 2606 OID 17502)
 -- Name: section section_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -766,7 +767,7 @@ ALTER TABLE ONLY public.section
 
 
 --
--- TOC entry 3344 (class 2606 OID 17504)
+-- TOC entry 3340 (class 2606 OID 17504)
 -- Name: subject_in_class subject_in_class_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -775,7 +776,7 @@ ALTER TABLE ONLY public.subject_in_class
 
 
 --
--- TOC entry 3339 (class 2606 OID 17506)
+-- TOC entry 3335 (class 2606 OID 17506)
 -- Name: subject subject_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -784,7 +785,7 @@ ALTER TABLE ONLY public.subject
 
 
 --
--- TOC entry 3347 (class 2606 OID 17508)
+-- TOC entry 3343 (class 2606 OID 17508)
 -- Name: year year_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -793,7 +794,7 @@ ALTER TABLE ONLY public.year
 
 
 --
--- TOC entry 3350 (class 1259 OID 17651)
+-- TOC entry 3346 (class 1259 OID 17651)
 -- Name: fki_FK_class_plan_class; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -801,7 +802,7 @@ CREATE INDEX "fki_FK_class_plan_class" ON public.class_plan USING btree (class_i
 
 
 --
--- TOC entry 3351 (class 1259 OID 17652)
+-- TOC entry 3347 (class 1259 OID 17652)
 -- Name: fki_FK_class_plan_plan; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -833,7 +834,7 @@ CREATE INDEX "fki_FK_class_year" ON public.class_ USING btree (year_id);
 
 
 --
--- TOC entry 3309 (class 1259 OID 17512)
+-- TOC entry 3350 (class 1259 OID 17672)
 -- Name: fki_FK_daily_hour_hour; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -841,7 +842,7 @@ CREATE INDEX "fki_FK_daily_hour_hour" ON public.daily_hour USING btree (hour_id)
 
 
 --
--- TOC entry 3310 (class 1259 OID 17513)
+-- TOC entry 3351 (class 1259 OID 17673)
 -- Name: fki_FK_daily_hour_plan; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -849,7 +850,7 @@ CREATE INDEX "fki_FK_daily_hour_plan" ON public.daily_hour USING btree (plan_id)
 
 
 --
--- TOC entry 3311 (class 1259 OID 17514)
+-- TOC entry 3307 (class 1259 OID 17514)
 -- Name: fki_FK_hour_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -857,7 +858,7 @@ CREATE INDEX "fki_FK_hour_school" ON public.hour USING btree (school_id);
 
 
 --
--- TOC entry 3314 (class 1259 OID 17515)
+-- TOC entry 3310 (class 1259 OID 17515)
 -- Name: fki_FK_person_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -865,7 +866,7 @@ CREATE INDEX "fki_FK_person_school" ON public.person USING btree (school_id);
 
 
 --
--- TOC entry 3317 (class 1259 OID 17516)
+-- TOC entry 3313 (class 1259 OID 17516)
 -- Name: fki_FK_person_to_subject_in_class_person; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -873,7 +874,7 @@ CREATE INDEX "fki_FK_person_to_subject_in_class_person" ON public.person_to_subj
 
 
 --
--- TOC entry 3318 (class 1259 OID 17517)
+-- TOC entry 3314 (class 1259 OID 17517)
 -- Name: fki_FK_person_to_subject_in_class_subject_in_class; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -881,7 +882,7 @@ CREATE INDEX "fki_FK_person_to_subject_in_class_subject_in_class" ON public.pers
 
 
 --
--- TOC entry 3321 (class 1259 OID 17518)
+-- TOC entry 3317 (class 1259 OID 17518)
 -- Name: fki_FK_plan_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -889,7 +890,7 @@ CREATE INDEX "fki_FK_plan_school" ON public.plan USING btree (school_id);
 
 
 --
--- TOC entry 3324 (class 1259 OID 17519)
+-- TOC entry 3320 (class 1259 OID 17519)
 -- Name: fki_FK_room_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -897,7 +898,7 @@ CREATE INDEX "fki_FK_room_school" ON public.room USING btree (school_id);
 
 
 --
--- TOC entry 3329 (class 1259 OID 17520)
+-- TOC entry 3325 (class 1259 OID 17520)
 -- Name: fki_FK_schoolyear_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -905,7 +906,7 @@ CREATE INDEX "fki_FK_schoolyear_school" ON public.school_year USING btree (schoo
 
 
 --
--- TOC entry 3334 (class 1259 OID 17521)
+-- TOC entry 3330 (class 1259 OID 17521)
 -- Name: fki_FK_section_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -913,7 +914,7 @@ CREATE INDEX "fki_FK_section_school" ON public.section USING btree (school_id);
 
 
 --
--- TOC entry 3340 (class 1259 OID 17522)
+-- TOC entry 3336 (class 1259 OID 17522)
 -- Name: fki_FK_subject_in_class_class; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -921,7 +922,7 @@ CREATE INDEX "fki_FK_subject_in_class_class" ON public.subject_in_class USING bt
 
 
 --
--- TOC entry 3341 (class 1259 OID 17523)
+-- TOC entry 3337 (class 1259 OID 17523)
 -- Name: fki_FK_subject_in_class_room; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -929,7 +930,7 @@ CREATE INDEX "fki_FK_subject_in_class_room" ON public.subject_in_class USING btr
 
 
 --
--- TOC entry 3342 (class 1259 OID 17524)
+-- TOC entry 3338 (class 1259 OID 17524)
 -- Name: fki_FK_subject_in_class_subject; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -937,7 +938,7 @@ CREATE INDEX "fki_FK_subject_in_class_subject" ON public.subject_in_class USING 
 
 
 --
--- TOC entry 3337 (class 1259 OID 17525)
+-- TOC entry 3333 (class 1259 OID 17525)
 -- Name: fki_FK_subject_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -945,7 +946,7 @@ CREATE INDEX "fki_FK_subject_school" ON public.subject USING btree (school_id);
 
 
 --
--- TOC entry 3345 (class 1259 OID 17526)
+-- TOC entry 3341 (class 1259 OID 17526)
 -- Name: fki_FK_year_school; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -953,7 +954,7 @@ CREATE INDEX "fki_FK_year_school" ON public.year USING btree (school_id);
 
 
 --
--- TOC entry 3387 (class 2620 OID 17653)
+-- TOC entry 3386 (class 2620 OID 17653)
 -- Name: class_plan tr_class_plan_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -969,7 +970,7 @@ CREATE TRIGGER tr_class_start_datetime BEFORE INSERT OR UPDATE ON public.class_ 
 
 
 --
--- TOC entry 3375 (class 2620 OID 17528)
+-- TOC entry 3387 (class 2620 OID 17674)
 -- Name: daily_hour tr_daily_hour_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -977,7 +978,7 @@ CREATE TRIGGER tr_daily_hour_start_datetime BEFORE INSERT OR UPDATE ON public.da
 
 
 --
--- TOC entry 3376 (class 2620 OID 17529)
+-- TOC entry 3375 (class 2620 OID 17529)
 -- Name: hour tr_hour_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -985,7 +986,7 @@ CREATE TRIGGER tr_hour_start_datetime BEFORE INSERT OR UPDATE ON public.hour FOR
 
 
 --
--- TOC entry 3377 (class 2620 OID 17530)
+-- TOC entry 3376 (class 2620 OID 17530)
 -- Name: person tr_person_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -993,7 +994,7 @@ CREATE TRIGGER tr_person_start_datetime BEFORE INSERT OR UPDATE ON public.person
 
 
 --
--- TOC entry 3378 (class 2620 OID 17531)
+-- TOC entry 3377 (class 2620 OID 17531)
 -- Name: person_to_subject_in_class tr_person_to_subject_in_class_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1001,7 +1002,7 @@ CREATE TRIGGER tr_person_to_subject_in_class_start_datetime BEFORE INSERT OR UPD
 
 
 --
--- TOC entry 3379 (class 2620 OID 17532)
+-- TOC entry 3378 (class 2620 OID 17532)
 -- Name: plan tr_plan_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1009,7 +1010,7 @@ CREATE TRIGGER tr_plan_start_datetime BEFORE INSERT OR UPDATE ON public.plan FOR
 
 
 --
--- TOC entry 3380 (class 2620 OID 17533)
+-- TOC entry 3379 (class 2620 OID 17533)
 -- Name: room tr_room_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1017,7 +1018,7 @@ CREATE TRIGGER tr_room_start_datetime BEFORE INSERT OR UPDATE ON public.room FOR
 
 
 --
--- TOC entry 3373 (class 2620 OID 17534)
+-- TOC entry 3372 (class 2620 OID 17534)
 -- Name: school tr_school_history; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1025,7 +1026,7 @@ CREATE TRIGGER tr_school_history AFTER UPDATE ON public.school FOR EACH ROW EXEC
 
 
 --
--- TOC entry 3372 (class 2620 OID 17535)
+-- TOC entry 3373 (class 2620 OID 17535)
 -- Name: school tr_school_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1033,7 +1034,7 @@ CREATE TRIGGER tr_school_start_datetime BEFORE INSERT OR UPDATE ON public.school
 
 
 --
--- TOC entry 3382 (class 2620 OID 17536)
+-- TOC entry 3380 (class 2620 OID 17536)
 -- Name: school_year tr_school_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1049,7 +1050,7 @@ CREATE TRIGGER tr_school_year_history AFTER UPDATE ON public.school_year FOR EAC
 
 
 --
--- TOC entry 3383 (class 2620 OID 17538)
+-- TOC entry 3382 (class 2620 OID 17538)
 -- Name: section tr_section_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1057,7 +1058,7 @@ CREATE TRIGGER tr_section_start_datetime BEFORE INSERT OR UPDATE ON public.secti
 
 
 --
--- TOC entry 3385 (class 2620 OID 17539)
+-- TOC entry 3384 (class 2620 OID 17539)
 -- Name: subject_in_class tr_subject_in_class_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1065,7 +1066,7 @@ CREATE TRIGGER tr_subject_in_class_start_datetime BEFORE INSERT OR UPDATE ON pub
 
 
 --
--- TOC entry 3384 (class 2620 OID 17540)
+-- TOC entry 3383 (class 2620 OID 17540)
 -- Name: subject tr_subject_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1073,7 +1074,7 @@ CREATE TRIGGER tr_subject_start_datetime BEFORE INSERT OR UPDATE ON public.subje
 
 
 --
--- TOC entry 3386 (class 2620 OID 17541)
+-- TOC entry 3385 (class 2620 OID 17541)
 -- Name: year tr_year_start_datetime; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1081,7 +1082,7 @@ CREATE TRIGGER tr_year_start_datetime BEFORE INSERT OR UPDATE ON public.year FOR
 
 
 --
--- TOC entry 3370 (class 2606 OID 17641)
+-- TOC entry 3368 (class 2606 OID 17641)
 -- Name: class_plan FK_class_plan_class; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1090,7 +1091,7 @@ ALTER TABLE ONLY public.class_plan
 
 
 --
--- TOC entry 3371 (class 2606 OID 17646)
+-- TOC entry 3369 (class 2606 OID 17646)
 -- Name: class_plan FK_class_plan_plan; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1126,7 +1127,7 @@ ALTER TABLE ONLY public.class_
 
 
 --
--- TOC entry 3355 (class 2606 OID 17557)
+-- TOC entry 3370 (class 2606 OID 17662)
 -- Name: daily_hour FK_daily_hour_hour; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1135,7 +1136,7 @@ ALTER TABLE ONLY public.daily_hour
 
 
 --
--- TOC entry 3356 (class 2606 OID 17562)
+-- TOC entry 3371 (class 2606 OID 17667)
 -- Name: daily_hour FK_daily_hour_plan; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1144,7 +1145,7 @@ ALTER TABLE ONLY public.daily_hour
 
 
 --
--- TOC entry 3357 (class 2606 OID 17567)
+-- TOC entry 3355 (class 2606 OID 17567)
 -- Name: hour FK_hour_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1153,7 +1154,7 @@ ALTER TABLE ONLY public.hour
 
 
 --
--- TOC entry 3358 (class 2606 OID 17572)
+-- TOC entry 3356 (class 2606 OID 17572)
 -- Name: person FK_person_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1162,7 +1163,7 @@ ALTER TABLE ONLY public.person
 
 
 --
--- TOC entry 3359 (class 2606 OID 17577)
+-- TOC entry 3357 (class 2606 OID 17577)
 -- Name: person_to_subject_in_class FK_person_to_subject_in_class_person; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1171,7 +1172,7 @@ ALTER TABLE ONLY public.person_to_subject_in_class
 
 
 --
--- TOC entry 3360 (class 2606 OID 17582)
+-- TOC entry 3358 (class 2606 OID 17582)
 -- Name: person_to_subject_in_class FK_person_to_subject_in_class_subject_in_class; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1180,7 +1181,7 @@ ALTER TABLE ONLY public.person_to_subject_in_class
 
 
 --
--- TOC entry 3361 (class 2606 OID 17587)
+-- TOC entry 3359 (class 2606 OID 17587)
 -- Name: plan FK_plan_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1189,7 +1190,7 @@ ALTER TABLE ONLY public.plan
 
 
 --
--- TOC entry 3362 (class 2606 OID 17592)
+-- TOC entry 3360 (class 2606 OID 17592)
 -- Name: room FK_room_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1198,7 +1199,7 @@ ALTER TABLE ONLY public.room
 
 
 --
--- TOC entry 3363 (class 2606 OID 17597)
+-- TOC entry 3361 (class 2606 OID 17597)
 -- Name: school_year FK_schoolyear_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1207,7 +1208,7 @@ ALTER TABLE ONLY public.school_year
 
 
 --
--- TOC entry 3364 (class 2606 OID 17602)
+-- TOC entry 3362 (class 2606 OID 17602)
 -- Name: section FK_section_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1216,7 +1217,7 @@ ALTER TABLE ONLY public.section
 
 
 --
--- TOC entry 3366 (class 2606 OID 17607)
+-- TOC entry 3364 (class 2606 OID 17607)
 -- Name: subject_in_class FK_subject_in_class_class; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1225,7 +1226,7 @@ ALTER TABLE ONLY public.subject_in_class
 
 
 --
--- TOC entry 3367 (class 2606 OID 17612)
+-- TOC entry 3365 (class 2606 OID 17612)
 -- Name: subject_in_class FK_subject_in_class_room; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1234,7 +1235,7 @@ ALTER TABLE ONLY public.subject_in_class
 
 
 --
--- TOC entry 3368 (class 2606 OID 17617)
+-- TOC entry 3366 (class 2606 OID 17617)
 -- Name: subject_in_class FK_subject_in_class_subject; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1243,7 +1244,7 @@ ALTER TABLE ONLY public.subject_in_class
 
 
 --
--- TOC entry 3365 (class 2606 OID 17622)
+-- TOC entry 3363 (class 2606 OID 17622)
 -- Name: subject FK_subject_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1252,7 +1253,7 @@ ALTER TABLE ONLY public.subject
 
 
 --
--- TOC entry 3369 (class 2606 OID 17627)
+-- TOC entry 3367 (class 2606 OID 17627)
 -- Name: year FK_year_school; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1260,7 +1261,7 @@ ALTER TABLE ONLY public.year
     ADD CONSTRAINT "FK_year_school" FOREIGN KEY (school_id) REFERENCES public.school(id) NOT VALID;
 
 
--- Completed on 2023-11-27 13:11:52 CET
+-- Completed on 2023-12-02 19:25:33 CET
 
 --
 -- PostgreSQL database dump complete

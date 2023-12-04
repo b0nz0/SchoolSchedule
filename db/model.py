@@ -209,6 +209,7 @@ class DailyHour(Base):
     plan: Mapped["Plan"] = relationship(back_populates="daily_hours")
     
     week_day: Mapped[WeekDayEnum]
+    ordinal: Mapped[int]
     hour_id: Mapped[int] = mapped_column(ForeignKey("hour.id"))
     hour: Mapped["Hour"] = relationship(lazy="joined")
 
