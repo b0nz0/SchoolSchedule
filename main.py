@@ -1,6 +1,7 @@
 from db.model import *
 import db.connection, db.query
 import gui.setup, gui.screen
+import engine.struct
 from tkinter import *
 import pickle
 
@@ -394,6 +395,17 @@ def populate_DB():
     cp.class_ = l3
     db.query.save(cp)
 
+def test():
+    s = db.query.get(School, 1)
+    print(s)
+    print(db.query.dump_school_year(id=1))
+    struct = engine.struct.EngineSupport()
+    struct.load_assignments_from_subject_in_class(1)
+    ass = struct.get_assignment(0)
+    rows = db.query.get_subjects_in_class_per_person(1)
+    with open("test_ser_school.ser", "wb") as outfile:
+        pickle.dump(s, outfile)
+    
 
 if __name__ == '__main__':
     db.connection.connect()
@@ -404,11 +416,7 @@ if __name__ == '__main__':
 #    for s in schools:
 #        print(s.name)
 #    populate_DB()
-    s = db.query.get(School, 1)
-    print(s)
-    print(db.query.dump_school_year(id=1))
-    with open("test_ser_school.ser", "wb") as outfile:
-        pickle.dump(s, outfile)
+    test()
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
     gui.screen.school_select_screen()

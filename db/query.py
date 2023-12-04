@@ -184,7 +184,7 @@ def save(entity, log_user="-"):
     except (Exception) as error:
         traceback.print_exc()
 
-def get_plan(id = 0, name = None):
+def get_plan(plan_id = 0, name = None):
     try:
         with db.connection.active_session() as session:
             if name:
@@ -192,13 +192,13 @@ def get_plan(id = 0, name = None):
                     where(db.model.Plan.identifier == name)
                 plan = session.execute(stmt).scalar()
             else:
-                plan = get(db.model.Plan, id=id)
+                plan = get(db.model.Plan, id=plan_id)
             if not plan:
                     return None
-            id = plan.id
+            plan_id = plan.id
             
             stmt = select(db.model.DailyHour).\
-                    where(db.model.DailyHour.plan_id == id)
+                    where(db.model.DailyHour.plan_id == plan_id)
             daily_hours = session.execute(stmt).scalars().all()    
             
             days = {}
@@ -221,20 +221,29 @@ def get_plan(id = 0, name = None):
     except (Exception) as error:
         traceback.print_exc()
 
-def get_classes_in_plan(id: int):
+def get_classes_in_plan(plan_id: int):
     try:
         with db.connection.active_session() as session:
             stmt = select(db.model.ClassPlan).\
-                    where(db.model.ClassPlan.plan_id == id)
+                    where(db.model.ClassPlan.plan_id == plan_id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_subjects_in_class(id: int):
+def get_subjects_in_class(class_id: int):
     try:
         with db.connection.active_session() as session:
             stmt = select(db.model.SubjectInClass).\
-                    where(db.model.SubjectInClass.class_id == id)
+                    where(db.model.SubjectInClass.class_id == class_id)
+            return session.execute(stmt).unique().scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def get_subjects_in_class_per_person(person_id: int):
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.PersonToSubjectInClassAssociation.subject_in_class_id).\
+                    where(db.model.PersonToSubjectInClassAssociation.person_id == person_id)
             return session.execute(stmt).unique().scalars().all()
     except (Exception) as error:
         traceback.print_exc()
