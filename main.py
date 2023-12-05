@@ -436,9 +436,9 @@ def test():
     print(s)
     print(db.query.dump_school_year(id=1))
     struct = engine.struct.EngineSupport()
-    struct.load_assignments_from_subject_in_class(1)
-    ass = struct.get_assignment(0)
-    rows = db.query.get_subjects_in_class_per_person(1)
+    rows = db.query.get_subjects_in_class_per_person(1, 1)
+    for row in rows:
+        struct.load_assignments_from_subject_in_class(int(row))
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
     

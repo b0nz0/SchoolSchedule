@@ -240,11 +240,13 @@ def get_subjects_in_class(class_id: int):
     except (Exception) as error:
         traceback.print_exc()
 
-def get_subjects_in_class_per_person(person_id: int):
+def get_subjects_in_class_per_person(person_id: int, school_year_id: int):
     try:
-        with db.connection.active_session() as session:
+        with db.connection.active_session as session:
             stmt = select(db.model.PersonToSubjectInClassAssociation.subject_in_class_id).\
-                    where(db.model.PersonToSubjectInClassAssociation.person_id == person_id)
+                    join(db.model.SubjectInClass).join(db.model.Class).\
+                    where(db.model.PersonToSubjectInClassAssociation.person_id == person_id,
+                          db.model.Class.school_year_id == school_year_id)
             return session.execute(stmt).unique().scalars().all()
     except (Exception) as error:
         traceback.print_exc()
