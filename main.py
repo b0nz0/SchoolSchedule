@@ -5,6 +5,7 @@ import gui.setup, gui.screen
 import engine.struct, engine.constraint
 from tkinter import *
 import pickle
+import logging, logging.handlers
 
 def populate_DB():
     # one school
@@ -107,6 +108,12 @@ def populate_DB():
     room4.school = s
     db.query.save(room4)
 
+    room5 = Room()
+    room5.identifier = "201"
+    room5.room_type = RoomEnum.AULA
+    room5.school = s
+    db.query.save(room5)
+    
     # professors
     profs = {}
     
@@ -169,6 +176,7 @@ def populate_DB():
     db.query.save(subj_arte)
     
     # map subject in classes, hours, professors and rooms
+    # CLASS 1
     sic = SubjectInClass()
     sic.class_ = l
     sic.subject = subj_matematica
@@ -232,6 +240,138 @@ def populate_DB():
     sic.max_hours_per_day = 1
     sic.persons = [profs[7]]
     sic.room = room1
+    db.query.save(sic)
+
+    # CLASS 2
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_matematica
+    sic.hours_total = 5
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[1]]
+    sic.room = room5
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_italiano
+    sic.hours_total = 5
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[2]]
+    sic.room = room5
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_inglese
+    sic.hours_total = 4
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[3], lettore]
+    sic.room = room5
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_arte
+    sic.hours_total = 2
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[4]]
+    sic.room = room5
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_edfisica
+    sic.hours_total = 2
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[5]]
+    sic.room = room3
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_fisica
+    sic.hours_total = 3
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[1]]
+    sic.room = room5
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_latino
+    sic.hours_total = 3
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[6]]
+    sic.room = room5
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l2
+    sic.subject = subj_religione
+    sic.hours_total = 1
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[7]]
+    sic.room = room5
+    db.query.save(sic)
+
+    # CLASS 3
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_matematica
+    sic.hours_total = 5
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[1]]
+    sic.room = room2
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_italiano
+    sic.hours_total = 5
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[2]]
+    sic.room = room2
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_inglese
+    sic.hours_total = 4
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[3], lettore]
+    sic.room = room2
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_arte
+    sic.hours_total = 2
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[4]]
+    sic.room = room2
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_edfisica
+    sic.hours_total = 2
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[5]]
+    sic.room = room2
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_fisica
+    sic.hours_total = 3
+    sic.max_hours_per_day = 2
+    sic.persons = [profs[1]]
+    sic.room = room2
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_latino
+    sic.hours_total = 3
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[6]]
+    sic.room = room2
+    db.query.save(sic)
+    sic = SubjectInClass()
+    sic.class_ = l3
+    sic.subject = subj_religione
+    sic.hours_total = 1
+    sic.max_hours_per_day = 1
+    sic.persons = [profs[7]]
+    sic.room = room2
     db.query.save(sic)
 
     # 5 hours each day
@@ -434,23 +574,34 @@ def populate_DB():
 
 def test():
     s = db.query.get(School, 1)
-    print(s)
-    print(db.query.dump_school_year(id=1))
-    engine = SimpleEngine()
-    engine.load(1)
-    engine.run()
+    logging.debug(s)
+    logging.debug(db.query.dump_school_year(id=1))
+    eng = SimpleEngine()
+    eng.load(1)
+    c = engine.constraint.MultipleConsecutiveForSubject()
+    c.configure(1, 2, 1)
+    eng.add_constraint(c)
+    c = engine.constraint.MultipleConsecutiveForSubject()
+    c.configure(2, 2, 1)
+    eng.add_constraint(c)
+    eng.run()
+    eng.write_calendars_to_csv('calendari.csv')
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
     
 
 if __name__ == '__main__':
+    
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    handler = logging.handlers.RotatingFileHandler(
+                filename='school_schedule.log', maxBytes=10000, backupCount=5)
+    bf = logging.Formatter('%(asctime)s %(processName)s %(name)s %(levelname)s %(message)s')
+    handler.setFormatter(bf)
+    logger.addHandler(handler)
+
     db.connection.connect()
-#    print (db.connection.active_connection)
-#    db.connection.print_connection_status()
-#    db.connection.unconnect()
-#    schools = db.query.get_schools()
-#    for s in schools:
-#        print(s.name)
+
 #    populate_DB()
     test()
     ui = gui.setup.SchoolSchedulerGUI()

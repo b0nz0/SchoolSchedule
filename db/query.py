@@ -1,146 +1,147 @@
 import traceback
+import logging
 from typing import List
 import psycopg
 import db.connection
 from sqlalchemy import select
-import db.model
+from db.model import *
 
-def get_schools() -> List[db.model.School]:
+def get_schools() -> List[School]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.School).order_by(db.model.School.id)
+            stmt = select(School).order_by(School.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_schoolyears(school_id) -> List[db.model.SchoolYear]:
+def get_schoolyears(school_id) -> List[SchoolYear]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.SchoolYear).\
-                where(db.model.SchoolYear.school_id == school_id).\
-                    order_by(db.model.SchoolYear.id)
+            stmt = select(SchoolYear).\
+                where(SchoolYear.school_id == school_id).\
+                    order_by(SchoolYear.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_years(school_id) -> List[db.model.Year]:
+def get_years(school_id) -> List[Year]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.Year).\
-                where(db.model.Year.school_id == school_id).\
-                    order_by(db.model.Year.id)
+            stmt = select(Year).\
+                where(Year.school_id == school_id).\
+                    order_by(Year.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_sections(school_id) -> List[db.model.Section]:
+def get_sections(school_id) -> List[Section]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.Section).\
-                where(db.model.Section.school_id == school_id).\
-                    order_by(db.model.Section.id)
+            stmt = select(Section).\
+                where(Section.school_id == school_id).\
+                    order_by(Section.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_classes(schoolyear_id) -> List[db.model.Class]:
+def get_classes(schoolyear_id) -> List[Class]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.Class).\
-                where(db.model.Class.school_year_id == schoolyear_id).\
-                    order_by(db.model.Class.id)
+            stmt = select(Class).\
+                where(Class.school_year_id == schoolyear_id).\
+                    order_by(Class.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_rooms(school_id) -> List[db.model.Room]:
+def get_rooms(school_id) -> List[Room]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.Room).\
-                where(db.model.Room.school_id == school_id).\
-                    order_by(db.model.Room.id)
+            stmt = select(Room).\
+                where(Room.school_id == school_id).\
+                    order_by(Room.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_plans(school_id) -> List[db.model.Plan]:
+def get_plans(school_id) -> List[Plan]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.Plan).\
-                where(db.model.Plan.school_id == school_id).\
-                    order_by(db.model.Plan.id)
+            stmt = select(Plan).\
+                where(Plan.school_id == school_id).\
+                    order_by(Plan.id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
 
-def get_school(school: db.model.School):
+def get_school(school: School):
     if school.id != None and school.id != 0:
-        return (get(db.model.School, school.id))
+        return (get(School, school.id))
     elif school.name != None and school.name != '':
         try:
             with db.connection.active_session() as session:
-                stmt = select(db.model.School).\
-                    where(db.model.School.name == school.name)
+                stmt = select(School).\
+                    where(School.name == school.name)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()
     else:
         return False
 
-def get_schoolyear(schoolyear: db.model.SchoolYear):
+def get_schoolyear(schoolyear: SchoolYear):
     if schoolyear.id != None and schoolyear.id != 0:
-        return get(db.model.SchoolYear, schoolyear.id)
+        return get(SchoolYear, schoolyear.id)
     elif schoolyear.identifier != None and schoolyear.identifier != '':
         try:
             with db.connection.active_session() as session:
-                stmt = select(db.model.SchoolYear).\
-                    where(db.model.SchoolYear.identifier == schoolyear.identifier)
+                stmt = select(SchoolYear).\
+                    where(SchoolYear.identifier == schoolyear.identifier)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()
     else:
         return False
 
-def get_year(year: db.model.Year):
+def get_year(year: Year):
     if year.id != None and year.id != 0:
-        return get(db.model.Year, year.id)
+        return get(Year, year.id)
     elif year.identifier != None and year.identifier != '':
         try:
             with db.connection.active_session() as session:
-                stmt = select(db.model.Year).\
-                    where(db.model.Year.identifier == year.identifier)
+                stmt = select(Year).\
+                    where(Year.identifier == year.identifier)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()
     else:
         return False
 
-def get_section(section: db.model.Section):
+def get_section(section: Section):
     if section.id != None and section.id != 0:
-        return get(db.model.Section, section.id)
+        return get(Section, section.id)
     elif section.identifier != None and section.identifier != '':
         try:
             with db.connection.active_session() as session:
-                stmt = select(db.model.Section).\
-                    where(db.model.Section.identifier == section.identifier)
+                stmt = select(Section).\
+                    where(Section.identifier == section.identifier)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()
     else:
         return False
 
-def get_class(classe: db.model.Class):
+def get_class(classe: Class):
     if classe.id != None and classe.id != 0:
-        return get(db.model.Section, classe.id)
+        return get(Section, classe.id)
     elif classe.school_year_id != None and classe.school_year_id != 0 and \
             classe.year_id != None and classe.year_id != 0 and \
             classe.section_id != None and classe.section_id != 0:
         try:
             with db.connection.active_session() as session:
-                stmt = select(db.model.Class).\
-                    where(db.model.Class.school_year_id == classe.school_year_id, 
-                        db.model.Class.year_id == classe.year_id, 
-                        db.model.Class.section_id == classe.section_id)
+                stmt = select(Class).\
+                    where(Class.school_year_id == classe.school_year_id, 
+                        Class.year_id == classe.year_id, 
+                        Class.section_id == classe.section_id)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()
@@ -149,10 +150,10 @@ def get_class(classe: db.model.Class):
             classe.section != None:
         try:
             with db.connection.active_session() as session:
-                stmt = select(db.model.Class).\
-                    where(db.model.Class.school_year == classe.school_year, 
-                        db.model.Class.year == classe.year, 
-                        db.model.Class.section == classe.section)
+                stmt = select(Class).\
+                    where(Class.school_year == classe.school_year, 
+                        Class.year == classe.year, 
+                        Class.section == classe.section)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()
@@ -188,27 +189,27 @@ def get_plan(plan_id = 0, name = None):
     try:
         with db.connection.active_session() as session:
             if name:
-                stmt = select(db.model.Plan).\
-                    where(db.model.Plan.identifier == name)
+                stmt = select(Plan).\
+                    where(Plan.identifier == name)
                 plan = session.execute(stmt).scalar()
             else:
-                plan = get(db.model.Plan, id=plan_id)
+                plan = get(Plan, id=plan_id)
             if not plan:
                     return None
             plan_id = plan.id
             
-            stmt = select(db.model.DailyHour).\
-                    where(db.model.DailyHour.plan_id == plan_id).order_by(db.model.DailyHour.ordinal)
+            stmt = select(DailyHour).\
+                    where(DailyHour.plan_id == plan_id).order_by(DailyHour.ordinal)
             daily_hours = session.execute(stmt).scalars().all()    
             
             days = {}
-            days[db.model.WeekDayEnum.MONDAY] = []
-            days[db.model.WeekDayEnum.TUESDAY] = []
-            days[db.model.WeekDayEnum.WEDNESDAY] = []
-            days[db.model.WeekDayEnum.THURSDAY] = []
-            days[db.model.WeekDayEnum.FRIDAY] = []
-            days[db.model.WeekDayEnum.SATURDAY] = []
-            days[db.model.WeekDayEnum.SUNDAY] = []
+            days[WeekDayEnum.MONDAY] = []
+            days[WeekDayEnum.TUESDAY] = []
+            days[WeekDayEnum.WEDNESDAY] = []
+            days[WeekDayEnum.THURSDAY] = []
+            days[WeekDayEnum.FRIDAY] = []
+            days[WeekDayEnum.SATURDAY] = []
+            days[WeekDayEnum.SUNDAY] = []
             for daily_hour in daily_hours:
                 # newday = list([h for h in days[daily_hour.week_day] if h.start < daily_hour.hour.start])
                 # newday.append(daily_hour.hour)
@@ -225,8 +226,8 @@ def get_plan(plan_id = 0, name = None):
 def get_classes_in_plan(plan_id: int):
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.ClassPlan).\
-                    where(db.model.ClassPlan.plan_id == plan_id)
+            stmt = select(ClassPlan).\
+                    where(ClassPlan.plan_id == plan_id)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -234,8 +235,8 @@ def get_classes_in_plan(plan_id: int):
 def get_plan_for_class(class_id: int):
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.ClassPlan.plan_id).\
-                    where(db.model.ClassPlan.class_id == class_id)
+            stmt = select(ClassPlan.plan_id).\
+                    where(ClassPlan.class_id == class_id)
             return session.execute(stmt).scalar_one_or_none()
     except (Exception) as error:
         traceback.print_exc()
@@ -243,8 +244,8 @@ def get_plan_for_class(class_id: int):
 def get_subjects_in_class(class_id: int):
     try:
         with db.connection.active_session() as session:
-            stmt = select(db.model.SubjectInClass).\
-                    where(db.model.SubjectInClass.class_id == class_id)
+            stmt = select(SubjectInClass).\
+                    where(SubjectInClass.class_id == class_id)
             return session.execute(stmt).unique().scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -253,14 +254,14 @@ def get_subjects_in_class_per_school_year(school_year_id: int, person_id=None):
     try:
         with db.connection.active_session() as session:
             if person_id:
-                stmt = select(db.model.PersonToSubjectInClassAssociation.subject_in_class_id).\
-                        join(db.model.SubjectInClass).join(db.model.Class).\
-                        where(db.model.PersonToSubjectInClassAssociation.person_id == person_id,
-                            db.model.Class.school_year_id == school_year_id)
+                stmt = select(PersonToSubjectInClassAssociation.subject_in_class_id).\
+                        join(SubjectInClass).join(Class).\
+                        where(PersonToSubjectInClassAssociation.person_id == person_id,
+                            Class.school_year_id == school_year_id)
             else:
-                stmt = select(db.model.PersonToSubjectInClassAssociation.subject_in_class_id).\
-                        join(db.model.SubjectInClass).join(db.model.Class).\
-                        where(db.model.Class.school_year_id == school_year_id)
+                stmt = select(PersonToSubjectInClassAssociation.subject_in_class_id).\
+                        join(SubjectInClass).join(Class).\
+                        where(Class.school_year_id == school_year_id)
             return session.execute(stmt).unique().scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -269,7 +270,7 @@ def dump_school_year(id: int) -> str:
     try:
         out = str()
         with db.connection.active_session() as session:
-            schoolyear = get(db.model.SchoolYear, id=id)
+            schoolyear = get(SchoolYear, id=id)
             out = out + f'Anno scolastico {schoolyear.identifier}\nClassi:'
             session.add(schoolyear)
             classes = get_classes(id)
@@ -278,17 +279,17 @@ def dump_school_year(id: int) -> str:
                 for subject_in_class in get_subjects_in_class(classe.id):
                     out = out + dump_subject_in_class(subject_in_class.id)
                 out = out + '\nTimetable:\n'
-                stmt = select(db.model.ClassPlan).\
-                        where(db.model.ClassPlan.class_id == classe.id)
+                stmt = select(ClassPlan).\
+                        where(ClassPlan.class_id == classe.id)
                 classplan = session.execute(stmt).scalar()
                 plan = get_plan(classplan.plan_id)
-                for day in [db.model.WeekDayEnum.MONDAY,
-                    db.model.WeekDayEnum.TUESDAY,
-                    db.model.WeekDayEnum.WEDNESDAY,
-                    db.model.WeekDayEnum.THURSDAY,
-                    db.model.WeekDayEnum.FRIDAY,
-                    db.model.WeekDayEnum.SATURDAY,
-                    db.model.WeekDayEnum.SUNDAY,
+                for day in [WeekDayEnum.MONDAY,
+                    WeekDayEnum.TUESDAY,
+                    WeekDayEnum.WEDNESDAY,
+                    WeekDayEnum.THURSDAY,
+                    WeekDayEnum.FRIDAY,
+                    WeekDayEnum.SATURDAY,
+                    WeekDayEnum.SUNDAY,
                     ]:
                     out = out + str(day.value) + ": \t"
                     for daily_hour in plan[day]:
@@ -302,7 +303,7 @@ def dump_class(id: int) -> str:
     try:
         out = str()
         with db.connection.active_session() as session:
-            class_ = get(db.model.Class, id=id)
+            class_ = get(Class, id=id)
             session.add(class_)
             out = out + f'\nClasse {class_.year.identifier} {class_.section.identifier}\n'
             return out
@@ -314,7 +315,7 @@ def dump_subject_in_class(id: int) -> str:
     try:
         out = str()
         with db.connection.active_session() as session:
-            sic = get(db.model.SubjectInClass, id=id)
+            sic = get(SubjectInClass, id=id)
             session.add(sic)
             out = out + f'{sic.subject.identifier} ('
             out = out + ','.join([person.fullname for person in sic.persons])

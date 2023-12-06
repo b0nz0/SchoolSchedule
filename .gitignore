@@ -1,3 +1,7 @@
 database.ini
 *.pyc
 *.ser
+*.log
+*.log.*
+*.csv
+*.csv#

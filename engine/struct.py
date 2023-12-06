@@ -79,18 +79,20 @@ class Constraint:
     TRIGGER_PERSON = 1
     TRIGGER_CLASS = 2
     TRIGGER_ROOM = 3
+    TRIGGER_SUBJECT = 4
 
     TRIGGER_TYPES = (
         TRIGGER_ALWAYS, 
         TRIGGER_PERSON, 
         TRIGGER_CLASS,
-        TRIGGER_ROOM
+        TRIGGER_ROOM,
+        TRIGGER_SUBJECT
     )
 
     def __init__(self) -> None:
         self._triggers = {}
         for type in Constraint.TRIGGER_TYPES:
-            self._triggers[type] = {}
+            self._triggers[type] = set()
         self._weight = 0
         self._score = 0
     
@@ -100,32 +102,25 @@ class Constraint:
         else:
             return self._triggers
     
-    def register_trigger(self, trigger, trigger_type=TRIGGER_ALWAYS, key=None):
-        if trigger_type != Constraint.TRIGGER_ALWAYS and key == None:
-            print(f'Attempt to add trigger <{trigger}> of type {trigger_type} without a key\n')
-        if trigger_type not in Constraint.TRIGGER_TYPES:
-            print(f'Attempt to add trigger <{trigger}> to non-existent type {trigger_type}\n')
-        if key not in self._triggers[trigger_type].keys():
-            self._triggers[trigger_type][key] = set()
-        self._triggers[trigger_type][key].add(trigger)
+    def register_trigger(self, trigger, trigger_type=TRIGGER_ALWAYS):
+        assert trigger_type in Constraint.TRIGGER_TYPES, f'Attempt to add trigger <{trigger}> to non-existent type {trigger_type}'
+        self._triggers[trigger_type].add(trigger)
 
-    def delete_trigger(self, trigger, trigger_type=TRIGGER_ALWAYS, key=None):
-        if trigger_type != Constraint.TRIGGER_ALWAYS and key == None:
-            print(f'Attempt to remove trigger <{trigger}> of type {trigger_type} without a key\n')
-        if trigger_type not in Constraint.TRIGGER_TYPES:
-            print(f'Attempt to remove trigger <{trigger}> to non-existent type {trigger_type}\n')
-        if key in self._triggers[trigger_type].keys():
-            self._triggers[trigger_type][key].discard(trigger)
+    def delete_trigger(self, trigger, trigger_type=TRIGGER_ALWAYS):
+        assert trigger_type in Constraint.TRIGGER_TYPES, f'Attempt to remove trigger <{trigger}> to non-existent type {trigger_type}'
+        self._triggers[trigger_type].discard(trigger)
 
-    def has_trigger(self, trigger, trigger_type=TRIGGER_ALWAYS, key=None):
-        if trigger_type == Constraint.TRIGGER_ALWAYS:
+    def has_trigger(self, trigger, trigger_type=TRIGGER_ALWAYS):
+        assert trigger_type in Constraint.TRIGGER_TYPES, f'Attempt to check trigger <{trigger}> to non-existent type {trigger_type}'
+        if trigger_type == Constraint.TRIGGER_ALWAYS and len(self._triggers[Constraint.TRIGGER_ALWAYS]) > 0:
             return True
-        if key not in self._triggers[trigger_type].keys():
-            return False
-        return trigger in self._triggers[trigger_type][key]
+        return trigger in self._triggers[trigger_type]
     
     def fire(self, engine_support, calendar_id=None, assignment_id=None, day=None, hour=None):
         print('WARNING: fired superclass constraint')
+        
+    def suggest_continuing(self):
+        return False
 
     @property
     def weight(self):
@@ -213,6 +208,25 @@ class EngineSupport:
     def get_calendar_ids(self):
         return self._calendars.keys()
     
+    def write_calendars_to_csv(self, filename):
+        with open(filename, 'w') as ff:
+            for class_id in self.get_calendar_ids():
+                str = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;'
+                for hour in range(1, 11):
+                    str = str + f'\n{hour};'
+                    for day in db.model.WeekDayEnum:
+                        assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                        if assignment == Calendar.UNAIVALABLE:
+                            continue
+                        elif assignment == Calendar.AVAILABLE:
+                            str = str + f'---;'    
+                        else:
+                            subject = assignment.data['subject']
+                            persons_list = [x['person'] for x in assignment.data['persons']]
+                            persons_string = ",".join(persons_list)
+                            str = str + f'{subject} ({persons_string});'
+                ff.write(str + '\n')
+            
     @property
     def constraints(self):
         return self._constraints
@@ -225,3 +239,25 @@ class EngineSupport:
     def assignments(self):
         return self._assignments
     
+class Engine:
+
+    def __init__(self) -> None:
+        self._struct = EngineSupport()
+        self._closed = False
+
+    def add_constraint(self, constraint):
+        self._struct.constraints.add(constraint)
+        
+    def run(self):
+        pass        
+    
+    def write_calendars_to_csv(self, filename):
+        self._struct.write_calendars_to_csv(filename=filename)
+            
+    @property
+    def closed(self):
+        return self._closed
+    
+    @property
+    def engine_support(self):
+        return self._struct

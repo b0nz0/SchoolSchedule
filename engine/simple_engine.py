@@ -1,17 +1,20 @@
 from operator import itemgetter
+import logging
 from engine.struct import *
 from engine.constraint import *
 
-class SimpleEngine():
+class SimpleEngine(Engine):
 
     def __init__(self) -> None:
-        self._struct = EngineSupport()
-
+        super().__init__()
+        
     def load(self, school_year_id: int):
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
         for row in rows:
             self._struct.load_assignment_from_subject_in_class(int(row))
         constraint = NonDuplicateConstraint()
+        self._struct.constraints.add(constraint)
+        constraint = NoComebacks()
         self._struct.constraints.add(constraint)
 
     def run(self):
@@ -21,28 +24,61 @@ class SimpleEngine():
         for assignment in self._struct.assignments.values():
             assignments_remaining[assignment] = assignment.data['hours_total']
 
+        working = True
         # while we still have assignments with remaining hours
-        while len([a for a in assignments_remaining.keys() if assignments_remaining[a] > 0]) > 0:
+        while len([a for a in assignments_remaining.keys() if assignments_remaining[a] > 0]) > 0 and working:
             # cycle thru all assignments with remainig hours
             for assignment in [a for a in assignments_remaining.keys() if assignments_remaining[a] > 0]:
                 persons_list = [x['person'] for x in assignment.data['persons']]
                 persons_string = ",".join(persons_list)
                 class_id = assignment.data['class_id']
-                calendar = self._struct.get_calendar(class_id=class_id)
                 candidates = []
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):  
                         if self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE:
                             score = 0
+                            suggest_continuing = False
                             for c in self._struct.constraints:
                                 if c.has_trigger(None):
-                                    score = score + c.fire(self._struct, assignment=assignment, day=day, hour=hour)
-                                    print(f'score now = {score} (prof. {persons_string})')
+                                    score = score + c.fire(self._struct, calendar_id=class_id, assignment=assignment, day=day, hour=hour)
+                                    suggest_continuing = suggest_continuing or c.suggest_continuing()                                      
+                                    print(f'score now = {score} (prof. {persons_string}, day {day.value}, hour {hour})')
+                                if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
+                                    score = score + c.fire(self._struct, calendar_id=class_id, assignment=assignment, day=day, hour=hour)                                        
+                                    suggest_continuing = suggest_continuing or c.suggest_continuing()                                      
+                                    print(f'score now = {score} (prof. {persons_string}, day {day.value}, hour {hour})')
                             if score >= 0:
-                                candidates.append((score, day, hour))
-                (score, day, hour) = sorted(candidates, key=itemgetter(0), reverse=True)[0]
-                print(f'best candidate: class={class_id}, score={score}, day={day.value}, hour={hour}')
-                self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                    class_id=assignment.data['class_id'], \
-                                    day=day, hour_ordinal=hour)
-                assignments_remaining[assignment] = assignments_remaining[assignment] - 1
+                                if suggest_continuing and assignments_remaining[assignment] > 1:
+                                    candidates.append((score, day, hour, True))
+                                else:
+                                    candidates.append((score, day, hour, False))
+                        else:
+                            print(f'skipping day {day.value}, hour {hour}')
+                                
+                # get the highest score between possible candidates and assign it to the hour
+                if len(candidates) == 0:
+                    logging.error('impossibile trovare un candidato')
+                    working = False
+                    break
+                else:
+                    (score, day, hour, continuing) = sorted(candidates, key=itemgetter(0), reverse=True)[0]
+                    print(f'best candidate: class={class_id}, score={score}, day={day.value}, hour={hour}')
+                    self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
+                                        class_id=assignment.data['class_id'], \
+                                        day=day, hour_ordinal=hour)
+                    assignments_remaining[assignment] = assignments_remaining[assignment] - 1
+                    if continuing:
+                        if self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour+1) == Calendar.AVAILABLE:
+                            self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
+                                        class_id=assignment.data['class_id'], \
+                                        day=day, hour_ordinal=hour+1)
+                        assignments_remaining[assignment] = assignments_remaining[assignment] - 1
+        self._closed = working
+        
+    def write_calendars_to_csv(self, filename):
+        self._struct.write_calendars_to_csv(filename=filename)
+            
+    @property
+    def closed(self):
+        return self._closed
+    
