@@ -292,11 +292,11 @@ def timetable_selected(event):
                 db.model.WeekDayEnum.SUNDAY,
                 ]:
         i = 1
-        for hour in plan[day]:
+        for daily_hour in plan[day]:
             var_start = ui.variables[f'timetable_hour_{d}_{i}_start']
-            var_start.set(hour.start.strftime('%H:%M'))
+            var_start.set(daily_hour.hour.start.strftime('%H:%M'))
             var_end = ui.variables[f'timetable_hour_{d}_{i}_end']
-            var_end.set(hour.get_end().strftime('%H:%M'))
+            var_end.set(daily_hour.hour.get_end().strftime('%H:%M'))
             i = i + 1
         d = d + 1
     

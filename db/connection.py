@@ -74,3 +74,12 @@ def unconnect():
         active_connection.close()
         print('Database connection closed.')
 
+
+''' default database.ini
+[postgresql]
+host=localhost
+port=5432
+dbname=school_schedule
+user=postgres
+password=postgres
+'''

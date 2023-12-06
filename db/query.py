@@ -198,7 +198,7 @@ def get_plan(plan_id = 0, name = None):
             plan_id = plan.id
             
             stmt = select(db.model.DailyHour).\
-                    where(db.model.DailyHour.plan_id == id).order_by(db.model.DailyHour.ordinal)
+                    where(db.model.DailyHour.plan_id == plan_id).order_by(db.model.DailyHour.ordinal)
             daily_hours = session.execute(stmt).scalars().all()    
             
             days = {}
@@ -216,7 +216,7 @@ def get_plan(plan_id = 0, name = None):
                 # if len(rest) > 0:
                 #     newday.append(rest)
                 # days[daily_hour.week_day] = newday
-                days[daily_hour.week_day].append(daily_hour.hour)
+                days[daily_hour.week_day].append(daily_hour)
             return days
 
     except (Exception) as error:
@@ -231,6 +231,15 @@ def get_classes_in_plan(plan_id: int):
     except (Exception) as error:
         traceback.print_exc()
 
+def get_plan_for_class(class_id: int):
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(db.model.ClassPlan.plan_id).\
+                    where(db.model.ClassPlan.class_id == class_id)
+            return session.execute(stmt).scalar_one_or_none()
+    except (Exception) as error:
+        traceback.print_exc()
+
 def get_subjects_in_class(class_id: int):
     try:
         with db.connection.active_session() as session:
@@ -240,13 +249,18 @@ def get_subjects_in_class(class_id: int):
     except (Exception) as error:
         traceback.print_exc()
 
-def get_subjects_in_class_per_person(person_id: int, school_year_id: int):
+def get_subjects_in_class_per_school_year(school_year_id: int, person_id=None):
     try:
-        with db.connection.active_session as session:
-            stmt = select(db.model.PersonToSubjectInClassAssociation.subject_in_class_id).\
-                    join(db.model.SubjectInClass).join(db.model.Class).\
-                    where(db.model.PersonToSubjectInClassAssociation.person_id == person_id,
-                          db.model.Class.school_year_id == school_year_id)
+        with db.connection.active_session() as session:
+            if person_id:
+                stmt = select(db.model.PersonToSubjectInClassAssociation.subject_in_class_id).\
+                        join(db.model.SubjectInClass).join(db.model.Class).\
+                        where(db.model.PersonToSubjectInClassAssociation.person_id == person_id,
+                            db.model.Class.school_year_id == school_year_id)
+            else:
+                stmt = select(db.model.PersonToSubjectInClassAssociation.subject_in_class_id).\
+                        join(db.model.SubjectInClass).join(db.model.Class).\
+                        where(db.model.Class.school_year_id == school_year_id)
             return session.execute(stmt).unique().scalars().all()
     except (Exception) as error:
         traceback.print_exc()
