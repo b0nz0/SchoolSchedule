@@ -1,7 +1,8 @@
 from db.model import *
 import db.connection, db.query
+from engine.simple_engine import SimpleEngine
 import gui.setup, gui.screen
-import engine.struct
+import engine.struct, engine.constraint
 from tkinter import *
 import pickle
 
@@ -435,10 +436,9 @@ def test():
     s = db.query.get(School, 1)
     print(s)
     print(db.query.dump_school_year(id=1))
-    struct = engine.struct.EngineSupport()
-    rows = db.query.get_subjects_in_class_per_school_year(1)
-    for row in rows:
-        struct.load_assignment_from_subject_in_class(int(row))
+    engine = SimpleEngine()
+    engine.load(1)
+    engine.run()
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
     

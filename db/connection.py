@@ -42,7 +42,7 @@ def connect():
                                 ":" + connection_parameters['password'] + \
                                 "@" + connection_parameters['host'] + \
                                 ":" + connection_parameters['port'] + \
-                                "/" + connection_parameters['dbname'], echo=True)
+                                "/" + connection_parameters['dbname'], echo=False)
         active_session = sessionmaker(active_engine, expire_on_commit=False)
 
     except (Exception, psycopg.DatabaseError) as error:
