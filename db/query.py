@@ -291,8 +291,8 @@ def dump_school_year(id: int) -> str:
                     db.model.WeekDayEnum.SUNDAY,
                     ]:
                     out = out + str(day.value) + ": \t"
-                    for hour in plan[day]:
-                        out = out + hour.start.strftime('%H:%M') + "-" + hour.get_end().strftime('%H:%M') + " ; "
+                    for daily_hour in plan[day]:
+                        out = out + daily_hour.hour.start.strftime('%H:%M') + "-" + daily_hour.hour.get_end().strftime('%H:%M') + " ; "
                     out = out + "\n"
         return out    
     except (Exception) as error:
