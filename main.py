@@ -222,7 +222,7 @@ def populate_DB():
     sic.subject = subj_fisica
     sic.hours_total = 3
     sic.max_hours_per_day = 2
-    sic.persons = [profs[1]]
+    sic.persons = [profs[14]]
     sic.room = room1
     db.query.save(sic)
     sic = SubjectInClass()
@@ -288,7 +288,7 @@ def populate_DB():
     sic.subject = subj_fisica
     sic.hours_total = 3
     sic.max_hours_per_day = 2
-    sic.persons = [profs[1]]
+    sic.persons = [profs[14]]
     sic.room = room5
     db.query.save(sic)
     sic = SubjectInClass()
@@ -354,7 +354,7 @@ def populate_DB():
     sic.subject = subj_fisica
     sic.hours_total = 3
     sic.max_hours_per_day = 2
-    sic.persons = [profs[1]]
+    sic.persons = [profs[14]]
     sic.room = room2
     db.query.save(sic)
     sic = SubjectInClass()
