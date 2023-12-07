@@ -55,7 +55,7 @@ class MultipleConsecutiveForSubject(Constraint):
         conf_data['subject_id'] = self._subject_id
         conf_data['consecutive_hours'] = self._consecutive_hours
         conf_data['times'] = self._times
-        constraint.configuration = json.dump(conf_data)
+        constraint.configuration = json.dumps(conf_data)
         return constraint
 
     def from_model(self, constraint: db.model.Constraint):

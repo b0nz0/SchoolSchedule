@@ -576,11 +576,11 @@ def populate_DB():
     c = engine.constraint.MultipleConsecutiveForSubject()
     c.identifier = "Coppia compito di italiano"
     c.configure(1, 2, 1)
-    db.query.save(c)
+    db.query.save(c.to_model())
     c = engine.constraint.MultipleConsecutiveForSubject()
     c.identifier = "Coppia compito di matematica"
     c.configure(2, 2, 1)
-    db.query.save(c)
+    db.query.save(c.to_model())
 
 def test():
     s = db.query.get(School, 1)
@@ -588,8 +588,8 @@ def test():
     logging.debug(db.query.dump_school_year(id=1))
     eng = SimpleEngine()
     eng.load(1)
-    for c in db.query.get_constraints_per_school_year(school_year_id=1):
-        eng.add_constraint(c)
+#    for c in db.query.get_constraints_per_school_year(school_year_id=1):
+#        eng.add_constraint(c)
     eng.run()
     eng.write_calendars_to_csv('calendari.csv')
     with open("test_ser_school.ser", "wb") as outfile:

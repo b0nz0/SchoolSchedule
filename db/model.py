@@ -231,8 +231,7 @@ class ClassPlan(Base):
 class Constraint(Base):
     __tablename__ = "constraint"
 
-    school_year_id: Mapped[int] = mapped_column(ForeignKey("school_year.id"))
-    school_year: Mapped["SchoolYear"] = relationship()
+    engine_id: Mapped[int]
 
     identifier: Mapped[str]
     kind: Mapped[str]

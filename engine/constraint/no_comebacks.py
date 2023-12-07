@@ -1,5 +1,5 @@
 from engine.struct import *
-from db.model import DailyHour, WeekDayEnum, Constraint
+from db.model import DailyHour, WeekDayEnum 
 
 class NoComebacks(Constraint):
     
