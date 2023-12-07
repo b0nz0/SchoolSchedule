@@ -126,6 +126,9 @@ class Constraint:
     def to_model(self) -> db.model.Constraint:
         pass
 
+    def from_model(self, constraint: db.model.Constraint):
+        pass
+
     @property
     def weight(self):
         return self._weight

@@ -30,3 +30,14 @@ class NonDuplicateConstraint(Constraint):
         else:
             return 0
 
+    def to_model(self) -> db.model.Constraint:
+        constraint = db.model.Constraint()
+        constraint.identifier = self.identifier
+        constraint.kind = 'NonDuplicateConstraint'
+        constraint.configuration = ''
+        return constraint
+    
+    def from_model(self, constraint: db.model.Constraint):
+        assert constraint.kind == 'NonDuplicateConstraint', 'returned constraint of wrong kind'
+        self.identifier = constraint.identifier
+

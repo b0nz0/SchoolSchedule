@@ -266,6 +266,15 @@ def get_subjects_in_class_per_school_year(school_year_id: int, person_id=None):
     except (Exception) as error:
         traceback.print_exc()
 
+def get_constraints_per_school_year(school_year_id: int):
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(Constraint).\
+                    where(Constraint.school_year_id == school_year_id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
 def dump_school_year(id: int) -> str:
     try:
         out = str()
