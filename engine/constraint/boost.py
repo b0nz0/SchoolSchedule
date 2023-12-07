@@ -6,6 +6,7 @@ class Boost(Constraint):
     
     def __init__(self) -> None:
         super().__init__()
+        self._person_id = None
         self._subject_id = None
         self._class_id = 0
         self._hour = 0
@@ -13,8 +14,12 @@ class Boost(Constraint):
         self.score = 1000
         self.weight = 1000
 
-    def configure(self, subject_id: int, class_id: int, day: WeekDayEnum, hour: int, score=1000):
-        self.register_trigger(trigger=subject_id, trigger_type=Constraint.TRIGGER_SUBJECT)
+    def configure(self, person_id: int, subject_id: int, class_id: int, day: WeekDayEnum, hour: int, score=1000):
+        if subject_id:
+            self.register_trigger(trigger=subject_id, trigger_type=Constraint.TRIGGER_SUBJECT)
+        if person_id:
+            self.register_trigger(trigger=person_id, trigger_type=Constraint.TRIGGER_PERSON)
+        self._person_id = person_id
         self._subject_id = subject_id
         self._class_id = class_id
         self._hour = hour
@@ -23,34 +28,47 @@ class Boost(Constraint):
         
     def fire(self, engine_support: EngineSupport, calendar_id:int=None, assignment:Assignment=None, day:WeekDayEnum=None, hour:int=None):
         assert assignment != None, 'no assignment provided'
-        assert day != None, 'no weekday provided'
-        assert hour != None, 'no hour ordinal provided'
 
         subject_id = assignment.data['subject_id']
         class_id = assignment.data['class_id']
-        if subject_id == self._subject_id and \
-                (class_id == self._class_id or self._class_id == None) and \
-                (day == self._day or self._day == None):
-             if hour == self._hour:
-                return self.score
-             elif hour == self._hour - 1:
-                return 0-self.score
-             elif hour == self._hour + 1:
-                return 0-self.score
-             else: 
+        persons = [x['person_id'] for x in assignment.data['persons']]
+        
+        if self._subject_id:
+            if subject_id == self._subject_id and \
+                    (class_id == self._class_id or self._class_id == None) and \
+                    (day == self._day or self._day == None):
+                if hour == self._hour or self._hour == None:
+                    return self.score
+                else: 
+                    return 0
+            else:
                 return 0
-        else:
-            return 0
-
+            
+        elif self._person_id:
+            if self._person_id in persons and \
+                    (class_id == self._class_id or self._class_id == None) and \
+                    (day == self._day or self._day == None):
+                if hour == self._hour or self._hour == None:
+                    return self.score
+                else: 
+                    return 0
+            else:
+                return 0
+        return 0
+    
     def to_model(self) -> db.model.Constraint:
         constraint = db.model.Constraint()
         constraint.identifier = self.identifier
         constraint.kind = 'Boost'
         # save configuration as json string
         conf_data = dict()
+        conf_data['person_id'] = self._person_id
         conf_data['subject_id'] = self._subject_id
         conf_data['class_id'] = self._class_id
-        conf_data['day'] = self._day
+        if self._day:
+            conf_data['day'] = self._day.name
+        else:
+            conf_data['day'] = None
         conf_data['hour'] = self._hour
         conf_data['score'] = self.score
         constraint.configuration = json.dumps(conf_data)
@@ -61,10 +79,17 @@ class Boost(Constraint):
         self.identifier = constraint.identifier
         # load configuration as json string
         conf_data = json.loads(constraint.configuration)
+        person_id = conf_data['person_id']
         subject_id = conf_data['subject_id']
         class_id = conf_data['class_id']
-        day = conf_data['day']
+        loadday = conf_data['day']
+        if loadday:
+            for wd in WeekDayEnum:
+                if loadday == wd.name:
+                    day = wd
+        else:
+            day = None
         hour = conf_data['hour']
         score = conf_data['score']
-        self.configure(subject_id=subject_id, class_id=class_id, day=day, hour=hour, score=score)
+        self.configure(person_id=person_id, subject_id=subject_id, class_id=class_id, day=day, hour=hour, score=score)
         return self

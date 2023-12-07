@@ -5,8 +5,8 @@ class NonDuplicateConstraint(Constraint):
     
     def __init__(self) -> None:
         super().__init__()
-        self.score = -1000
-        self.weight = 1000
+        self.score = -10000
+        self.weight = 10000
         self.register_trigger(None)
 
     def fire(self, engine_support: EngineSupport, calendar_id:int=None, assignment:Assignment=None, day:WeekDayEnum=None, hour:int=None):

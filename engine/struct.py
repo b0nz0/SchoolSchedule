@@ -264,9 +264,10 @@ class EngineSupport:
                             str = str + f'---;'    
                         else:
                             subject = assignment.data['subject']
+                            score = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                             persons_list = [x['person'] for x in assignment.data['persons']]
                             persons_string = ",".join(persons_list)
-                            str = str + f'{subject} ({persons_string});'
+                            str = str + f'{subject} ({persons_string}) <{score}>;'
                 ff.write(str + '\n')
             
     @property

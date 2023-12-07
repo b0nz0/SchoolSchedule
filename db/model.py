@@ -193,14 +193,14 @@ class Plan(Base):
     def __repr__(self) -> str:
         return f"{self.identifier}"
     
-class WeekDayEnum(str, enum.Enum):
-    MONDAY: str = "lunedì"
-    TUESDAY: str = "martedì"
-    WEDNESDAY: str = "mercoledì"
-    THURSDAY: str = "giovedì"
-    FRIDAY: str = "venerdì"
-    SATURDAY: str = "sabato"
-    SUNDAY: str = "domenica"
+class WeekDayEnum(enum.Enum):
+    MONDAY = "lunedì"
+    TUESDAY = "martedì"
+    WEDNESDAY = "mercoledì"
+    THURSDAY = "giovedì"
+    FRIDAY = "venerdì"
+    SATURDAY = "sabato"
+    SUNDAY = "domenica"
     
 class DailyHour(Base):
     __tablename__ = "daily_hour"    

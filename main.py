@@ -1,6 +1,7 @@
 from db.model import *
 import db.connection, db.query
 from engine.simple_engine import SimpleEngine
+from engine.simple_engine_rand import SimpleEngineRand
 import gui.setup, gui.screen
 import engine.struct, engine.constraint
 from tkinter import *
@@ -583,33 +584,36 @@ def populate_DB():
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
     c.identifier = "Educazione fisica all'ultima ora di mercoledì in classe 1"
-    c.configure(subject_id=subj_edfisica.id, class_id=1, day=WeekDayEnum.WEDNESDAY, hour=5, score=2000)
+    c.configure(person_id=None, subject_id=subj_edfisica.id, class_id=1, day=WeekDayEnum.WEDNESDAY, hour=5, score=2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
     c.identifier = "Educazione fisica alla seconda ora di martedì in classe 2"
-    c.configure(subject_id=subj_edfisica.id, class_id=2, day=WeekDayEnum.TUESDAY, hour=2, score=2000)
+    c.configure(person_id=None, subject_id=subj_edfisica.id, class_id=2, day=WeekDayEnum.TUESDAY, hour=2, score=2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
     c.identifier = "Educazione fisica alla seconda ora di giovedì in classe 3"
-    c.configure(subject_id=subj_edfisica.id, class_id=3, day=WeekDayEnum.THURSDAY, hour=2, score=2000)
+    c.configure(person_id=None, subject_id=subj_edfisica.id, class_id=3, day=WeekDayEnum.THURSDAY, hour=2, score=2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
     c.identifier = "Italiano no prima ora di lunedì"
-    c.configure(subject_id=subj_italiano.id, class_id=None, day=WeekDayEnum.MONDAY, hour=1, score=-2000)
+    c.configure(person_id=None, subject_id=subj_italiano.id, class_id=None, day=WeekDayEnum.MONDAY, hour=1, score=-2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
     c.identifier = "Fisica no ultime ore"
-    c.configure(subject_id=subj_fisica.id, class_id=None, day=None, hour=5, score=-2000)
+    c.configure(person_id=None, subject_id=subj_fisica.id, class_id=None, day=None, hour=5, score=-2000)
     db.query.save(c.to_model())
 
 def test():
     s = db.query.get(School, 1)
     logging.debug(s)
     logging.debug(db.query.dump_school_year(id=1))
-    eng = SimpleEngine()
+    eng = SimpleEngineRand()
     eng.load(1)
     for c in db.query.get_constraints():
         eng.add_constraint(c)
+    c = engine.constraint.Boost()
+    c.identifier = "lettore mai martedì"
+    c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     eng.run()
     eng.write_calendars_to_csv('calendari.csv')
     with open("test_ser_school.ser", "wb") as outfile:
@@ -621,7 +625,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
     handler = logging.handlers.RotatingFileHandler(
                 filename='school_schedule.log', maxBytes=10000000, backupCount=5)
-    bf = logging.Formatter('%(asctime)s %(processName)s %(name)s %(levelname)s %(message)s')
+    bf = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     handler.setFormatter(bf)
     logger.addHandler(handler)
 
