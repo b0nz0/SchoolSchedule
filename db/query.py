@@ -5,6 +5,7 @@ import psycopg
 import db.connection
 from sqlalchemy import select
 from db.model import *
+import engine.constraint, engine.struct
 
 def get_schools() -> List[School]:
     try:
@@ -266,12 +267,23 @@ def get_subjects_in_class_per_school_year(school_year_id: int, person_id=None):
     except (Exception) as error:
         traceback.print_exc()
 
-def get_constraints_per_school_year(school_year_id: int):
+def get_constraints() -> List[engine.struct.Constraint]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(Constraint).\
-                    where(Constraint.school_year_id == school_year_id)
-            return session.execute(stmt).scalars().all()
+            stmt = select(Constraint).order_by(Constraint.id)
+            rets = []
+            for c in session.execute(stmt).scalars().all():
+                if c.kind == 'NoComebacks':
+                    retc = engine.constraint.NoComebacks()
+                elif c.kind == 'NonDuplicateConstraint':
+                    retc = engine.constraint.NonDuplicateConstraint()
+                elif c.kind == 'MultipleConsecutiveForSubject':
+                    retc = engine.constraint.MultipleConsecutiveForSubject()
+                elif c.kind == 'Boost':
+                    retc = engine.constraint.Boost()
+                retc.from_model(c)
+                rets.append(retc)
+            return rets
     except (Exception) as error:
         traceback.print_exc()
 
