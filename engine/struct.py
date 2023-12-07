@@ -95,6 +95,7 @@ class Constraint:
             self._triggers[type] = set()
         self._weight = 0
         self._score = 0
+        self._identifier = ''
     
     def get_triggers(self, trigger_type=None):
         if trigger_type in Constraint.TRIGGER_TYPES:
@@ -122,6 +123,9 @@ class Constraint:
     def suggest_continuing(self):
         return False
 
+    def to_model(self) -> db.model.Constraint:
+        pass
+
     @property
     def weight(self):
         return self._weight
@@ -138,6 +142,14 @@ class Constraint:
     def score(self, score):
         self._score = score
 
+    @property
+    def identifier(self):
+        return self._identifier
+    
+    @identifier.setter
+    def identifier(self, identifier):
+        self._identifier = identifier
+
 class EngineSupport:
 
     def __init__(self) -> None:
@@ -145,6 +157,7 @@ class EngineSupport:
         self._assignments = {}
         self._constraints = set()
         self._persons = {}
+        self._scores = {}
   
     def get_assignment(self, subject_in_class_id: int):
         if subject_in_class_id in self._assignments.keys():
@@ -201,9 +214,35 @@ class EngineSupport:
         else:
             return Calendar.UNAIVALABLE
         
-    def assign(self, subject_in_class_id, class_id, day, hour_ordinal):
+    def assign(self, subject_in_class_id: int, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int, score: int=0):
         plan_day = self.get_calendar(class_id=class_id).day(day_id=day)
         plan_day[hour_ordinal] = self._assignments[subject_in_class_id]
+        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=score)
+
+    def deassign(self, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int):
+        plan_day = self.get_calendar(class_id=class_id).day(day_id=day)
+        plan_day[hour_ordinal] = Calendar.AVAILABLE
+        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=0)
+
+    def _update_score(self, class_id, day, hour_ordinal, score):
+        if class_id not in self._scores.keys():
+            self._scores[class_id] = {}
+        self._scores[class_id][(day, hour_ordinal)] = score
+
+    def get_score(self, class_id: int, day: int, hour_ordinal: int):
+        if class_id not in self._scores.keys():
+            return 0
+        if (day, hour_ordinal) not in self._scores[class_id]:
+            return 0
+        return self._scores[class_id][(day, hour_ordinal)]
+
+    def get_overall_score(self, class_id: int):
+        score = 0
+        if class_id not in self._scores.keys():
+            return 0 
+        for s in self._scores[class_id]:
+            score = score + s
+        return score
         
     def get_calendar_ids(self):
         return self._calendars.keys()

@@ -1,5 +1,5 @@
 from engine.struct import *
-from db.model import DailyHour, WeekDayEnum
+from db.model import DailyHour, WeekDayEnum, Constraint
 
 class NoComebacks(Constraint):
     
@@ -19,17 +19,16 @@ class NoComebacks(Constraint):
         persons = [x['person_id'] for x in assignment.data['persons']]
         
         # cycle thru the hours before this one in the same day
-        for hour in range(1, hour-1):  
-            ass_in_calendar = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour)
+        for currhour in range(1, hour-1):  
+            ass_in_calendar = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=currhour)
             if ass_in_calendar == Calendar.AVAILABLE or ass_in_calendar == Calendar.UNAIVALABLE:
                 continue
-            # add the persons already assigned
-            persons.extend([x['person_id'] for x in ass_in_calendar.data['persons']])
+            # would add duplicates? in case return the score
+            for person_id in [x['person_id'] for x in ass_in_calendar.data['persons']]:
+                if person_id in persons:
+                    return self.score
 
-        # would add duplicates? in case return the score
-        dup = {x for x in persons if persons.count(x) > 1}
-        if len(dup) > 0:
-            return self.score
-        else:
-            return 0
+        return 0
 
+    def to_model(self) -> db.model.Constraint:
+        pass

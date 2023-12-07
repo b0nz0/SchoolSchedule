@@ -595,7 +595,7 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     handler = logging.handlers.RotatingFileHandler(
-                filename='school_schedule.log', maxBytes=10000, backupCount=5)
+                filename='school_schedule.log', maxBytes=10000000, backupCount=5)
     bf = logging.Formatter('%(asctime)s %(processName)s %(name)s %(levelname)s %(message)s')
     handler.setFormatter(bf)
     logger.addHandler(handler)

@@ -228,6 +228,18 @@ class ClassPlan(Base):
     def __repr__(self) -> str:
         return f"{self.class_}-{self.plan}"
     
+class Constraint(Base):
+    __tablename__ = "constraint"
+
+    school_year_id: Mapped[int] = mapped_column(ForeignKey("school_year.id"))
+    school_year: Mapped["SchoolYear"] = relationship()
+
+    identifier: Mapped[str]
+    kind: Mapped[str]
+    configuration: Mapped[str]
+
+    def __repr__(self) -> str:
+        return f"{self.identifier} of kind {self.kind}"
     
     
     
