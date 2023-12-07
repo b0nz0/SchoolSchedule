@@ -574,9 +574,11 @@ def populate_DB():
 
     # CONSTRAINTS
     c = engine.constraint.MultipleConsecutiveForSubject()
+    c.identifier = "Coppia compito di italiano"
     c.configure(1, 2, 1)
     db.query.save(c)
     c = engine.constraint.MultipleConsecutiveForSubject()
+    c.identifier = "Coppia compito di matematica"
     c.configure(2, 2, 1)
     db.query.save(c)
 
