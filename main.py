@@ -2,6 +2,7 @@ from db.model import *
 import db.connection, db.query
 from engine.simple_engine import SimpleEngine
 from engine.simple_engine_rand import SimpleEngineRand
+from engine.local_optimal import LocalOptimalEngine
 import gui.setup, gui.screen
 import engine.struct, engine.constraint
 from tkinter import *
@@ -614,8 +615,19 @@ def test():
     c = engine.constraint.Boost()
     c.identifier = "lettore mai martedì"
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
+    eng.add_constraint(c)
     eng.run()
     eng.write_calendars_to_csv('calendari.csv')
+    eng = LocalOptimalEngine()
+    eng.load(1)
+    for c in db.query.get_constraints():
+        eng.add_constraint(c)
+    c = engine.constraint.Boost()
+    c.identifier = "lettore mai martedì"
+    c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
+    eng.add_constraint(c)
+    eng.run()
+    eng.write_calendars_to_csv('calendari_lo.csv')
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
     

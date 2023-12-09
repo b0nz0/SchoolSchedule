@@ -1,5 +1,6 @@
 import db.query
 import db.model
+from engine.constraint import *
 
 class Assignment:
 
@@ -287,6 +288,15 @@ class Engine:
     def __init__(self) -> None:
         self._struct = EngineSupport()
         self._closed = False
+
+    def load(self, school_year_id: int):
+        rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
+        for row in rows:
+            self._struct.load_assignment_from_subject_in_class(int(row))
+        constraint = NonDuplicateConstraint()
+        self._struct.constraints.add(constraint)
+        constraint = NoComebacks()
+        self._struct.constraints.add(constraint)
 
     def add_constraint(self, constraint):
         self._struct.constraints.add(constraint)
