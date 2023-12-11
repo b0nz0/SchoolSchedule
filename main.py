@@ -616,6 +616,7 @@ def test():
     c.identifier = "lettore mai martedì"
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     eng.add_constraint(c)
+    logger.debug('eseguo SimpleEngineRand')
     eng.run()
     eng.write_calendars_to_csv('calendari.csv')
     eng = LocalOptimalEngine()
@@ -626,6 +627,7 @@ def test():
     c.identifier = "lettore mai martedì"
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     eng.add_constraint(c)
+    logger.debug('eseguo LocalOptimalEngine')
     eng.run()
     eng.write_calendars_to_csv('calendari_lo.csv')
     with open("test_ser_school.ser", "wb") as outfile:

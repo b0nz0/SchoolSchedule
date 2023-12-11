@@ -7,7 +7,7 @@ from engine.simple_engine import SimpleEngine
 
 class LocalOptimalEngine(Engine):
 
-    MAX_REASSIGNMENTS = 100
+    MAX_REASSIGNMENTS = 200
 
     def __init__(self) -> None:
         super().__init__()
@@ -33,43 +33,53 @@ class LocalOptimalEngine(Engine):
         # while we still have assignments with remaining hours
         while len([a for a in assignments_remaining.keys() if assignments_remaining[a] > 0]) > 0 and working:
             # cycle thru all free hours in each calendar to find a best score
-            for calendar_id in self._struct.get_calendar_ids():
-                max_score = -1
-                candidate_assignment = None
+            max_score = -1
+            candidate_assignment = None
+            for calendar_id in sorted(self._struct.get_calendar_ids(), reverse=random.choice([True, False])):
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):  
                         if self._struct.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE:
                             for assignment in [a for a in assignments_remaining.keys() \
-                                               if assignments_remaining[a] > 0 and a.data['class_id'] == calendar_id]:
-                                # find all non exhausted assignemtns for this class
-                                score = self.evaluate_constraints(calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                                if score > max_score:
-                                    max_score = score
-                                    candidate_assignment = (assignment, day, hour)
+                                               if assignments_remaining[a] > 0]:
+                                subject = assignment.data['subject']
+                                if reassignments > 80:
                                     persons_list = [x['person'] for x in assignment.data['persons']]
                                     persons_string = ",".join(persons_list)
-                                    logging.debug(f'candidato: score now = {score} (prof. {persons_string}, day {day.value}, hour {hour})')
-                # get the highest score between possible candidates and assign it to the hour
-                if not candidate_assignment:
-                    if reassignments < LocalOptimalEngine.MAX_REASSIGNMENTS:
-                        (score, sugg_day, sugg_hour) = self._suggest_substitution(class_id=calendar_id)
-                        if sugg_day != Calendar.UNAIVALABLE:
-                            logging.debug(f'impossibile trovare un candidato, provo una riassegnazione del {sugg_day} - ora {sugg_hour}')
-                            candidate = self._struct.get_assignment_in_calendar(class_id=calendar_id, day=sugg_day, hour_ordinal=sugg_hour)
-                            self._struct.deassign(class_id=calendar_id, day=sugg_day, hour_ordinal=sugg_hour)
-                            assignments_remaining[candidate] = assignments_remaining[candidate] + 1
-                            reassignments = reassignments + 1
-                    else:
-                        subjects = ",".join([a.data['subject'] for a in assignments_remaining.keys() if assignments_remaining[a] > 0])
-                        logging.error(f'impossibile trovare un candidato per la classe {calendar_id}, già provate {reassignments} riassegnazioni. Rimangono fuori: {subjects}')
-                        working = False
-                        break
+#                                    logging.debug('assignment class_id ' + str(assignment.data['class_id']) + ' subject ' + subject + \
+#                                        '(' + persons_string + ') remaining ' + str(assignments_remaining[assignment]))
+                                if assignment.data['class_id'] == calendar_id:
+#                                    logging.debug(f'cerco classe {calendar_id}, giorno {day.value}, ora {hour}, materia {subject}')
+                                    # find all non exhausted assignments for this class
+                                    score = self.evaluate_constraints(calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                                    if score > max_score:
+                                        max_score = score
+                                        candidate_assignment = (calendar_id, assignment, day, hour)
+                                        persons_list = [x['person'] for x in assignment.data['persons']]
+                                        persons_string = ",".join(persons_list)
+                                        logging.debug(f'candidato: score now = {score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')
+                                    else:
+                                        logging.debug(f'non candidato: score now = {score} < {max_score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')
+
+            # get the highest score between possible candidates and assign it to the hour
+            if not candidate_assignment:
+                if reassignments < LocalOptimalEngine.MAX_REASSIGNMENTS:
+                    for (score, class_id, sugg_day, sugg_hour) in self._suggest_substitution():
+                        logging.debug(f'impossibile trovare un candidato, provo una riassegnazione della classe {class_id}@{sugg_day} - ora {sugg_hour}')
+                        candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
+                        self._struct.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
+                        assignments_remaining[candidate] = assignments_remaining[candidate] + 1
+                        reassignments = reassignments + 1
                 else:
-                    (assignment, day, hour) = candidate_assignment
-                    logging.debug(f'best candidate: class={calendar_id}, score={max_score}, day={day.value}, hour={hour}')
-                    self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                        class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score)
-                    assignments_remaining[assignment] = assignments_remaining[assignment] - 1
+                    subjects = ",".join([a.data['subject'] for a in assignments_remaining.keys() if assignments_remaining[a] > 0])
+                    logging.error(f'impossibile trovare un candidato, già provate {reassignments} riassegnazioni. Rimangono fuori: {subjects}')
+                    working = False
+                    break
+            else:
+                (calendar_id, assignment, day, hour) = candidate_assignment
+                logging.debug(f'assign best candidate: class={calendar_id}, score={max_score}, day={day.value}, hour={hour}')
+                self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
+                                    class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score)
+                assignments_remaining[assignment] = assignments_remaining[assignment] - 1
                     # let's see if we can attach a hour after this one, as suggested
 #                    if continuing:
 #                        if self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour+1) == Calendar.AVAILABLE:
@@ -93,26 +103,24 @@ class LocalOptimalEngine(Engine):
 #            for person in [x['person_id'] for x in assignment.data['persons']]:                                        
 #                if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
 #                    score = score + c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)                                        
-            suggest_continuing = suggest_continuing or c.suggest_continuing()                                      
-            self._suggest_continuing = suggest_continuing
+#            suggest_continuing = suggest_continuing or c.suggest_continuing()                                      
+#            self._suggest_continuing = suggest_continuing
         return score
 
-    def _suggest_substitution(self, class_id: int):
+    def _suggest_substitution(self):
         MAX = 1000000000
-        lowest_score = (MAX, None, 0)
-        for day in db.model.WeekDayEnum:
-            for hour in range(1, 11):  
-                candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
-                if  candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
-                    score = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
-                    if score < lowest_score[0]:
-                        lowest_score = (score, day, hour)
-                    if score == lowest_score[0] and random.choice([True, False, False, False, False, False, False, False]):
-                        lowest_score = (score, day, hour)
-        if lowest_score[0] == MAX:
-            return (MAX, Calendar.UNAIVALABLE, 0)
-        else:
-            return lowest_score
+        lowest_score = MAX
+        ret = []
+        for class_id in self._struct.get_calendar_ids():
+            for day in db.model.WeekDayEnum:
+                for hour in range(1, 11):  
+                    candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                    if  candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
+                        score = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                        if score <= lowest_score:
+                            ret.append((score, class_id, day, hour))
+                            lowest_score = score
+        return ret
     
     def write_calendars_to_csv(self, filename):
         self._struct.write_calendars_to_csv(filename=filename)

@@ -45,8 +45,8 @@ class Assignment:
         
 class Calendar:
     
-    UNAIVALABLE = -1
-    AVAILABLE = 0
+    UNAIVALABLE = -100
+    AVAILABLE = -1
     
     def __init__(self, class_id) -> None:
         self._class_id = class_id
