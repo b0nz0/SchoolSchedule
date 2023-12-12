@@ -42,14 +42,14 @@ class SimpleEngine(Engine):
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):  
                         if self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE:
-                            score = self.evaluate_constraints(calendar_id=class_id, assignment=assignment, day=day, hour=hour)
+                            (score, constraint_scores) = self.evaluate_constraints(calendar_id=class_id, assignment=assignment, day=day, hour=hour)
                             logging.debug(f'update: score now = {score} (prof. {persons_string}, day {day.value}, hour {hour})')
                             if score >= 0:
                                 logging.debug(f'candidato: score now = {score} (prof. {persons_string}, day {day.value}, hour {hour})')
                                 if self._suggest_continuing and assignments_remaining[assignment] > 1:
-                                    candidates.append((score, day, hour, True))
+                                    candidates.append((score, constraint_scores, day, hour, True))
                                 else:
-                                    candidates.append((score, day, hour, False))
+                                    candidates.append((score, constraint_scores, day, hour, False))
                         else:
                             pass
                         #logging.debug(f'skipping day {day.value}, hour {hour}')
@@ -70,37 +70,45 @@ class SimpleEngine(Engine):
                         working = False
                         break
                 else:
-                    (score, day, hour, continuing) = sorted(candidates, key=itemgetter(0), reverse=True)[0]
+                    (score, constraint_scores, day, hour, continuing) = sorted(candidates, key=itemgetter(0), reverse=True)[0]
                     logging.debug(f'best candidate: class={class_id}, score={score}, day={day.value}, hour={hour}')
                     self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                        class_id=class_id, day=day, hour_ordinal=hour, score=score)
+                                        class_id=class_id, day=day, hour_ordinal=hour, score=score, constraint_scores=constraint_scores)
                     assignments_remaining[assignment] = assignments_remaining[assignment] - 1
                     # let's see if we can attach a hour after this one, as suggested
                     if continuing:
                         if self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour+1) == Calendar.AVAILABLE:
-                            score = self.evaluate_constraints(calendar_id=class_id, assignment=assignment, day=day, hour=hour+1)
+                            (score, constraint_scores) = self.evaluate_constraints(calendar_id=class_id, assignment=assignment, day=day, hour=hour)
                             if score >= 0:
                                 logging.debug('can continue')
                                 self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                            class_id=class_id, day=day, hour_ordinal=hour+1, score=score)
+                                            class_id=class_id, day=day, hour_ordinal=hour+1, score=score, constraint_scores=constraint_scores)
                                 assignments_remaining[assignment] = assignments_remaining[assignment] - 1
         self._closed = working
 
     def evaluate_constraints(self, calendar_id, assignment, day, hour) -> int:
-        score = 0
+        overall_score = 0
+        constraint_scores = []
         # if the constraint suggests to append a hour after the current one
         suggest_continuing = False
         for c in self._struct.constraints:
             if c.has_trigger(None):
-                score = score + c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                constraint_scores.append((c, score))
+                overall_score = overall_score + score
             if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
-                score = score + c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)                                        
+                constraint_scores.append((c, score))
+                overall_score = overall_score + score
             for person in [x['person_id'] for x in assignment.data['persons']]:                                        
                 if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
-                    score = score + c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)                                        
+                    score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)                                        
+                    constraint_scores.append((c, score))
+                    overall_score = overall_score + score
             suggest_continuing = suggest_continuing or c.suggest_continuing()                                      
             self._suggest_continuing = suggest_continuing
-        return score
+
+        return (overall_score, constraint_scores)
 
     def _suggest_substitution(self, assignment):
         MAX = 1000000000
@@ -110,7 +118,7 @@ class SimpleEngine(Engine):
             for hour in range(1, 11):  
                 candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
                 if  candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
-                    score = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                    (score, constraint_scores) = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                     if score < lowest_score[0]:
                         lowest_score = (score, day, hour)
                     if score == lowest_score[0] and random.choice([True, False, False, False, False, False, False, False]):

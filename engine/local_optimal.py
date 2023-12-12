@@ -7,7 +7,7 @@ from engine.simple_engine import SimpleEngine
 
 class LocalOptimalEngine(Engine):
 
-    MAX_REASSIGNMENTS = 200
+    MAX_REASSIGNMENTS = 2000
 
     def __init__(self) -> None:
         super().__init__()
@@ -17,8 +17,10 @@ class LocalOptimalEngine(Engine):
         for row in rows:
             self._struct.load_assignment_from_subject_in_class(int(row))
         constraint = NonDuplicateConstraint()
+        constraint.identifier = "non-duplicate"
         self._struct.constraints.add(constraint)
         constraint = NoComebacks()
+        constraint.identifier = "no comebacks"        
         self._struct.constraints.add(constraint)
 
     def run(self):
@@ -34,7 +36,7 @@ class LocalOptimalEngine(Engine):
         while len([a for a in assignments_remaining.keys() if assignments_remaining[a] > 0]) > 0 and working:
             # cycle thru all free hours in each calendar to find a best score
             max_score = -1
-            candidate_assignment = None
+            candidates = []
             for calendar_id in sorted(self._struct.get_calendar_ids(), reverse=random.choice([True, False])):
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):  
@@ -42,26 +44,28 @@ class LocalOptimalEngine(Engine):
                             for assignment in [a for a in assignments_remaining.keys() \
                                                if assignments_remaining[a] > 0]:
                                 subject = assignment.data['subject']
+                                persons_list = [x['person'] for x in assignment.data['persons']]
+                                persons_string = ",".join(persons_list)
                                 if reassignments > 80:
-                                    persons_list = [x['person'] for x in assignment.data['persons']]
-                                    persons_string = ",".join(persons_list)
+                                    pass
 #                                    logging.debug('assignment class_id ' + str(assignment.data['class_id']) + ' subject ' + subject + \
 #                                        '(' + persons_string + ') remaining ' + str(assignments_remaining[assignment]))
                                 if assignment.data['class_id'] == calendar_id:
 #                                    logging.debug(f'cerco classe {calendar_id}, giorno {day.value}, ora {hour}, materia {subject}')
                                     # find all non exhausted assignments for this class
-                                    score = self.evaluate_constraints(calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                                    (score, constraint_scores) = self.evaluate_constraints(calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                                     if score > max_score:
                                         max_score = score
-                                        candidate_assignment = (calendar_id, assignment, day, hour)
-                                        persons_list = [x['person'] for x in assignment.data['persons']]
-                                        persons_string = ",".join(persons_list)
+                                        candidates = [(calendar_id, assignment, day, hour, constraint_scores)]
                                         logging.debug(f'candidato: score now = {score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')
+                                    elif score == max_score:
+                                        candidates.append((calendar_id, assignment, day, hour, constraint_scores))
+                                        logging.debug(f'candidato pari: score now = {score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')                                        
                                     else:
                                         logging.debug(f'non candidato: score now = {score} < {max_score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')
 
             # get the highest score between possible candidates and assign it to the hour
-            if not candidate_assignment:
+            if len(candidates) == 0:
                 if reassignments < LocalOptimalEngine.MAX_REASSIGNMENTS:
                     for (score, class_id, sugg_day, sugg_hour) in self._suggest_substitution():
                         logging.debug(f'impossibile trovare un candidato, provo una riassegnazione della classe {class_id}@{sugg_day} - ora {sugg_hour}')
@@ -75,10 +79,10 @@ class LocalOptimalEngine(Engine):
                     working = False
                     break
             else:
-                (calendar_id, assignment, day, hour) = candidate_assignment
-                logging.debug(f'assign best candidate: class={calendar_id}, score={max_score}, day={day.value}, hour={hour}')
+                (calendar_id, assignment, day, hour, constraint_scores) = random.choice(candidates)
+                logging.debug(f'assign best candidate: class={calendar_id}, score={max_score}, day={day.value}, hour={hour} out of {len(candidates)}')
                 self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                    class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score)
+                                    class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score, constraint_scores=constraint_scores)
                 assignments_remaining[assignment] = assignments_remaining[assignment] - 1
                     # let's see if we can attach a hour after this one, as suggested
 #                    if continuing:
@@ -92,12 +96,15 @@ class LocalOptimalEngine(Engine):
         self._closed = working
 
     def evaluate_constraints(self, calendar_id, assignment, day, hour) -> int:
-        score = 0
+        overall_score = 0
+        constraint_scores = []
         # if the constraint suggests to append a hour after the current one
         suggest_continuing = False
         for c in self._struct.constraints:
 #            if c.has_trigger(None):
-            score = score + c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+            score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+            constraint_scores.append((c, score))
+            overall_score = overall_score + score
 #            if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
 #                score = score + c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
 #            for person in [x['person_id'] for x in assignment.data['persons']]:                                        
@@ -105,7 +112,7 @@ class LocalOptimalEngine(Engine):
 #                    score = score + c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)                                        
 #            suggest_continuing = suggest_continuing or c.suggest_continuing()                                      
 #            self._suggest_continuing = suggest_continuing
-        return score
+        return (overall_score, constraint_scores)
 
     def _suggest_substitution(self):
         MAX = 1000000000
@@ -116,7 +123,7 @@ class LocalOptimalEngine(Engine):
                 for hour in range(1, 11):  
                     candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
                     if  candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
-                        score = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                        (score, constraint_scores) = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                         if score <= lowest_score:
                             ret.append((score, class_id, day, hour))
                             lowest_score = score

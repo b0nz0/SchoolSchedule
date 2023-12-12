@@ -5,7 +5,7 @@ class NoComebacks(Constraint):
     
     def __init__(self) -> None:
         super().__init__()
-        self.score = -20
+        self.score = -50
         self.weight = 20
         self.register_trigger(None)
 
@@ -19,7 +19,7 @@ class NoComebacks(Constraint):
         persons = [x['person_id'] for x in assignment.data['persons']]
         
         # cycle thru the hours before this one in the same day
-        for currhour in range(1, hour-1):  
+        for currhour in [x for x in range(1, 11) if x < hour - 1 or x > hour + 1]:  
             ass_in_calendar = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=currhour)
             if ass_in_calendar == Calendar.AVAILABLE or ass_in_calendar == Calendar.UNAIVALABLE:
                 continue

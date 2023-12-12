@@ -154,6 +154,9 @@ class Constraint:
     def identifier(self, identifier):
         self._identifier = identifier
 
+    def __repr__(self) -> str:
+        return f'{self.identifier}'
+    
 class EngineSupport:
 
     def __init__(self) -> None:
@@ -218,34 +221,34 @@ class EngineSupport:
         else:
             return Calendar.UNAIVALABLE
         
-    def assign(self, subject_in_class_id: int, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int, score: int=0):
+    def assign(self, subject_in_class_id: int, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int, score: int, constraint_scores: None):
         plan_day = self.get_calendar(class_id=class_id).day(day_id=day)
         plan_day[hour_ordinal] = self._assignments[subject_in_class_id]
-        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=score)
+        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=score, constraint_scores=constraint_scores)
 
     def deassign(self, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int):
         plan_day = self.get_calendar(class_id=class_id).day(day_id=day)
         plan_day[hour_ordinal] = Calendar.AVAILABLE
-        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=0)
+        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=0, constraint_scores=[])
 
-    def _update_score(self, class_id, day, hour_ordinal, score):
+    def _update_score(self, class_id, day, hour_ordinal, score, constraint_scores):
         if class_id not in self._scores.keys():
             self._scores[class_id] = {}
-        self._scores[class_id][(day, hour_ordinal)] = score
+        self._scores[class_id][(day, hour_ordinal)] = (score, constraint_scores)
 
     def get_score(self, class_id: int, day: int, hour_ordinal: int):
         if class_id not in self._scores.keys():
-            return 0
+            return (0, None)
         if (day, hour_ordinal) not in self._scores[class_id]:
-            return 0
+            return (0, None)
         return self._scores[class_id][(day, hour_ordinal)]
 
     def get_overall_score(self, class_id: int):
         score = 0
         if class_id not in self._scores.keys():
             return 0 
-        for s in self._scores[class_id]:
-            score = score + s
+        for (s, c) in self._scores[class_id]:
+            score = score + self._scores[class_id][(s, c)][0]
         return score
         
     def get_calendar_ids(self):
@@ -254,7 +257,7 @@ class EngineSupport:
     def write_calendars_to_csv(self, filename):
         with open(filename, 'w') as ff:
             for class_id in self.get_calendar_ids():
-                str = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;'
+                str = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
                 for hour in range(1, 11):
                     str = str + f'\n{hour};'
                     for day in db.model.WeekDayEnum:
@@ -265,10 +268,29 @@ class EngineSupport:
                             str = str + f'---;'    
                         else:
                             subject = assignment.data['subject']
-                            score = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                            (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                             persons_list = [x['person'] for x in assignment.data['persons']]
                             persons_string = ",".join(persons_list)
-                            str = str + f'{subject} ({persons_string}) <{score}>;'
+                            str = str + f'{subject} ({persons_string});'
+                ff.write(str + '\n')
+                
+        with open('debug_' + filename, 'w') as ff:
+            for class_id in self.get_calendar_ids():
+                str = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
+                for hour in range(1, 11):
+                    str = str + f'\n{hour};'
+                    for day in db.model.WeekDayEnum:
+                        assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                        if assignment == Calendar.UNAIVALABLE:
+                            continue
+                        elif assignment == Calendar.AVAILABLE:
+                            str = str + f'---;'    
+                        else:
+                            subject = assignment.data['subject']
+                            (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                            persons_list = [x['person'] for x in assignment.data['persons']]
+                            persons_string = ",".join(persons_list)
+                            str = str + f'{subject} ({persons_string}) <{score}><{constraint_scores}>;'
                 ff.write(str + '\n')
             
     @property

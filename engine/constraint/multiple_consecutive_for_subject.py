@@ -25,6 +25,10 @@ class MultipleConsecutiveForSubject(Constraint):
         assert day != None, 'no weekday provided'
         assert hour != None, 'no hour ordinal provided'
 
+        self._suggest_continuing = False
+        if assignment.data['subject_id'] != self._subject_id:
+            return 0
+        
         # let's see if a multiple day is already present
         ntimes = 0
         for day_ordinal in db.model.WeekDayEnum:
@@ -36,14 +40,15 @@ class MultipleConsecutiveForSubject(Constraint):
                         nfound = nfound + 1
             if nfound >= self._consecutive_hours:
                 ntimes = ntimes + 1
+                
         # no previous assignments that satisfy the constraint
         if ntimes < self._times:
             self._suggest_continuing = False
             ass_m1 = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour-1)
             if type(ass_m1) == Assignment and ass_m1.data['subject_id'] == self._subject_id: 
                 return self.score*10
-            ass_m1 = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour+1)
-            if type(ass_m1) == Assignment and ass_m1.data['subject_id'] == self._subject_id: 
+            ass_p1 = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour+1)
+            if type(ass_p1) == Assignment and ass_p1.data['subject_id'] == self._subject_id: 
                 return self.score*10
             self._suggest_continuing = True
             return self.score

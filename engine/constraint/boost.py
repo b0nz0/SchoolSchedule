@@ -34,26 +34,21 @@ class Boost(Constraint):
         persons = [x['person_id'] for x in assignment.data['persons']]
         
         if self._subject_id:
-            if subject_id == self._subject_id and \
-                    (class_id == self._class_id or self._class_id == None) and \
+            if subject_id == self._subject_id:
+                if  (class_id == self._class_id or self._class_id == None) and \
                     (day == self._day or self._day == None):
-                if hour == self._hour or self._hour == None:
-                    return self.score
-                else: 
-                    return 0
-            else:
-                return 0
+                    if hour == self._hour or self._hour == None:
+                        return self.score
+                return 1
             
         elif self._person_id:
-            if self._person_id in persons and \
-                    (class_id == self._class_id or self._class_id == None) and \
+            if self._person_id in persons:
+                if (class_id == self._class_id or self._class_id == None) and \
                     (day == self._day or self._day == None):
-                if hour == self._hour or self._hour == None:
-                    return self.score
-                else: 
-                    return 0
-            else:
-                return 0
+                    if hour == self._hour or self._hour == None:
+                        return self.score
+                return 1
+
         return 0
     
     def to_model(self) -> db.model.Constraint:
