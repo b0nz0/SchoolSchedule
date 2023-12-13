@@ -13,6 +13,7 @@ class Boost(Constraint):
         self._day = None
         self.score = 1000
         self.weight = 1000
+        self.noscore = 1
 
     def configure(self, person_id: int, subject_id: int, class_id: int, day: WeekDayEnum, hour: int, score=1000):
         if subject_id:
@@ -25,6 +26,8 @@ class Boost(Constraint):
         self._hour = hour
         self._day = day
         self.score = score
+        if score > 0: self.noscore = 0
+        else: self.noscore = 1
         
     def fire(self, engine_support: EngineSupport, calendar_id:int=None, assignment:Assignment=None, day:WeekDayEnum=None, hour:int=None):
         assert assignment != None, 'no assignment provided'
@@ -39,7 +42,7 @@ class Boost(Constraint):
                     (day == self._day or self._day == None):
                     if hour == self._hour or self._hour == None:
                         return self.score
-                return 1
+                return self.noscore
             
         elif self._person_id:
             if self._person_id in persons:
@@ -47,7 +50,7 @@ class Boost(Constraint):
                     (day == self._day or self._day == None):
                     if hour == self._hour or self._hour == None:
                         return self.score
-                return 1
+                return self.noscore
 
         return 0
     

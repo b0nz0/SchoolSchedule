@@ -55,10 +55,14 @@ class Calendar:
     def load(self, plan_id: int):
         if len(self._days.keys()) > 0:
             print(f'Calendario {self._id} già caricato. Sovrascrivo\n')
+        for day in db.model.WeekDayEnum:
+            self._days[day] = {}
+            for hour in range(1, 11):
+                    self._days[day][hour] = Calendar.UNAIVALABLE
+
         plan = db.query.get_plan(plan_id)
         if plan:
             for day in plan.keys():
-                self._days[day] = {}
                 for daily_hour in plan[day]:
                     self._days[day][daily_hour.ordinal] = Calendar.AVAILABLE
         else:
@@ -228,8 +232,9 @@ class EngineSupport:
 
     def deassign(self, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int):
         plan_day = self.get_calendar(class_id=class_id).day(day_id=day)
-        plan_day[hour_ordinal] = Calendar.AVAILABLE
-        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=0, constraint_scores=[])
+        if type(plan_day[hour_ordinal]) == Assignment:
+            plan_day[hour_ordinal] = Calendar.AVAILABLE
+            self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=0, constraint_scores=[])
 
     def _update_score(self, class_id, day, hour_ordinal, score, constraint_scores):
         if class_id not in self._scores.keys():
@@ -319,6 +324,13 @@ class Engine:
         self._struct.constraints.add(constraint)
         constraint = NoComebacks()
         self._struct.constraints.add(constraint)
+
+    def clear_assignments(self):        
+        for calendar_id in self._struct.get_calendar_ids():
+            for day in db.model.WeekDayEnum:
+                for hour in range(1, 11):
+                    self._struct.deassign(class_id=calendar_id, day=day, hour_ordinal=hour)
+
 
     def add_constraint(self, constraint):
         self._struct.constraints.add(constraint)

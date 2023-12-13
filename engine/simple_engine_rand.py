@@ -26,6 +26,8 @@ class SimpleEngineRand(Engine):
         assignments_remaining = {}
         reassignments = 0
 
+        self.clear_assignments()
+
         # save remaining hours per assignment in class
         for assignment in self._struct.assignments.values():
             assignments_remaining[assignment] = assignment.data['hours_total']
@@ -108,7 +110,7 @@ class SimpleEngineRand(Engine):
                     constraint_scores.append((c, score))
                     overall_score = overall_score + score
             suggest_continuing = suggest_continuing or c.suggest_continuing()                                      
-            self._suggest_continuing = suggest_continuing
+        self._suggest_continuing = suggest_continuing
 
         return (overall_score, constraint_scores)
 

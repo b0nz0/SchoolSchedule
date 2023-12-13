@@ -603,32 +603,44 @@ def populate_DB():
     c.identifier = "Fisica no ultime ore"
     c.configure(person_id=None, subject_id=subj_fisica.id, class_id=None, day=None, hour=5, score=-2000)
     db.query.save(c.to_model())
+    c = engine.constraint.Boost()
+    c.identifier = "lettore mai martedì"
+    c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
+    db.query.save(c.to_model())
 
 def test():
     s = db.query.get(School, 1)
     logging.debug(s)
     logging.debug(db.query.dump_school_year(id=1))
+
     eng = SimpleEngineRand()
-    eng.load(1)
     for c in db.query.get_constraints():
         eng.add_constraint(c)
     c = engine.constraint.Boost()
     c.identifier = "lettore mai martedì"
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     eng.add_constraint(c)
-    logger.debug('eseguo SimpleEngineRand')
-    eng.run()
+    eng.load(1)
+    for x in range(1,6):
+        logger.info(f'eseguo SimpleEngineRand (run {x})')
+        print(f'eseguo SimpleEngineRand (run {x})')
+        eng.run()
+        if eng.closed: break
     eng.write_calendars_to_csv('calendari.csv')
+
     eng = LocalOptimalEngine()
-    eng.load(1)
     for c in db.query.get_constraints():
         eng.add_constraint(c)
     c = engine.constraint.Boost()
     c.identifier = "lettore mai martedì"
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     eng.add_constraint(c)
-    logger.debug('eseguo LocalOptimalEngine')
-    eng.run()
+    eng.load(1)
+    for x in range(1,6):
+        logger.info(f'eseguo LocalOptimalEngine (run {x})')
+        print(f'eseguo LocalOptimalEngine (run {x})')
+        eng.run()
+        if eng.closed: break
     eng.write_calendars_to_csv('calendari_lo.csv')
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
