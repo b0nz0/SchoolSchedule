@@ -2,6 +2,8 @@ import traceback
 import logging
 from typing import List
 import psycopg
+import sqlalchemy
+
 import db.connection
 from sqlalchemy import select
 from db.model import *
@@ -245,6 +247,16 @@ def get_plan_for_class(class_id: int):
             stmt = select(ClassPlan.plan_id). \
                 where(ClassPlan.class_id == class_id)
             return session.execute(stmt).scalar_one_or_none()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def delete_plan_for_class(class_id: int):
+    try:
+        with db.connection.active_session() as session:
+            stmt = sqlalchemy.delete(ClassPlan). \
+                where(ClassPlan.class_id == class_id)
+            session.execute(stmt)
+            session.commit()
     except (Exception) as error:
         traceback.print_exc()
 

@@ -1,7 +1,6 @@
 import db.query
 import db.model
 from engine.constraint import *
-from engine.constraint import NonDuplicateConstraint
 
 
 class Assignment:
@@ -237,7 +236,7 @@ class EngineSupport:
             self._scores[class_id] = {}
         self._scores[class_id][(day, hour_ordinal)] = (score, constraint_scores)
 
-    def get_score(self, class_id: int, day: WeekDayEnum, hour_ordinal: int):
+    def get_score(self, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int):
         if class_id not in self._scores.keys():
             return (0, None)
         if (day, hour_ordinal) not in self._scores[class_id]:

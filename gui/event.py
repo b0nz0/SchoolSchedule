@@ -1,4 +1,7 @@
-import gui.setup, gui.screen
+import logging
+from tkinter import END
+
+import gui.setup, gui.screen, gui.dialog
 import db.query, db.model
 from operator import itemgetter
 import tkinter.simpledialog, tkinter.messagebox
@@ -20,6 +23,7 @@ def populate_school_combo():
     for school in db.query.get_schools():
         school_dict[school.name] = school.id
     ui.widgets['schools_combo']['values'] = list(school_dict.keys())
+    ui.widgets['schools_combo'].current(0)
 
 
 def populate_school_configuration():
@@ -32,12 +36,12 @@ def populate_school_configuration():
     for item in ui.widgets['years_listbox'].get_children():
         ui.widgets['years_listbox'].delete(item)
 
-    for identifier, id in [(y.identifier, y.id) for y in years]:
-        years_list.append((identifier, id))
-    for (identifier, id) in sorted(years_list, key=itemgetter(0)):
-        years_dict[identifier] = id
-        years_dict[id] = identifier
-        ui.widgets['years_listbox'].insert(parent="", index="end", text=identifier, iid=id)
+    for identifier, yid in [(y.identifier, y.id) for y in years]:
+        years_list.append((identifier, yid))
+    for (identifier, yid) in sorted(years_list, key=itemgetter(0)):
+        years_dict[identifier] = yid
+        years_dict[yid] = identifier
+        ui.widgets['years_listbox'].insert(parent="", index="end", text=identifier, iid=yid)
 
         # Clear the treeview list items
     for item in ui.widgets['sections_listbox'].get_children():
@@ -45,12 +49,12 @@ def populate_school_configuration():
 
     sections = db.query.get_sections(school_id=school_selected_dict['id'])
     sections_list = []
-    for identifier, id in [(y.identifier, y.id) for y in sections]:
-        sections_list.append((identifier, id))
-    for (identifier, id) in sorted(sections_list, key=itemgetter(0)):
-        sections_dict[identifier] = id
-        sections_dict[id] = identifier
-        ui.widgets['sections_listbox'].insert(parent="", index="end", text=identifier, iid=id)
+    for identifier, yid in [(y.identifier, y.id) for y in sections]:
+        sections_list.append((identifier, yid))
+    for (identifier, yid) in sorted(sections_list, key=itemgetter(0)):
+        sections_dict[identifier] = yid
+        sections_dict[yid] = identifier
+        ui.widgets['sections_listbox'].insert(parent="", index="end", text=identifier, iid=yid)
 
         # Clear the treeview list items
     for item in ui.widgets['classes_listbox'].get_children():
@@ -58,17 +62,17 @@ def populate_school_configuration():
 
     classes = db.query.get_classes(schoolyear_id=schoolyear_selected_dict['id'])
     classes_list = []
-    for year, section, id in [(c.year, c.section, c.id) for c in classes]:
-        classes_list.append((year.identifier, section.identifier, id))
+    for year, section, yid in [(c.year, c.section, c.id) for c in classes]:
+        classes_list.append((year.identifier, section.identifier, yid))
 
-    for (year, section, id) in sorted(classes_list, key=itemgetter(1)):
-        if not ui.widgets['classes_listbox'].exists(str(section)):
-            ui.widgets['classes_listbox'].insert(parent="", index="end", text=str(section), iid=str(section))
+    for (year, section, sid) in sorted(classes_list, key=itemgetter(1)):
+        if not ui.widgets['classes_listbox'].exists('S' + str(section)):
+            ui.widgets['classes_listbox'].insert(parent="", index="end", text=str(section), iid='S' + str(section))
 
-    for (year, section, id) in sorted(sorted(classes_list, key=itemgetter(1)), key=itemgetter(0)):
+    for (year, section, sid) in sorted(sorted(classes_list, key=itemgetter(1)), key=itemgetter(0)):
         identifier = str(year) + " " + str(section)
-        classes_dict[identifier] = id
-        ui.widgets['classes_listbox'].insert(parent=str(section), index="end", text=identifier, iid=id)
+        classes_dict[identifier] = sid
+        ui.widgets['classes_listbox'].insert(parent='S' + str(section), index="end", text=identifier, iid=sid)
 
 
 def populate_room_configuration():
@@ -81,23 +85,23 @@ def populate_room_configuration():
     for item in ui.widgets['rooms_listbox'].get_children():
         ui.widgets['rooms_listbox'].delete(item)
 
-    for identifier, room_type, id in [(r.identifier, r.room_type, r.id) for r in rooms]:
-        rooms_list.append((identifier, room_type, id))
+    for identifier, room_type, rid in [(r.identifier, r.room_type, r.id) for r in rooms]:
+        rooms_list.append((identifier, room_type, rid))
     ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.AULA.value, iid="A")
     ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.LABORATORIO.value, iid="B")
     ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.PALESTRA.value, iid="C")
     ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.ALTRO.value, iid="D")
 
-    for (identifier, room_type, id) in sorted(rooms_list, key=itemgetter(0)):
+    for (identifier, room_type, rid) in sorted(rooms_list, key=itemgetter(0)):
         rooms_dict[identifier] = id
         if room_type == db.model.RoomEnum.AULA:
-            ui.widgets['rooms_listbox'].insert(parent="A", index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="A", index="end", text=identifier, iid=rid)
         elif room_type == db.model.RoomEnum.LABORATORIO:
-            ui.widgets['rooms_listbox'].insert(parent="B", index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="B", index="end", text=identifier, iid=rid)
         elif room_type == db.model.RoomEnum.PALESTRA:
-            ui.widgets['rooms_listbox'].insert(parent="C", index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="C", index="end", text=identifier, iid=rid)
         elif room_type == db.model.RoomEnum.ALTRO:
-            ui.widgets['rooms_listbox'].insert(parent="D", index="end", text=identifier, iid=id)
+            ui.widgets['rooms_listbox'].insert(parent="D", index="end", text=identifier, iid=rid)
 
 
 def populate_timetable_combo():
@@ -121,9 +125,11 @@ def school_selected(event):
     ui.widgets['schoolyear_duplicate_button'].grid()
     ui.widgets['schoolyear_reset_button'].grid()
     ui.widgets['schoolyears_combo']['values'] = list([s.identifier for s in schoolyears])
-    for identifier, id in [(s.identifier, s.id) for s in schoolyears]:
-        schoolyears_dict[identifier] = id
+    ui.widgets['schoolyears_combo'].current(0)
+    for identifier, sid in [(s.identifier, s.id) for s in schoolyears]:
+        schoolyears_dict[identifier] = sid
     ui.widgets['school_delete_button'].state(['!disabled'])
+    schoolyear_selected(None)
 
 
 def school_delete():
@@ -133,10 +139,10 @@ def school_delete():
 def school_add():
     ui = gui.setup.SchoolSchedulerGUI()
     school_name = tkinter.simpledialog.askstring("Aggiungi scuola", "Nome scuola")
-    if school_name != None and school_name != '':
+    if school_name is not None and school_name != '':
         s = db.model.School()
         s.name = school_name
-        if (db.query.get_school(s) != None):
+        if db.query.get_school(s) is not None:
             tkinter.messagebox.showwarning("Aggiunta scuola", "Scuola " + school_name + " già presente")
         else:
             db.query.save(s)
@@ -166,10 +172,10 @@ def schoolyear_delete():
 def schoolyear_add():
     ui = gui.setup.SchoolSchedulerGUI()
     schoolyear_name = tkinter.simpledialog.askstring("Aggiungi anno scolastico", "Anno Scolastico")
-    if schoolyear_name != None and schoolyear_name != '':
+    if schoolyear_name is not None and schoolyear_name != '':
         s = db.model.SchoolYear()
         s.identifier = schoolyear_name
-        if (db.query.get_schoolyear(s) != None):
+        if db.query.get_schoolyear(s) is not None:
             tkinter.messagebox.showwarning("Aggiunta anno scolastico",
                                            "Anno scolastico " + schoolyear_name + " già presente")
         else:
@@ -191,10 +197,10 @@ def year_delete():
 def year_add():
     ui = gui.setup.SchoolSchedulerGUI()
     year_name = tkinter.simpledialog.askstring("Aggiungi anno", "Anno")
-    if year_name != None and year_name != '':
+    if year_name is not None and year_name != '':
         s = db.model.Year()
         s.identifier = year_name
-        if (db.query.get_year(s)):
+        if db.query.get_year(s):
             tkinter.messagebox.showwarning("Aggiunta anno ", "Anno " + year_name + " già presente")
         else:
             s.school_id = school_selected_dict['id']
@@ -241,9 +247,35 @@ def add_class_in_plan():
 
     class_ids = ui.widgets['classes_listbox'].selection()
     class_string = str()
-    for class_id in class_ids:
-        class_string = class_string + classes_dict[int(class_id)] + ", "
+    for class_id in [int(cid) for cid in class_ids if cid.isnumeric()]:
+        for class_str in classes_dict.keys():
+            if classes_dict[class_str] == class_id:
+                class_string = class_string + class_str + ", "
     class_string = class_string[:-2]
+
+    if len(class_string) == 0:
+        tkinter.messagebox.showwarning("Abbinamento classi", "Nessuna classe selezionata")
+        return None
+
+    for plan in db.query.get_plans(school_id=school_selected_dict['id']):
+        timetable_dict[plan.identifier] = plan.id
+
+    dialog = gui.dialog.AddClassInPlanDialog(parent=ui.root, plans=timetable_dict, classes=class_string)
+
+    plan = dialog.result
+    if plan:
+        plan_id = timetable_dict[plan]
+        logging.info(f'assegno il piano ({plan}: {plan_id}) alle classi {class_string}')
+
+        for class_id in [int(cid) for cid in class_ids if cid.isnumeric()]:
+            db.query.delete_plan_for_class(class_id)
+            cp = db.model.ClassPlan()
+            cp.class_id = class_id
+            cp.plan_id = plan_id
+            db.query.save(cp)
+
+        tkinter.messagebox.showinfo("Abbinamento classi", "Classi abbinate")
+
 
 
 def class_delete():
@@ -266,6 +298,10 @@ def class_create():
         section_string = section_string + sections_dict[int(section_id)] + ", "
     section_string = section_string[:-2]
 
+    if len(year_string) == 0 or len(section_string) == 0:
+        tkinter.messagebox.showwarning("Creazione classi", "Selezionare almeno un anno e una sezione")
+        return None
+
     confirm = tkinter.messagebox.askokcancel("Creazione classi",
                                              "Confermi di creare le classi per l'Anno Scolastico " + ui.widgets[
                                                  'schoolyears_combo'].get() + ":\n" +
@@ -279,7 +315,7 @@ def class_create():
                 c.school_year_id = int(schoolyear_id)
                 c.year_id = int(year_id)
                 c.section_id = int(section_id)
-                if db.query.get_class(c) == None:
+                if db.query.get_class(c) is None:
                     db.query.save(c)
                     created = created + 1
 
@@ -305,14 +341,7 @@ def timetable_selected(event):
     plan = db.query.get_plan(timetable_dict[choice])
 
     d = 1
-    for day in [db.model.WeekDayEnum.MONDAY,
-                db.model.WeekDayEnum.TUESDAY,
-                db.model.WeekDayEnum.WEDNESDAY,
-                db.model.WeekDayEnum.THURSDAY,
-                db.model.WeekDayEnum.FRIDAY,
-                db.model.WeekDayEnum.SATURDAY,
-                db.model.WeekDayEnum.SUNDAY,
-                ]:
+    for day in db.model.WeekDayEnum:
         i = 1
         for daily_hour in plan[day]:
             var_start = ui.variables[f'timetable_hour_{d}_{i}_start']
@@ -323,6 +352,7 @@ def timetable_selected(event):
         d = d + 1
 
     l = ui.widgets['text_plan_classes']
+    l.delete('1.0', END)
     classes_str = str()
     for classe in db.query.get_classes_in_plan(timetable_dict[choice]):
         classes_str = classes_str + str(classe.class_) + '\n'

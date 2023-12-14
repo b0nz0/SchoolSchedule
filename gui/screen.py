@@ -52,7 +52,7 @@ def school_select_screen():
     root.geometry('1200x400')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
-    frame.grid(column=0, row=0, sticky=(N, W, E, S))
+    frame.grid(column=0, row=0)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
 
@@ -187,7 +187,7 @@ def configure_schoolyear_screen():
     root.geometry('800x600')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
-    frame.grid(column=0, row=0, sticky=(N, W, E, S))
+    frame.grid(column=0, row=0)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
 
@@ -297,7 +297,7 @@ def configure_room_screen():
     root.geometry('800x400')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
-    frame.grid(column=0, row=0, sticky=(N, W, E, S))
+    frame.grid(column=0, row=0)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
 
@@ -357,7 +357,7 @@ def configure_timetable_screen():
     root.geometry('800x700')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
-    frame.grid(column=0, row=0, sticky=(N, W, E, S))
+    frame.grid(column=0, row=0)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
 
@@ -391,11 +391,11 @@ def configure_timetable_screen():
         l = ttk.Label(timetable_grid_frame, text=day.value, style='TTFrame.TLabel', padding="5 5 5 5")
         l.grid(column=0, row=curr_row, rowspan=2, sticky=(N, W, E, S))
         for i in range(1, 11):
-            var = StringVar(timetable_grid_frame, value="00:00")
+            var = StringVar(timetable_grid_frame, value="-")
             l = ttk.Entry(timetable_grid_frame, textvariable=var, state=DISABLED, width=5)
             l.grid(column=i, row=curr_row, rowspan=1, sticky=(N, W, E, S))
             ui.variables[f'timetable_hour_{d}_{i}_start'] = var
-            var = StringVar(timetable_grid_frame, value="00:00")
+            var = StringVar(timetable_grid_frame, value="-")
             l = ttk.Entry(timetable_grid_frame, textvariable=var, state=DISABLED, width=5)
             l.grid(column=i, row=curr_row + 1, rowspan=1, sticky=(N, W, E, S))
             ui.variables[f'timetable_hour_{d}_{i}_end'] = var

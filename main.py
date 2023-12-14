@@ -660,7 +660,7 @@ if __name__ == '__main__':
     db.connection.connect()
 
     #    populate_DB()
-    test()
+#    test()
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
     gui.screen.school_select_screen()
