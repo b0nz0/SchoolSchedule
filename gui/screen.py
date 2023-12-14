@@ -43,6 +43,7 @@ TIMETABLE_SELECT_LABEL = "Piani orari"
 START_END = "IN/FI"
 PLAN_USED_IN = "Piano usato in"
 
+
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
@@ -94,7 +95,8 @@ def school_select_screen():
     schoolyear_delete_button.grid(column=12, row=1, sticky=(N, E, W, S))
     schoolyear_delete_button.state(['disabled'])
 
-    schoolyear_duplicate_button = ttk.Button(frame, text=DUPLICATE_SCHOOLYEAR_LABEL, command=gui.event.schoolyear_delete)
+    schoolyear_duplicate_button = ttk.Button(frame, text=DUPLICATE_SCHOOLYEAR_LABEL,
+                                             command=gui.event.schoolyear_delete)
     schoolyear_duplicate_button.grid(column=13, row=1, sticky=(N, E, W, S))
     schoolyear_duplicate_button.state(['disabled'])
 
@@ -102,37 +104,36 @@ def school_select_screen():
     schoolyear_reset_button.grid(column=14, row=1, sticky=(N, E, W, S))
     schoolyear_reset_button.state(['disabled'])
 
-    classes_mgmt_button = ttk.Button(frame, text=MANAGE_CLASSES_LABEL, command=lambda: gui.event.switch_frame(\
+    classes_mgmt_button = ttk.Button(frame, text=MANAGE_CLASSES_LABEL, command=lambda: gui.event.switch_frame(
         "school_select_frame", "schoolyear_configure_frame"))
     classes_mgmt_button.grid(column=0, row=10, columnspan=2, sticky=(N, E, W, S))
     classes_mgmt_button.state(['disabled'])
-    
-    lgst_mgmt_button = ttk.Button(frame, text=MANAGE_LOGISTIC_LABEL, command=lambda: gui.event.switch_frame(\
+
+    lgst_mgmt_button = ttk.Button(frame, text=MANAGE_LOGISTIC_LABEL, command=lambda: gui.event.switch_frame(
         "school_select_frame", "room_configure_frame"))
     lgst_mgmt_button.grid(column=11, row=10, columnspan=2, sticky=(N, E, W, S))
     lgst_mgmt_button.state(['disabled'])
-    
+
     sbj_mgmt_button = ttk.Button(frame, text=MANAGE_SUBJECTS_LABEL)
     sbj_mgmt_button.grid(column=13, row=10, columnspan=2, sticky=(N, E, W, S))
     sbj_mgmt_button.state(['disabled'])
-    
+
     pers_mgmt_button = ttk.Button(frame, text=MANAGE_PERSONS_LABEL)
     pers_mgmt_button.grid(column=0, row=11, columnspan=2, sticky=(N, E, W, S))
     pers_mgmt_button.state(['disabled'])
-    
-    time_mgmt_button = ttk.Button(frame, text=MANAGE_TIMETABLE_LABEL, command=lambda: gui.event.switch_frame(\
+
+    time_mgmt_button = ttk.Button(frame, text=MANAGE_TIMETABLE_LABEL, command=lambda: gui.event.switch_frame(
         "school_select_frame", "timetable_configure_frame"))
     time_mgmt_button.grid(column=11, row=11, columnspan=2, sticky=(N, E, W, S))
     time_mgmt_button.state(['disabled'])
-    
+
     rest_mgmt_button = ttk.Button(frame, text=MANAGE_RESTRICTIONS_LABEL)
     rest_mgmt_button.grid(column=13, row=11, columnspan=2, sticky=(N, E, W, S))
     rest_mgmt_button.state(['disabled'])
-    
+
     proc_mgmt_button = ttk.Button(frame, text=PROCESS_LABEL)
     proc_mgmt_button.grid(column=11, row=12, columnspan=2, sticky=(N, E, W, S))
     proc_mgmt_button.state(['disabled'])
-    
 
     heights = []
     widths = []
@@ -177,6 +178,7 @@ def school_select_screen():
 
     gui.event.populate_school_combo()
 
+
 def configure_schoolyear_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
@@ -189,7 +191,7 @@ def configure_schoolyear_screen():
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
 
-    #year selection
+    # year selection
     year_label = ttk.Label(frame, text=YEAR_SELECT_LABEL)
     year_label.grid(column=0, row=0, sticky=(E, W))
 
@@ -209,7 +211,7 @@ def configure_schoolyear_screen():
     year_delete_button.grid(column=11, row=1, sticky=(E, W))
     year_delete_button.state(['disabled'])
 
-    #section selection
+    # section selection
     section_label = ttk.Label(frame, text=SECTION_SELECT_LABEL)
     section_label.grid(column=0, row=2, sticky=(E, W))
 
@@ -229,7 +231,7 @@ def configure_schoolyear_screen():
     section_delete_button.grid(column=11, row=3, sticky=(E, W))
     section_delete_button.state(['disabled'])
 
-    #classes selection
+    # classes selection
     class_label = ttk.Label(frame, text=CLASS_SELECT_LABEL)
     class_label.grid(column=0, row=4, sticky=(E, W))
 
@@ -253,7 +255,7 @@ def configure_schoolyear_screen():
     class_delete_button.grid(column=11, row=6, sticky=(E, W))
     class_delete_button.state(['disabled'])
 
-    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(\
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
         "schoolyear_configure_frame", "school_select_frame"))
     return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
     return_button.state(['!disabled'])
@@ -286,6 +288,7 @@ def configure_schoolyear_screen():
 
     gui.event.populate_school_configuration()
 
+
 def configure_room_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
@@ -298,7 +301,7 @@ def configure_room_screen():
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
 
-    #year selection
+    # year selection
     room_label = ttk.Label(frame, text=ROOM_SELECT_LABEL)
     room_label.grid(column=0, row=0, sticky=(E, W))
 
@@ -318,8 +321,8 @@ def configure_room_screen():
     room_delete_button.grid(column=11, row=1, sticky=(E, W))
     room_delete_button.state(['disabled'])
 
-    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(\
-        "room_configure_frame", "school_select_frame"))    
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
+        "room_configure_frame", "school_select_frame"))
     return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
     return_button.state(['!disabled'])
 
@@ -345,6 +348,7 @@ def configure_room_screen():
 
     gui.event.populate_room_configuration()
 
+
 def configure_timetable_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
@@ -356,8 +360,8 @@ def configure_timetable_screen():
     frame.grid(column=0, row=0, sticky=(N, W, E, S))
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
-    
-    #plan selection
+
+    # plan selection
     time_label = ttk.Label(frame, text=TIMETABLE_SELECT_LABEL)
     time_label.grid(column=0, row=0, sticky=(E, W))
 
@@ -366,9 +370,9 @@ def configure_timetable_screen():
     timetables_combo.grid(column=1, row=0, sticky=(N, W, E, S))
     timetables_combo.bind('<<ComboboxSelected>>', gui.event.timetable_selected)
     timetables_combo['values'] = ['']
-    
+
     frame.rowconfigure(1, minsize=10)
-        
+
     s = ttk.Style()
     # Create style for the inner frame
     s.configure('TTFrame.TFrame', background='white', bordercolor='black', border=1, borderwidth=1)
@@ -393,7 +397,7 @@ def configure_timetable_screen():
             ui.variables[f'timetable_hour_{d}_{i}_start'] = var
             var = StringVar(timetable_grid_frame, value="00:00")
             l = ttk.Entry(timetable_grid_frame, textvariable=var, state=DISABLED, width=5)
-            l.grid(column=i, row=curr_row+1, rowspan=1, sticky=(N, W, E, S))
+            l.grid(column=i, row=curr_row + 1, rowspan=1, sticky=(N, W, E, S))
             ui.variables[f'timetable_hour_{d}_{i}_end'] = var
         curr_row = curr_row + 3
         d = d + 1
@@ -406,7 +410,7 @@ def configure_timetable_screen():
 
     frame.rowconfigure(9, minsize=10)
 
-    l = ttk.Label(frame, text=PLAN_USED_IN, padding= "5 5 5 5")
+    l = ttk.Label(frame, text=PLAN_USED_IN, padding="5 5 5 5")
     l.grid(column=0, row=10, sticky=(N, W, E, S))
     lwidth = l.winfo_reqwidth() * 2
     text_plan_classes = Text(frame, height=8, width=10)
@@ -417,14 +421,14 @@ def configure_timetable_screen():
 
     frame.rowconfigure(20, minsize=10)
 
-    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(\
-        "timetable_configure_frame", "school_select_frame"))    
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
+        "timetable_configure_frame", "school_select_frame"))
     return_button.grid(column=0, row=100, columnspan=2, sticky=(N, S))
     return_button.state(['!disabled'])
-        
+
     ui.frames['timetable_configure_frame'] = frame
     ui.frames['timetable_grid_frame'] = timetable_grid_frame
     ui.widgets['timetables_combo'] = timetables_combo
     ui.widgets['text_plan_classes'] = text_plan_classes
-    
+
     gui.event.populate_timetable_combo()

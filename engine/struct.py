@@ -1,6 +1,8 @@
 import db.query
 import db.model
 from engine.constraint import *
+from engine.constraint import NonDuplicateConstraint
+
 
 class Assignment:
 
@@ -9,20 +11,11 @@ class Assignment:
         self._subject_in_class_id = 0
         self._data = dict()
         self._score = 0
-    
-    
-    def as_copy(self, from_assignment):
-        self._subject_in_class_id = from_assignment.subject_in_class_id
-        self._classe = from_assignment.class_.copy()
-        self._subject = from_assignment.subject.copy()
-        self._persons = from_assignment.persons[:]
-        self._room = from_assignment.room.copy()
-        self._score = 0
-            
+
     @property
     def id(self):
         return self._id
-    
+
     @property
     def subject_in_class_id(self):
         return self._subject_in_class_id
@@ -30,35 +23,35 @@ class Assignment:
     @subject_in_class_id.setter
     def subject_in_class_id(self, subject_in_class_id):
         self._subject_in_class_id = subject_in_class_id
-    
+
     @property
     def data(self):
         return self._data
-    
+
     @property
     def score(self):
         return self._score
-    
+
     @score.setter
     def score(self, score):
         self._score = score
-        
+
+
 class Calendar:
-    
     UNAIVALABLE = -100
     AVAILABLE = -1
-    
+
     def __init__(self, class_id) -> None:
         self._class_id = class_id
         self._days = {}
-        
+
     def load(self, plan_id: int):
         if len(self._days.keys()) > 0:
-            print(f'Calendario {self._id} già caricato. Sovrascrivo\n')
+            print(f'Calendario {self.class_id} già caricato. Sovrascrivo\n')
         for day in db.model.WeekDayEnum:
             self._days[day] = {}
             for hour in range(1, 11):
-                    self._days[day][hour] = Calendar.UNAIVALABLE
+                self._days[day][hour] = Calendar.UNAIVALABLE
 
         plan = db.query.get_plan(plan_id)
         if plan:
@@ -67,19 +60,19 @@ class Calendar:
                     self._days[day][daily_hour.ordinal] = Calendar.AVAILABLE
         else:
             print(f'Plan ID {plan_id} non trovato\n')
-            
+
     def day(self, day_id):
         if day_id in self._days.keys():
             return self._days[day_id]
         else:
             return None
-    
+
     @property
     def class_id(self):
         return self._class_id
-        
-class Constraint:
 
+
+class Constraint:
     TRIGGER_ALWAYS = 0
     TRIGGER_PERSON = 1
     TRIGGER_CLASS = 2
@@ -87,8 +80,8 @@ class Constraint:
     TRIGGER_SUBJECT = 4
 
     TRIGGER_TYPES = (
-        TRIGGER_ALWAYS, 
-        TRIGGER_PERSON, 
+        TRIGGER_ALWAYS,
+        TRIGGER_PERSON,
         TRIGGER_CLASS,
         TRIGGER_ROOM,
         TRIGGER_SUBJECT
@@ -101,13 +94,13 @@ class Constraint:
         self._weight = 0
         self._score = 0
         self._identifier = ''
-    
+
     def get_triggers(self, trigger_type=None):
         if trigger_type in Constraint.TRIGGER_TYPES:
             return self._triggers[trigger_type]
         else:
             return self._triggers
-    
+
     def register_trigger(self, trigger, trigger_type=TRIGGER_ALWAYS):
         assert trigger_type in Constraint.TRIGGER_TYPES, f'Attempt to add trigger <{trigger}> to non-existent type {trigger_type}'
         self._triggers[trigger_type].add(trigger)
@@ -121,10 +114,10 @@ class Constraint:
         if trigger_type == Constraint.TRIGGER_ALWAYS and len(self._triggers[Constraint.TRIGGER_ALWAYS]) > 0:
             return True
         return trigger in self._triggers[trigger_type]
-    
+
     def fire(self, engine_support, calendar_id=None, assignment_id=None, day=None, hour=None):
         print('WARNING: fired superclass constraint')
-        
+
     def suggest_continuing(self):
         return False
 
@@ -137,7 +130,7 @@ class Constraint:
     @property
     def weight(self):
         return self._weight
-    
+
     @weight.setter
     def weight(self, weight):
         self._weight = weight
@@ -145,7 +138,7 @@ class Constraint:
     @property
     def score(self):
         return self._score
-    
+
     @score.setter
     def score(self, score):
         self._score = score
@@ -153,14 +146,15 @@ class Constraint:
     @property
     def identifier(self):
         return self._identifier
-    
+
     @identifier.setter
     def identifier(self, identifier):
         self._identifier = identifier
 
     def __repr__(self) -> str:
         return f'{self.identifier}'
-    
+
+
 class EngineSupport:
 
     def __init__(self) -> None:
@@ -169,14 +163,14 @@ class EngineSupport:
         self._constraints = set()
         self._persons = {}
         self._scores = {}
-  
+
     def get_assignment(self, subject_in_class_id: int):
         if subject_in_class_id in self._assignments.keys():
-            return self._assignments[subject_in_class_id]  
+            return self._assignments[subject_in_class_id]
         else:
             self._assignments[subject_in_class_id] = Assignment(id=subject_in_class_id)
             return self._assignments[subject_in_class_id]
-    
+
     def load_assignment_from_subject_in_class(self, subject_in_class_id: int):
         sic = db.query.get(db.model.SubjectInClass, id=subject_in_class_id)
         if sic:
@@ -184,8 +178,8 @@ class EngineSupport:
             assignment.subject_in_class_id = subject_in_class_id
             assignment.data['class_id'] = sic.class_id
             assignment.data['section'] = sic.class_.section.identifier
-            assignment.data['year']= sic.class_.year.identifier
-            assignment.data['subject_id']= sic.subject.id
+            assignment.data['year'] = sic.class_.year.identifier
+            assignment.data['subject_id'] = sic.subject.id
             assignment.data['subject'] = sic.subject.identifier
             assignment.data['hours_total'] = sic.hours_total
             assignment.data['persons'] = []
@@ -203,16 +197,16 @@ class EngineSupport:
             assignment.data['room'] = sic.room.identifier
             assignment.score = 0
             self.get_calendar(sic.class_id)
-                
-    def get_calendar(self, class_id = None) -> Calendar:
+
+    def get_calendar(self, class_id=None) -> Calendar:
         if class_id in self._calendars.keys():
-            return self._calendars[class_id]  
-        else: 
+            return self._calendars[class_id]
+        else:
             plan_id = db.query.get_plan_for_class(class_id)
-            if plan_id:    
+            if plan_id:
                 self._calendars[class_id] = Calendar(class_id=class_id)
-                self._calendars[class_id].load(plan_id=plan_id)  
-                return self._calendars[class_id]    
+                self._calendars[class_id].load(plan_id=plan_id)
+                return self._calendars[class_id]
 
     def get_assignment_in_calendar(self, class_id, day, hour_ordinal):
         calendar = self.get_calendar(class_id=class_id)
@@ -221,27 +215,29 @@ class EngineSupport:
             if hour_ordinal in plan_day:
                 return plan_day[hour_ordinal]
             else:
-                return Calendar.UNAIVALABLE    
+                return Calendar.UNAIVALABLE
         else:
             return Calendar.UNAIVALABLE
-        
-    def assign(self, subject_in_class_id: int, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int, score: int, constraint_scores: None):
+
+    def assign(self, subject_in_class_id: int, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int, score: int,
+               constraint_scores: None):
         plan_day = self.get_calendar(class_id=class_id).day(day_id=day)
         plan_day[hour_ordinal] = self._assignments[subject_in_class_id]
-        self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=score, constraint_scores=constraint_scores)
+        self._update_score(class_id=class_id, day=day, hour_ordinal=hour_ordinal, score=score,
+                           constraint_scores=constraint_scores)
 
     def deassign(self, class_id: int, day: db.model.WeekDayEnum, hour_ordinal: int):
         plan_day = self.get_calendar(class_id=class_id).day(day_id=day)
         if type(plan_day[hour_ordinal]) == Assignment:
             plan_day[hour_ordinal] = Calendar.AVAILABLE
-            self._update_score(class_id=class_id, day= day, hour_ordinal=hour_ordinal, score=0, constraint_scores=[])
+            self._update_score(class_id=class_id, day=day, hour_ordinal=hour_ordinal, score=0, constraint_scores=[])
 
     def _update_score(self, class_id, day, hour_ordinal, score, constraint_scores):
         if class_id not in self._scores.keys():
             self._scores[class_id] = {}
         self._scores[class_id][(day, hour_ordinal)] = (score, constraint_scores)
 
-    def get_score(self, class_id: int, day: int, hour_ordinal: int):
+    def get_score(self, class_id: int, day: WeekDayEnum, hour_ordinal: int):
         if class_id not in self._scores.keys():
             return (0, None)
         if (day, hour_ordinal) not in self._scores[class_id]:
@@ -251,53 +247,54 @@ class EngineSupport:
     def get_overall_score(self, class_id: int):
         score = 0
         if class_id not in self._scores.keys():
-            return 0 
+            return 0
         for (s, c) in self._scores[class_id]:
             score = score + self._scores[class_id][(s, c)][0]
         return score
-        
+
     def get_calendar_ids(self):
         return self._calendars.keys()
-    
+
     def write_calendars_to_csv(self, filename):
         with open(filename, 'w') as ff:
             for class_id in self.get_calendar_ids():
-                str = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
+                wstr = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: \
+                    {self.get_overall_score(class_id=class_id)}'
                 for hour in range(1, 11):
-                    str = str + f'\n{hour};'
+                    wstr = wstr + f'\n{hour};'
                     for day in db.model.WeekDayEnum:
                         assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
                         if assignment == Calendar.UNAIVALABLE:
                             continue
                         elif assignment == Calendar.AVAILABLE:
-                            str = str + f'---;'    
+                            wstr = wstr + f'---;'
                         else:
                             subject = assignment.data['subject']
                             (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                             persons_list = [x['person'] for x in assignment.data['persons']]
                             persons_string = ",".join(persons_list)
-                            str = str + f'{subject} ({persons_string});'
-                ff.write(str + '\n')
-                
+                            wstr = wstr + f'{subject} ({persons_string});'
+                ff.write(wstr + '\n')
+
         with open('debug_' + filename, 'w') as ff:
             for class_id in self.get_calendar_ids():
-                str = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
+                wstr = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
                 for hour in range(1, 11):
-                    str = str + f'\n{hour};'
+                    wstr = wstr + f'\n{hour};'
                     for day in db.model.WeekDayEnum:
                         assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
                         if assignment == Calendar.UNAIVALABLE:
                             continue
                         elif assignment == Calendar.AVAILABLE:
-                            str = str + f'---;'    
+                            wstr = wstr + f'---;'
                         else:
                             subject = assignment.data['subject']
                             (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                             persons_list = [x['person'] for x in assignment.data['persons']]
                             persons_string = ",".join(persons_list)
-                            str = str + f'{subject} ({persons_string}) <{score}><{constraint_scores}>;'
-                ff.write(str + '\n')
-            
+                            wstr = wstr + f'{subject} ({persons_string}) <{score}><{constraint_scores}>;'
+                ff.write(wstr + '\n')
+
     @property
     def constraints(self):
         return self._constraints
@@ -309,12 +306,14 @@ class EngineSupport:
     @property
     def assignments(self):
         return self._assignments
-    
+
+
 class Engine:
 
     def __init__(self) -> None:
         self._struct = EngineSupport()
         self._closed = False
+        self._suggest_continuing = False
 
     def load(self, school_year_id: int):
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
@@ -325,26 +324,25 @@ class Engine:
         constraint = NoComebacks()
         self._struct.constraints.add(constraint)
 
-    def clear_assignments(self):        
+    def clear_assignments(self):
         for calendar_id in self._struct.get_calendar_ids():
             for day in db.model.WeekDayEnum:
                 for hour in range(1, 11):
                     self._struct.deassign(class_id=calendar_id, day=day, hour_ordinal=hour)
 
-
     def add_constraint(self, constraint):
         self._struct.constraints.add(constraint)
-        
+
     def run(self):
-        pass        
-    
+        pass
+
     def write_calendars_to_csv(self, filename):
         self._struct.write_calendars_to_csv(filename=filename)
-            
+
     @property
     def closed(self):
         return self._closed
-    
+
     @property
     def engine_support(self):
         return self._struct

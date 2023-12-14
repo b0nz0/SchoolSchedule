@@ -10,6 +10,7 @@ connection_parameters = None
 active_engine = None
 active_session = None
 
+
 def config(filename='database.ini', section='postgresql'):
     # create a parser
     parser = ConfigParser()
@@ -27,6 +28,7 @@ def config(filename='database.ini', section='postgresql'):
 
     return db
 
+
 def connect():
     global connection_parameters
     global active_engine
@@ -34,39 +36,41 @@ def connect():
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
-        if connection_parameters == None:
+        if connection_parameters is None:
             # read connection parameters
             connection_parameters = config()
 
         active_engine = create_engine("postgresql+psycopg://" + connection_parameters['user'] + \
-                                ":" + connection_parameters['password'] + \
-                                "@" + connection_parameters['host'] + \
-                                ":" + connection_parameters['port'] + \
-                                "/" + connection_parameters['dbname'], echo=False)
+                                      ":" + connection_parameters['password'] + \
+                                      "@" + connection_parameters['host'] + \
+                                      ":" + connection_parameters['port'] + \
+                                      "/" + connection_parameters['dbname'], echo=False)
         active_session = sessionmaker(active_engine, expire_on_commit=False)
 
     except (Exception, psycopg.DatabaseError) as error:
         print(error)
+
 
 def print_connection_status():
     global active_connection
     try:
         # create a cursor
         cur = active_connection.cursor()
-        
-	    # execute a statement
+
+        # execute a statement
         print('PostgreSQL database version:')
         cur.execute('SELECT version()')
 
         # display the PostgreSQL database server version
         db_version = cur.fetchone()
         print(db_version)
-       
-	    # close the communication with the PostgreSQL
+
+        # close the communication with the PostgreSQL
         cur.close()
 
     except (Exception, psycopg.DatabaseError) as error:
         print(error)
+
 
 def unconnect():
     global active_connection

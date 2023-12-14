@@ -2,8 +2,11 @@ from engine.struct import *
 from db.model import DailyHour, WeekDayEnum
 import json
 
+from engine.struct import Constraint, Assignment
+
+
 class Boost(Constraint):
-    
+
     def __init__(self) -> None:
         super().__init__()
         self._person_id = None
@@ -15,7 +18,8 @@ class Boost(Constraint):
         self.weight = 1000
         self.noscore = 1
 
-    def configure(self, person_id: int, subject_id: int, class_id: int, day: WeekDayEnum, hour: int, score=1000):
+    def configure(self, person_id: int or None, subject_id: int or None, class_id: int or None,
+                  day: WeekDayEnum or None, hour: int or None, score=1000):
         if subject_id:
             self.register_trigger(trigger=subject_id, trigger_type=Constraint.TRIGGER_SUBJECT)
         if person_id:
@@ -26,34 +30,37 @@ class Boost(Constraint):
         self._hour = hour
         self._day = day
         self.score = score
-        if score > 0: self.noscore = 0
-        else: self.noscore = 1
-        
-    def fire(self, engine_support: EngineSupport, calendar_id:int=None, assignment:Assignment=None, day:WeekDayEnum=None, hour:int=None):
-        assert assignment != None, 'no assignment provided'
+        if score > 0:
+            self.noscore = 0
+        else:
+            self.noscore = 1
+
+    def fire(self, engine_support: EngineSupport, calendar_id: int = None, assignment: Assignment = None,
+             day: WeekDayEnum = None, hour: int = None):
+        assert assignment is not None, 'no assignment provided'
 
         subject_id = assignment.data['subject_id']
         class_id = assignment.data['class_id']
         persons = [x['person_id'] for x in assignment.data['persons']]
-        
+
         if self._subject_id:
             if subject_id == self._subject_id:
-                if  (class_id == self._class_id or self._class_id == None) and \
-                    (day == self._day or self._day == None):
-                    if hour == self._hour or self._hour == None:
+                if (class_id == self._class_id or self._class_id is None) and \
+                        (day == self._day or self._day is None):
+                    if hour == self._hour or self._hour is None:
                         return self.score
                 return self.noscore
-            
+
         elif self._person_id:
             if self._person_id in persons:
-                if (class_id == self._class_id or self._class_id == None) and \
-                    (day == self._day or self._day == None):
-                    if hour == self._hour or self._hour == None:
+                if (class_id == self._class_id or self._class_id is None) and \
+                        (day == self._day or self._day is None):
+                    if hour == self._hour or self._hour is None:
                         return self.score
                 return self.noscore
 
         return 0
-    
+
     def to_model(self) -> db.model.Constraint:
         constraint = db.model.Constraint()
         constraint.identifier = self.identifier

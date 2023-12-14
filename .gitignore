@@ -5,3 +5,4 @@ database.ini
 *.log.*
 *.csv
 *.csv#
+*.xlsx

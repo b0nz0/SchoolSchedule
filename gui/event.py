@@ -14,11 +14,13 @@ classes_dict = {}
 rooms_dict = {}
 timetable_dict = {}
 
+
 def populate_school_combo():
     ui = gui.setup.SchoolSchedulerGUI()
     for school in db.query.get_schools():
         school_dict[school.name] = school.id
-    ui.widgets['schools_combo']['values'] = list(school_dict.keys()) 
+    ui.widgets['schools_combo']['values'] = list(school_dict.keys())
+
 
 def populate_school_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -26,18 +28,18 @@ def populate_school_configuration():
     years = db.query.get_years(school_id=school_selected_dict['id'])
     years_list = []
 
-    #Clear the treeview list items
+    # Clear the treeview list items
     for item in ui.widgets['years_listbox'].get_children():
         ui.widgets['years_listbox'].delete(item)
-    
+
     for identifier, id in [(y.identifier, y.id) for y in years]:
         years_list.append((identifier, id))
     for (identifier, id) in sorted(years_list, key=itemgetter(0)):
         years_dict[identifier] = id
         years_dict[id] = identifier
-        ui.widgets['years_listbox'].insert(parent="", index="end", text=identifier, iid=id) 
+        ui.widgets['years_listbox'].insert(parent="", index="end", text=identifier, iid=id)
 
-    #Clear the treeview list items
+        # Clear the treeview list items
     for item in ui.widgets['sections_listbox'].get_children():
         ui.widgets['sections_listbox'].delete(item)
 
@@ -48,9 +50,9 @@ def populate_school_configuration():
     for (identifier, id) in sorted(sections_list, key=itemgetter(0)):
         sections_dict[identifier] = id
         sections_dict[id] = identifier
-        ui.widgets['sections_listbox'].insert(parent="", index="end", text=identifier, iid=id) 
+        ui.widgets['sections_listbox'].insert(parent="", index="end", text=identifier, iid=id)
 
-    #Clear the treeview list items
+        # Clear the treeview list items
     for item in ui.widgets['classes_listbox'].get_children():
         ui.widgets['classes_listbox'].delete(item)
 
@@ -60,25 +62,25 @@ def populate_school_configuration():
         classes_list.append((year.identifier, section.identifier, id))
 
     for (year, section, id) in sorted(classes_list, key=itemgetter(1)):
-        if not ui.widgets['classes_listbox'].exists(str(section)): 
-            ui.widgets['classes_listbox'].insert(parent="", index="end", text=str(section), iid=str(section)) 
+        if not ui.widgets['classes_listbox'].exists(str(section)):
+            ui.widgets['classes_listbox'].insert(parent="", index="end", text=str(section), iid=str(section))
 
     for (year, section, id) in sorted(sorted(classes_list, key=itemgetter(1)), key=itemgetter(0)):
         identifier = str(year) + " " + str(section)
         classes_dict[identifier] = id
-        ui.widgets['classes_listbox'].insert(parent=str(section), index="end", text=identifier, iid=id) 
+        ui.widgets['classes_listbox'].insert(parent=str(section), index="end", text=identifier, iid=id)
+
 
 def populate_room_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
 
     rooms = db.query.get_rooms(school_id=school_selected_dict['id'])
     rooms_list = []
-    
-    #Clear the treeview list items
+
+    # Clear the treeview list items
     for item in ui.widgets['rooms_listbox'].get_children():
         ui.widgets['rooms_listbox'].delete(item)
 
-    
     for identifier, room_type, id in [(r.identifier, r.room_type, r.id) for r in rooms]:
         rooms_list.append((identifier, room_type, id))
     ui.widgets['rooms_listbox'].insert(parent="", index="end", text=db.model.RoomEnum.AULA.value, iid="A")
@@ -97,11 +99,12 @@ def populate_room_configuration():
         elif room_type == db.model.RoomEnum.ALTRO:
             ui.widgets['rooms_listbox'].insert(parent="D", index="end", text=identifier, iid=id)
 
+
 def populate_timetable_combo():
     ui = gui.setup.SchoolSchedulerGUI()
     for plan in db.query.get_plans(school_id=school_selected_dict['id']):
         timetable_dict[plan.identifier] = plan.id
-    ui.widgets['timetables_combo']['values'] = list(timetable_dict.keys()) 
+    ui.widgets['timetables_combo']['values'] = list(timetable_dict.keys())
 
 
 def school_selected(event):
@@ -117,13 +120,15 @@ def school_selected(event):
     ui.widgets['schoolyear_delete_button'].grid()
     ui.widgets['schoolyear_duplicate_button'].grid()
     ui.widgets['schoolyear_reset_button'].grid()
-    ui.widgets['schoolyears_combo']['values'] = list([s.identifier for s in schoolyears]) 
+    ui.widgets['schoolyears_combo']['values'] = list([s.identifier for s in schoolyears])
     for identifier, id in [(s.identifier, s.id) for s in schoolyears]:
         schoolyears_dict[identifier] = id
     ui.widgets['school_delete_button'].state(['!disabled'])
 
+
 def school_delete():
     pass
+
 
 def school_add():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -139,6 +144,7 @@ def school_add():
             gui.screen.school_select_screen()
             tkinter.messagebox.showinfo("Aggiunta scuola", "Scuola " + school_name + " inserita")
 
+
 def schoolyear_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     choice = ui.widgets['schoolyears_combo'].get()
@@ -151,9 +157,11 @@ def schoolyear_selected(event):
     ui.widgets['classes_mgmt_button'].state(['!disabled'])
     ui.widgets['rooms_mgmt_button'].state(['!disabled'])
     ui.widgets['time_mgmt_button'].state(['!disabled'])
-    
+
+
 def schoolyear_delete():
     pass
+
 
 def schoolyear_add():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -162,7 +170,8 @@ def schoolyear_add():
         s = db.model.SchoolYear()
         s.identifier = schoolyear_name
         if (db.query.get_schoolyear(s) != None):
-            tkinter.messagebox.showwarning("Aggiunta anno scolastico", "Anno scolastico " + schoolyear_name + " già presente")
+            tkinter.messagebox.showwarning("Aggiunta anno scolastico",
+                                           "Anno scolastico " + schoolyear_name + " già presente")
         else:
             s.school_id = school_selected_dict['id']
             db.query.save(s)
@@ -170,11 +179,14 @@ def schoolyear_add():
             gui.screen.school_select_screen()
             tkinter.messagebox.showinfo("Aggiunta anno scolastico", "Anno scolastico " + schoolyear_name + " inserito")
 
+
 def year_selected(event):
     pass
-    
+
+
 def year_delete():
     pass
+
 
 def year_add():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -191,19 +203,22 @@ def year_add():
             gui.screen.school_select_screen()
             tkinter.messagebox.showinfo("Aggiunta anno", "Anno " + year_name + " inserito")
 
+
 def section_selected(event):
     pass
-    
+
+
 def section_delete():
     pass
+
 
 def section_add():
     ui = gui.setup.SchoolSchedulerGUI()
     section_name = tkinter.simpledialog.askstring("Aggiungi sezione", "Sezione")
-    if section_name != None and section_name != '':
-        s = db.model.Year()
+    if section_name is not None and section_name != '':
+        s = db.model.Section()
         s.identifier = section_name
-        if (db.query.get_section(s) != None):
+        if db.query.get_section(s) is not None:
             tkinter.messagebox.showwarning("Aggiunta sezione", "Sezione " + section_name + " già presente")
         else:
             s.school_id = school_selected_dict['id']
@@ -212,12 +227,14 @@ def section_add():
             gui.screen.school_select_screen()
             tkinter.messagebox.showinfo("Aggiunta sezione", "Sezione " + section_name + " inserita")
 
+
 def class_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     selected = ui.widgets['classes_listbox'].selection()
     for item in selected:
         pass
-    
+
+
 def add_class_in_plan():
     ui = gui.setup.SchoolSchedulerGUI()
     schoolyear_id = schoolyear_selected_dict['id']
@@ -225,11 +242,13 @@ def add_class_in_plan():
     class_ids = ui.widgets['classes_listbox'].selection()
     class_string = str()
     for class_id in class_ids:
-        class_string = class_string + classes_dict[int(class_id)] +", "
+        class_string = class_string + classes_dict[int(class_id)] + ", "
     class_string = class_string[:-2]
+
 
 def class_delete():
     pass
+
 
 def class_create():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -238,20 +257,21 @@ def class_create():
     year_ids = ui.widgets['years_listbox'].selection()
     year_string = str()
     for year_id in year_ids:
-        year_string = year_string + years_dict[int(year_id)] +", "
+        year_string = year_string + years_dict[int(year_id)] + ", "
     year_string = year_string[:-2]
 
     section_ids = ui.widgets['sections_listbox'].selection()
     section_string = str()
     for section_id in section_ids:
-        section_string = section_string + sections_dict[int(section_id)] +", "
+        section_string = section_string + sections_dict[int(section_id)] + ", "
     section_string = section_string[:-2]
 
-    confirm = tkinter.messagebox.askokcancel("Creazione classi", \
-            "Confermi di creare le classi per l'Anno Scolastico " + ui.widgets['schoolyears_combo'].get() + ":\n" + \
-            "Anni: " + year_string + ", Sezioni: " + section_string +"?")
-    
-    if confirm:        
+    confirm = tkinter.messagebox.askokcancel("Creazione classi",
+                                             "Confermi di creare le classi per l'Anno Scolastico " + ui.widgets[
+                                                 'schoolyears_combo'].get() + ":\n" +
+                                             "Anni: " + year_string + ", Sezioni: " + section_string + "?")
+
+    if confirm:
         created = 0
         for year_id in year_ids:
             for section_id in section_ids:
@@ -262,20 +282,22 @@ def class_create():
                 if db.query.get_class(c) == None:
                     db.query.save(c)
                     created = created + 1
-        
+
         tkinter.messagebox.showinfo("Creazione classi", "Create " + str(created) + " classi")
-        populate_school_configuration()    
-    
-    
+        populate_school_configuration()
+
 
 def room_selected(event):
     pass
 
+
 def room_delete():
     pass
 
+
 def room_create():
     pass
+
 
 def timetable_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -299,17 +321,17 @@ def timetable_selected(event):
             var_end.set(daily_hour.hour.get_end().strftime('%H:%M'))
             i = i + 1
         d = d + 1
-    
+
     l = ui.widgets['text_plan_classes']
     classes_str = str()
     for classe in db.query.get_classes_in_plan(timetable_dict[choice]):
         classes_str = classes_str + str(classe.class_) + '\n'
     l.insert("1.0", classes_str)
 
-    
 
 def return_home():
     switch_frame(None, 'school_select_frame')
+
 
 def switch_frame(from_name, to_name):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -329,5 +351,3 @@ def switch_frame(from_name, to_name):
         elif to_name == "timetable_configure_frame":
             gui.screen.configure_timetable_screen()
     ui.root.geometry(gui.screen.geometries[to_name])
-
-    
