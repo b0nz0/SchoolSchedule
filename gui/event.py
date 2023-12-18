@@ -17,7 +17,7 @@ classes_dict = {}
 rooms_dict = {}
 subjects_dict = {}
 timetable_dict = {}
-
+persons_dict = {}
 
 def populate_school_combo():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -119,6 +119,40 @@ def populate_subject_configuration():
         ui.widgets['subjects_listbox'].insert(parent="", index="end", text=subject.identifier, iid=subject.id)
 
 
+def populate_person_configuration():
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    persons = db.query.get_persons(school_id=school_selected_dict['id'])
+    persons_list = []
+    
+    # Clear the treeview list items
+    for item in ui.widgets['persons_listbox'].get_children():
+        ui.widgets['persons_listbox'].delete(item)
+
+    for person in persons:
+        if person.is_impersonal:
+            fullname = person.fullname + " (I)"
+        else:
+            fullname = person.fullname
+        persons_list.append((fullname, person.person_type, person.id))
+        
+    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.DOCENTE.value, iid="A")
+    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.COLLABORATORE.value, iid="B")
+    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.LETTORE.value, iid="C")
+    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.ALTRO.value, iid="D")
+
+    for (fullname, person_type, pid) in sorted(persons_list, key=itemgetter(0)):
+        persons_dict[fullname] = id
+        if person_type == db.model.PersonEnum.DOCENTE:
+            ui.widgets['persons_listbox'].insert(parent="A", index="end", text=fullname, iid=pid)
+        elif person_type == db.model.PersonEnum.COLLABORATORE:
+            ui.widgets['persons_listbox'].insert(parent="B", index="end", text=fullname, iid=pid)
+        elif person_type == db.model.PersonEnum.LETTORE:
+            ui.widgets['persons_listbox'].insert(parent="C", index="end", text=fullname, iid=pid)
+        elif person_type == db.model.PersonEnum.ALTRO:
+            ui.widgets['persons_listbox'].insert(parent="D", index="end", text=fullname, iid=pid)
+
+
 def populate_timetable_combo():
     ui = gui.setup.SchoolSchedulerGUI()
     for plan in db.query.get_plans(school_id=school_selected_dict['id']):
@@ -179,6 +213,7 @@ def schoolyear_selected(event):
     ui.widgets['subjects_mgmt_button'].state(['!disabled'])
     ui.widgets['rooms_mgmt_button'].state(['!disabled'])
     ui.widgets['time_mgmt_button'].state(['!disabled'])
+    ui.widgets['person_mgmt_button'].state(['!disabled'])
 
 
 def schoolyear_delete():
@@ -376,20 +411,49 @@ def subject_delete():
 
 
 def subject_create():
-    ui = gui.setup.SchoolSchedulerGUI()
     subject_name = tkinter.simpledialog.askstring("Aggiungi materia", "Materia")
     if subject_name is not None and subject_name != '':
-        s = db.model.Subject()
-        s.identifier = subject_name
-        s.school_id = school_selected_dict['id']
-        if db.query.get_subject(s) is not None:
+        subject = db.model.Subject()
+        subject.identifier = subject_name
+        subject.school_id = school_selected_dict['id']
+        if db.query.get_subject(subject) is not None:
             tkinter.messagebox.showwarning("Aggiunta materia",
                                            "Materia " + subject_name + " già presente")
         else:
-            db.query.save(s)
+            db.query.save(subject)
             tkinter.messagebox.showinfo("Aggiunta materia", "Materia " + subject_name + " inserita")
 
         populate_subject_configuration()
+
+def person_selected(event):
+    pass
+
+
+def person_delete():
+    pass
+
+
+def person_create():
+    ui = gui.setup.SchoolSchedulerGUI()
+    options = {}
+    for t in db.model.PersonEnum:
+        options[t.name] = t.value
+    dialog = gui.dialog.CreatePersonDialog(ui.root, options=options)
+    ret = dialog.result
+    if ret:
+        pt, fullname, impersonal = ret
+        person = db.model.Person()
+        person.fullname = fullname
+        person.person_type = pt
+        person.is_impersonal = impersonal
+        person.school_id = school_selected_dict['id']
+        if db.query.get_person(person) is not None:
+            tkinter.messagebox.showwarning("Aggiunta persona",
+                                           fullname + " già presente")
+        else:
+            db.query.save(person)
+            tkinter.messagebox.showinfo("Aggiunta Persona", fullname + " aggiunto")
+        populate_person_configuration()
 
 def timetable_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -438,4 +502,6 @@ def switch_frame(from_name, to_name):
             gui.screen.configure_subject_screen()
         elif to_name == "timetable_configure_frame":
             gui.screen.configure_timetable_screen()
+        elif to_name == "person_configure_frame":
+            gui.screen.configure_person_screen()
     ui.root.geometry(gui.screen.geometries[to_name])

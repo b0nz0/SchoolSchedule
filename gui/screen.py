@@ -43,6 +43,10 @@ SUBJECT_SELECT_LABEL = "Materie"
 ADD_SUBJECT_LABEL = "Aggiungi materia"
 DELETE_SUBJECT_LABEL = "Elimina materia"
 
+PERSON_SELECT_LABEL = "Persone"
+ADD_PERSON_LABEL = "Aggiungi persona"
+DELETE_PERSON_LABEL = "Elimina persona"
+
 TIMETABLE_SELECT_LABEL = "Piano orario"
 START_END = "IN/FI"
 PLAN_USED_IN = "Piano usato in"
@@ -123,7 +127,8 @@ def school_select_screen():
     sbj_mgmt_button.grid(column=13, row=10, columnspan=2, sticky=(N, E, W, S))
     sbj_mgmt_button.state(['disabled'])
 
-    pers_mgmt_button = ttk.Button(frame, text=MANAGE_PERSONS_LABEL)
+    pers_mgmt_button = ttk.Button(frame, text=MANAGE_PERSONS_LABEL, command=lambda: gui.event.switch_frame(
+        "school_select_frame", "person_configure_frame"))
     pers_mgmt_button.grid(column=0, row=11, columnspan=2, sticky=(N, E, W, S))
     pers_mgmt_button.state(['disabled'])
 
@@ -181,6 +186,7 @@ def school_select_screen():
     ui.widgets['rooms_mgmt_button'] = lgst_mgmt_button
     ui.widgets['subjects_mgmt_button'] = sbj_mgmt_button
     ui.widgets['time_mgmt_button'] = time_mgmt_button
+    ui.widgets['person_mgmt_button'] = pers_mgmt_button
 
     gui.event.populate_school_combo()
 
@@ -412,6 +418,66 @@ def configure_subject_screen():
     ui.widgets['subject_delete_button'] = subject_delete_button
 
     gui.event.populate_subject_configuration()
+
+
+def configure_person_screen():
+    ui = gui.setup.SchoolSchedulerGUI()
+    root = ui.root
+    global geometries
+    geometries['person_configure_frame'] = '800x400'
+    root.geometry('800x400')
+
+    frame = ttk.Frame(root, padding="3 3 12 12")
+    frame.grid(column=0, row=0)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+
+    # person selection
+    person_label = ttk.Label(frame, text=PERSON_SELECT_LABEL)
+    person_label.grid(column=0, row=0, sticky=(E, W))
+
+    persons_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=10)
+    scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=persons_listbox.yview)
+    persons_listbox.configure(yscroll=scrollbar.set)
+    persons_listbox.grid(column=1, row=0, rowspan=2, sticky=(N, W, E, S))
+    scrollbar.configure(command=persons_listbox.yview)
+    scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
+    persons_listbox.bind('<<TreeviewSelect>>', gui.event.person_selected)
+
+    person_add_button = ttk.Button(frame, text=ADD_PERSON_LABEL, command=gui.event.person_create)
+    person_add_button.grid(column=11, row=0, sticky=(E, W))
+    person_add_button.state(['!disabled'])
+
+    person_delete_button = ttk.Button(frame, text=DELETE_PERSON_LABEL, command=gui.event.person_delete)
+    person_delete_button.grid(column=11, row=1, sticky=(E, W))
+    person_delete_button.state(['disabled'])
+
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
+        "person_configure_frame", "school_select_frame"))
+    return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
+    return_button.state(['!disabled'])
+
+    heights = []
+    widths = []
+    for child in frame.winfo_children():
+        child.grid_configure(padx=5, pady=5)
+        heights.append([child.winfo_reqheight()])
+        widths.append([child.winfo_reqwidth()])
+
+    height = 40
+    width = max(widths)
+
+    frame.rowconfigure(0, minsize=height)
+    frame.rowconfigure(1, minsize=height)
+    frame.columnconfigure(0, minsize=width)
+    frame.columnconfigure(1, minsize=width)
+
+    ui.frames['person_configure_frame'] = frame
+    ui.widgets['persons_listbox'] = persons_listbox
+    ui.widgets['person_add_button'] = person_add_button
+    ui.widgets['person_delete_button'] = person_delete_button
+
+    gui.event.populate_person_configuration()
 
 
 def configure_timetable_screen():

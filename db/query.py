@@ -73,12 +73,23 @@ def get_rooms(school_id) -> List[Room]:
     except (Exception) as error:
         traceback.print_exc()
 
-def get_subjects(school_id) -> List[Room]:
+def get_subjects(school_id) -> List[Subject]:
     try:
         with db.connection.active_session() as session:
             stmt = select(Subject). \
                 where(Subject.school_id == school_id). \
                 order_by(Subject.identifier)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+
+def get_persons(school_id) -> List[Person]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(Person). \
+                where(Person.school_id == school_id). \
+                order_by(Person.fullname)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -163,6 +174,21 @@ def get_room(room: Room):
                 stmt = select(Room). \
                     where(Room.identifier == room.identifier, Room.room_type == room.room_type,
                           Room.school_id == room.school_id)
+                return session.execute(stmt).first()
+        except (Exception) as error:
+            traceback.print_exc()
+    else:
+        return False
+
+def get_person(person: Person):
+    if person.id is not None and person.id != 0:
+        return get(Person, person.id)
+    elif person.fullname is not None and person.fullname != '' and person.school_id is not None:
+        try:
+            with db.connection.active_session() as session:
+                stmt = select(Person). \
+                    where(Person.fullname == person.fullname, Person.person_type == person.person_type,
+                          Person.school_id == person.school_id)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()

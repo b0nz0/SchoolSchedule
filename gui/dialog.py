@@ -83,3 +83,53 @@ class CreateRoomDialog(simpledialog.Dialog):
         self.result = list(self.options.keys())[list(self.options.values()).index(self.selected_option.get())], self.entry_text.get()
 
 
+class CreatePersonDialog(simpledialog.Dialog):
+    def __init__(self, parent, options):
+        self.result = None
+        self.selected_option = None
+        self.entry_text = ""
+        self.check_impersonal = None
+        self.options_combo = None
+        self.parent = parent
+        self.options = options
+        super().__init__(parent, title="Crea una persona")
+
+    def body(self, master):
+        l = ttk.Label(master=master, text="Scegli tipo, nome e flag impersonale della persona")
+        l.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        self.selected_option = StringVar(master)
+        self.options_combo = ttk.Combobox(master=master, textvariable=self.selected_option)
+        self.options_combo.grid(column=0, row=1, sticky=(N, S))
+        self.options_combo['values'] = list(self.options.values())
+        self.options_combo.current(0)
+        
+        self.entry_text = StringVar(master)
+        self.entry = ttk.Entry(master=master, textvariable=self.entry_text)
+        self.entry.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        self.check_impersonal = ttk.Checkbutton(master=master, text='Impersonale')
+        self.check_impersonal.state(['!alternate'])
+        self.check_impersonal.state(['!disabled', '!selected'])
+        self.check_impersonal.grid(column=0, row=3, sticky=(N, S))
+        
+        return self.options_combo
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def apply(self):
+        self.result = list(self.options.keys())[list(self.options.values()).index(self.selected_option.get())], \
+            self.entry_text.get(), self.check_impersonal.instate(['selected'])
+
+
