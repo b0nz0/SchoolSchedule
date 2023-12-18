@@ -13,7 +13,7 @@ import engine.constraint, engine.struct
 def get_schools() -> List[School]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(School).order_by(School.id)
+            stmt = select(School).order_by(School.name)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -24,7 +24,7 @@ def get_schoolyears(school_id) -> List[SchoolYear]:
         with db.connection.active_session() as session:
             stmt = select(SchoolYear). \
                 where(SchoolYear.school_id == school_id). \
-                order_by(SchoolYear.id)
+                order_by(SchoolYear.identifier)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -35,7 +35,7 @@ def get_years(school_id) -> List[Year]:
         with db.connection.active_session() as session:
             stmt = select(Year). \
                 where(Year.school_id == school_id). \
-                order_by(Year.id)
+                order_by(Year.identifier)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -46,7 +46,7 @@ def get_sections(school_id) -> List[Section]:
         with db.connection.active_session() as session:
             stmt = select(Section). \
                 where(Section.school_id == school_id). \
-                order_by(Section.id)
+                order_by(Section.identifier)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -68,7 +68,17 @@ def get_rooms(school_id) -> List[Room]:
         with db.connection.active_session() as session:
             stmt = select(Room). \
                 where(Room.school_id == school_id). \
-                order_by(Room.id)
+                order_by(Room.identifier)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def get_subjects(school_id) -> List[Room]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(Subject). \
+                where(Subject.school_id == school_id). \
+                order_by(Subject.identifier)
             return session.execute(stmt).scalars().all()
     except (Exception) as error:
         traceback.print_exc()
@@ -138,6 +148,36 @@ def get_section(section: Section):
             with db.connection.active_session() as session:
                 stmt = select(Section). \
                     where(Section.identifier == section.identifier)
+                return session.execute(stmt).first()
+        except (Exception) as error:
+            traceback.print_exc()
+    else:
+        return False
+
+def get_room(room: Room):
+    if room.id is not None and room.id != 0:
+        return get(Room, room.id)
+    elif room.identifier is not None and room.identifier != '' and room.school_id is not None:
+        try:
+            with db.connection.active_session() as session:
+                stmt = select(Room). \
+                    where(Room.identifier == room.identifier, Room.room_type == room.room_type,
+                          Room.school_id == room.school_id)
+                return session.execute(stmt).first()
+        except (Exception) as error:
+            traceback.print_exc()
+    else:
+        return False
+
+
+def get_subject(subject: Subject):
+    if subject.id is not None and subject.id != 0:
+        return get(Subject, subject.id)
+    elif subject.identifier is not None and subject.identifier != '' and subject.school_id is not None:
+        try:
+            with db.connection.active_session() as session:
+                stmt = select(Subject). \
+                    where(Subject.identifier == subject.identifier, Subject.school_id == subject.school_id)
                 return session.execute(stmt).first()
         except (Exception) as error:
             traceback.print_exc()

@@ -15,6 +15,7 @@ years_dict = {}
 sections_dict = {}
 classes_dict = {}
 rooms_dict = {}
+subjects_dict = {}
 timetable_dict = {}
 
 
@@ -103,6 +104,20 @@ def populate_room_configuration():
         elif room_type == db.model.RoomEnum.ALTRO:
             ui.widgets['rooms_listbox'].insert(parent="D", index="end", text=identifier, iid=rid)
 
+def populate_subject_configuration():
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    subjects = db.query.get_subjects(school_id=school_selected_dict['id'])
+    subjects_list = []
+
+    # Clear the treeview list items
+    for item in ui.widgets['subjects_listbox'].get_children():
+        ui.widgets['subjects_listbox'].delete(item)
+
+    for subject in subjects:
+        subjects_dict[subject.identifier] = subject.id
+        ui.widgets['subjects_listbox'].insert(parent="", index="end", text=subject.identifier, iid=subject.id)
+
 
 def populate_timetable_combo():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -161,6 +176,7 @@ def schoolyear_selected(event):
     ui.widgets['schoolyear_duplicate_button'].state(['disabled'])
     ui.widgets['schoolyear_reset_button'].state(['disabled'])
     ui.widgets['classes_mgmt_button'].state(['!disabled'])
+    ui.widgets['subjects_mgmt_button'].state(['!disabled'])
     ui.widgets['rooms_mgmt_button'].state(['!disabled'])
     ui.widgets['time_mgmt_button'].state(['!disabled'])
 
@@ -343,11 +359,37 @@ def room_create():
         r.identifier = identifier
         r.room_type = rt
         r.school_id = school_selected_dict['id']
-        db.query.save(r)
-        
-        tkinter.messagebox.showinfo("Aggiunta spazio", f"Spazio {identifier} aggiunto")
+        if db.query.get_room(r) is not None:
+            tkinter.messagebox.showwarning("Aggiunta spazio",
+                                           "Spazio " + identifier + " già presente")
+        else:
+            db.query.save(r)
+            tkinter.messagebox.showinfo("Aggiunta spazio", "Spazio " + identifier + " aggiunto")
         populate_room_configuration()
 
+def subject_selected(event):
+    pass
+
+
+def subject_delete():
+    pass
+
+
+def subject_create():
+    ui = gui.setup.SchoolSchedulerGUI()
+    subject_name = tkinter.simpledialog.askstring("Aggiungi materia", "Materia")
+    if subject_name is not None and subject_name != '':
+        s = db.model.Subject()
+        s.identifier = subject_name
+        s.school_id = school_selected_dict['id']
+        if db.query.get_subject(s) is not None:
+            tkinter.messagebox.showwarning("Aggiunta materia",
+                                           "Materia " + subject_name + " già presente")
+        else:
+            db.query.save(s)
+            tkinter.messagebox.showinfo("Aggiunta materia", "Materia " + subject_name + " inserita")
+
+        populate_subject_configuration()
 
 def timetable_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -392,6 +434,8 @@ def switch_frame(from_name, to_name):
             gui.screen.configure_schoolyear_screen()
         elif to_name == "room_configure_frame":
             gui.screen.configure_room_screen()
+        elif to_name == "subject_configure_frame":
+            gui.screen.configure_subject_screen()
         elif to_name == "timetable_configure_frame":
             gui.screen.configure_timetable_screen()
     ui.root.geometry(gui.screen.geometries[to_name])
