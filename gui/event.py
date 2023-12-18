@@ -128,7 +128,7 @@ def school_selected(event):
     ui.widgets['schoolyears_combo'].current(0)
     for identifier, sid in [(s.identifier, s.id) for s in schoolyears]:
         schoolyears_dict[identifier] = sid
-    ui.widgets['school_delete_button'].state(['!disabled'])
+    ui.widgets['school_delete_button'].state(['disabled'])
     schoolyear_selected(None)
 
 
@@ -157,9 +157,9 @@ def schoolyear_selected(event):
     schoolyear = db.query.get(db.model.SchoolYear, schoolyears_dict[choice])
     schoolyear_selected_dict['name'] = choice
     schoolyear_selected_dict['id'] = schoolyears_dict[choice]
-    ui.widgets['schoolyear_delete_button'].state(['!disabled'])
-    ui.widgets['schoolyear_duplicate_button'].state(['!disabled'])
-    ui.widgets['schoolyear_reset_button'].state(['!disabled'])
+    ui.widgets['schoolyear_delete_button'].state(['disabled'])
+    ui.widgets['schoolyear_duplicate_button'].state(['disabled'])
+    ui.widgets['schoolyear_reset_button'].state(['disabled'])
     ui.widgets['classes_mgmt_button'].state(['!disabled'])
     ui.widgets['rooms_mgmt_button'].state(['!disabled'])
     ui.widgets['time_mgmt_button'].state(['!disabled'])
@@ -169,7 +169,7 @@ def schoolyear_delete():
     pass
 
 
-def schoolyear_add():
+def schoolyear_create():
     ui = gui.setup.SchoolSchedulerGUI()
     schoolyear_name = tkinter.simpledialog.askstring("Aggiungi anno scolastico", "Anno Scolastico")
     if schoolyear_name is not None and schoolyear_name != '':
@@ -243,7 +243,6 @@ def class_selected(event):
 
 def add_class_in_plan():
     ui = gui.setup.SchoolSchedulerGUI()
-    schoolyear_id = schoolyear_selected_dict['id']
 
     class_ids = ui.widgets['classes_listbox'].selection()
     class_string = str()
@@ -332,7 +331,22 @@ def room_delete():
 
 
 def room_create():
-    pass
+    ui = gui.setup.SchoolSchedulerGUI()
+    options = {}
+    for t in db.model.RoomEnum:
+        options[t.name] = t.value
+    dialog = gui.dialog.CreateRoomDialog(ui.root, options=options)
+    ret = dialog.result
+    if ret:
+        rt, identifier = ret
+        r = db.model.Room()
+        r.identifier = identifier
+        r.room_type = rt
+        r.school_id = school_selected_dict['id']
+        db.query.save(r)
+        
+        tkinter.messagebox.showinfo("Aggiunta spazio", f"Spazio {identifier} aggiunto")
+        populate_room_configuration()
 
 
 def timetable_selected(event):

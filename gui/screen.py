@@ -39,7 +39,7 @@ ROOM_SELECT_LABEL = "Spazi"
 ADD_ROOM_LABEL = "Aggiungi spazio"
 DELETE_ROOM_LABEL = "Elimina spazio"
 
-TIMETABLE_SELECT_LABEL = "Piani orari"
+TIMETABLE_SELECT_LABEL = "Piano orario"
 START_END = "IN/FI"
 PLAN_USED_IN = "Piano usato in"
 
@@ -87,7 +87,7 @@ def school_select_screen():
     schoolyears_combo.bind('<<ComboboxSelected>>', gui.event.schoolyear_selected)
     schoolyears_combo['values'] = ['']
 
-    schoolyear_add_button = ttk.Button(frame, text=ADD_SCHOOLYEAR_LABEL, command=gui.event.schoolyear_add)
+    schoolyear_add_button = ttk.Button(frame, text=ADD_SCHOOLYEAR_LABEL, command=gui.event.schoolyear_create)
     schoolyear_add_button.grid(column=11, row=1, sticky=(N, E, W, S))
     schoolyear_add_button.state(['!disabled'])
 
@@ -313,11 +313,11 @@ def configure_room_screen():
     scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
     rooms_listbox.bind('<<TreeviewSelect>>', gui.event.room_selected)
 
-    room_add_button = ttk.Button(frame, text=ADD_YEAR_LABEL, command=gui.event.year_add)
+    room_add_button = ttk.Button(frame, text=ADD_ROOM_LABEL, command=gui.event.room_create)
     room_add_button.grid(column=11, row=0, sticky=(E, W))
     room_add_button.state(['!disabled'])
 
-    room_delete_button = ttk.Button(frame, text=DELETE_YEAR_LABEL, command=gui.event.year_delete)
+    room_delete_button = ttk.Button(frame, text=DELETE_ROOM_LABEL, command=gui.event.room_delete)
     room_delete_button.grid(column=11, row=1, sticky=(E, W))
     room_delete_button.state(['disabled'])
 

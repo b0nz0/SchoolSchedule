@@ -628,6 +628,8 @@ def test():
         print(f'eseguo SimpleEngineRand (run {x})')
         eng.run()
         if eng.closed: break
+    if eng.closed: print('Calendario chiuso')
+    else: print('Calendario non chiuso')
     eng.write_calendars_to_csv('calendari.csv')
 
     eng = LocalOptimalEngine()
@@ -643,7 +645,10 @@ def test():
         print(f'eseguo LocalOptimalEngine (run {x})')
         eng.run()
         if eng.closed: break
+    if eng.closed: print('Calendario chiuso')
+    else: print('Calendario non chiuso')        
     eng.write_calendars_to_csv('calendari_lo.csv')
+    
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
     with open("test_ser_eng.ser", "wb") as outfile:
@@ -662,7 +667,7 @@ if __name__ == '__main__':
     db.connection.connect()
 
     #    populate_DB()
-    test()
+    # test()
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
     gui.screen.school_select_screen()
