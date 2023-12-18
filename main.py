@@ -646,6 +646,8 @@ def test():
     eng.write_calendars_to_csv('calendari_lo.csv')
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
+    with open("test_ser_eng.ser", "wb") as outfile:
+        pickle.dump(eng, outfile)
 
 
 if __name__ == '__main__':
@@ -660,7 +662,7 @@ if __name__ == '__main__':
     db.connection.connect()
 
     #    populate_DB()
-#    test()
+    test()
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
     gui.screen.school_select_screen()

@@ -317,26 +317,26 @@ class Engine:
     def load(self, school_year_id: int):
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
         for row in rows:
-            self._struct.load_assignment_from_subject_in_class(int(row))
+            self.engine_support.load_assignment_from_subject_in_class(int(row))
         constraint = NonDuplicateConstraint()
-        self._struct.constraints.add(constraint)
+        self.engine_support.constraints.add(constraint)
         constraint = NoComebacks()
-        self._struct.constraints.add(constraint)
+        self.engine_support.constraints.add(constraint)
 
     def clear_assignments(self):
-        for calendar_id in self._struct.get_calendar_ids():
+        for calendar_id in self.engine_support.get_calendar_ids():
             for day in db.model.WeekDayEnum:
                 for hour in range(1, 11):
-                    self._struct.deassign(class_id=calendar_id, day=day, hour_ordinal=hour)
+                    self.engine_support.deassign(class_id=calendar_id, day=day, hour_ordinal=hour)
 
     def add_constraint(self, constraint):
-        self._struct.constraints.add(constraint)
+        self.engine_support.constraints.add(constraint)
 
     def run(self):
         pass
 
     def write_calendars_to_csv(self, filename):
-        self._struct.write_calendars_to_csv(filename=filename)
+        self.engine_support.write_calendars_to_csv(filename=filename)
 
     @property
     def closed(self):

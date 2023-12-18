@@ -16,13 +16,13 @@ class LocalOptimalEngine(Engine):
     def load(self, school_year_id: int):
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
         for row in rows:
-            self._struct.load_assignment_from_subject_in_class(int(row))
+            self.engine_support.load_assignment_from_subject_in_class(int(row))
         constraint = NonDuplicateConstraint()
         constraint.identifier = "non-duplicate"
-        self._struct.constraints.add(constraint)
+        self.engine_support.constraints.add(constraint)
         constraint = NoComebacks()
         constraint.identifier = "no comebacks"
-        self._struct.constraints.add(constraint)
+        self.engine_support.constraints.add(constraint)
 
     def run(self):
         assignments_remaining = {}
@@ -31,11 +31,11 @@ class LocalOptimalEngine(Engine):
 
         self.clear_assignments()
 
-        for calendar_id in self._struct.get_calendar_ids():
+        for calendar_id in self.engine_support.get_calendar_ids():
             self.last_assignments[calendar_id] = []
 
         # save remaining hours per assignment in class
-        for assignment in self._struct.assignments.values():
+        for assignment in self.engine_support.assignments.values():
             assignments_remaining[assignment] = assignment.data['hours_total']
 
         working = True
@@ -46,10 +46,10 @@ class LocalOptimalEngine(Engine):
             max_score = -1
             candidates = []
             odd = not odd
-            for calendar_id in sorted(self._struct.get_calendar_ids(), reverse=odd):
+            for calendar_id in sorted(self.engine_support.get_calendar_ids(), reverse=odd):
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):
-                        if self._struct.get_assignment_in_calendar(class_id=calendar_id, day=day,
+                        if self.engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day,
                                                                    hour_ordinal=hour) == Calendar.AVAILABLE:
                             for assignment in [a for a in assignments_remaining.keys() \
                                                if assignments_remaining[a] > 0 and a.data['class_id'] == calendar_id]:
@@ -84,10 +84,10 @@ class LocalOptimalEngine(Engine):
                     for (score, class_id, sugg_day, sugg_hour) in self.suggest_substitution():
                         logging.debug(
                             f'impossibile trovare un candidato, provo una riassegnazione della classe {class_id}@{sugg_day} - ora {sugg_hour}')
-                        candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=sugg_day,
+                        candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=sugg_day,
                                                                             hour_ordinal=sugg_hour)
                         if type(candidate) == Assignment:
-                            self._struct.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
+                            self.engine_support.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
                             assignments_remaining[candidate] = assignments_remaining[candidate] + 1
                             reassignments = reassignments + 1
                 else:
@@ -105,7 +105,7 @@ class LocalOptimalEngine(Engine):
                 logging.debug(
                     f'assign best candidate: class={calendar_id}, score={max_score}, day={day.value}, \
                         hour={hour} out of {len(candidates)}')
-                self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,
+                self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
                                     class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score,
                                     constraint_scores=constraint_scores)
                 assignments_remaining[assignment] = assignments_remaining[assignment] - 1
@@ -117,20 +117,20 @@ class LocalOptimalEngine(Engine):
         constraint_scores = []
         # if the constraint suggests to append a hour after the current one
         suggest_continuing = False
-        for c in self._struct.constraints:
+        for c in self.engine_support.constraints:
             if c.has_trigger(None):
-                score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                 constraint_scores.append((c, score))
                 overall_score = overall_score + score
                 continue
             if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
-                score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                 constraint_scores.append((c, score))
                 overall_score = overall_score + score
                 continue
             for person in [x['person_id'] for x in assignment.data['persons']]:
                 if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
-                    score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                    score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                     constraint_scores.append((c, score))
                     overall_score = overall_score + score
                     continue
@@ -153,16 +153,16 @@ class LocalOptimalEngine(Engine):
             if assignments_remaining[assignment] == 1:
                 return (class_id_cand, assignment, day_cand, hour_cand, constraint_scores_cand)
             # try assigning and let's see what happens to further assignments
-            self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,\
+            self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,\
                                     class_id=class_id_cand, day=day_cand, hour_ordinal=hour_cand, score=1, constraint_scores=constraint_scores_cand)
             positives = 0
-            for calendar_id in self._struct.get_calendar_ids():
+            for calendar_id in self.engine_support.get_calendar_ids():
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):  
-                        if self._struct.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE:
+                        if self.engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE:
                             (score, constraint_scores) = self.evaluate_constraints(calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                             if score > 0: positives = positives + 1
-            self._struct.deassign(class_id=class_id_cand, day=day_cand, hour_ordinal=hour_cand)
+            self.engine_support.deassign(class_id=class_id_cand, day=day_cand, hour_ordinal=hour_cand)
             # at least another assignment is possible
             if positives > 0: 
                 return (class_id_cand, assignment, day_cand, hour_cand, constraint_scores_cand)
@@ -173,7 +173,7 @@ class LocalOptimalEngine(Engine):
 
     def suggest_substitution(self):
         ret = []
-        for calendar_id in self._struct.get_calendar_ids():
+        for calendar_id in self.engine_support.get_calendar_ids():
             for (class_id, assignment, day, hour, constraint_scores) in self.last_assignments[calendar_id][-5:]:
                 ret.append((0, class_id, day, hour))
         return ret
@@ -183,12 +183,12 @@ class LocalOptimalEngine(Engine):
         MAX = 1000000000
         lowest_score = MAX
         ret = []
-        for class_id in self._struct.get_calendar_ids():
+        for class_id in self.engine_support.get_calendar_ids():
             for day in db.model.WeekDayEnum:
                 for hour in range(1, 11):  
-                    candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                    candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
                     if  candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
-                        (score, constraint_scores) = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                        (score, constraint_scores) = self.engine_support.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                         if score <= lowest_score:
                             ret.append((score, class_id, day, hour))
                             lowest_score = score
@@ -196,7 +196,7 @@ class LocalOptimalEngine(Engine):
         '''
 
     def write_calendars_to_csv(self, filename):
-        self._struct.write_calendars_to_csv(filename=filename)
+        self.engine_support.write_calendars_to_csv(filename=filename)
 
     @property
     def closed(self):

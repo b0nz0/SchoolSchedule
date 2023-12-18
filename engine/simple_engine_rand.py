@@ -16,13 +16,13 @@ class SimpleEngineRand(Engine):
     def load(self, school_year_id: int):
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
         for row in rows:
-            self._struct.load_assignment_from_subject_in_class(int(row))
+            self.engine_support.load_assignment_from_subject_in_class(int(row))
         constraint = NonDuplicateConstraint()
         constraint.identifier = "non-duplicate"
-        self._struct.constraints.add(constraint)
+        self.engine_support.constraints.add(constraint)
         constraint = NoComebacks()
         constraint.identifier = "no comebacks"
-        self._struct.constraints.add(constraint)
+        self.engine_support.constraints.add(constraint)
 
     def run(self):
         assignments_remaining = {}
@@ -31,7 +31,7 @@ class SimpleEngineRand(Engine):
         self.clear_assignments()
 
         # save remaining hours per assignment in class
-        for assignment in self._struct.assignments.values():
+        for assignment in self.engine_support.assignments.values():
             assignments_remaining[assignment] = assignment.data['hours_total']
 
         working = True
@@ -47,7 +47,7 @@ class SimpleEngineRand(Engine):
             logging.debug(f'cerco un candidato per la classe {class_id}-{subject}')
             for day in db.model.WeekDayEnum:
                 for hour in range(1, 11):
-                    if self._struct.get_assignment_in_calendar(class_id=class_id, day=day,
+                    if self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day,
                                                                hour_ordinal=hour) == Calendar.AVAILABLE:
                         (score, constraint_scores) = self.evaluate_constraints(calendar_id=class_id,
                                                                                assignment=assignment, day=day,
@@ -72,9 +72,9 @@ class SimpleEngineRand(Engine):
                     if sugg_day != Calendar.UNAIVALABLE:
                         logging.debug(
                             f'impossibile trovare un candidato, provo una riassegnazione del {sugg_day} - ora {sugg_hour}')
-                        candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=sugg_day,
+                        candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=sugg_day,
                                                                             hour_ordinal=sugg_hour)
-                        self._struct.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
+                        self.engine_support.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
                         assignments_remaining[candidate] = assignments_remaining[candidate] + 1
                         reassignments = reassignments + 1
                 else:
@@ -88,20 +88,20 @@ class SimpleEngineRand(Engine):
                 (score, constraint_scores, day, hour, continuing) = sorted(candidates, key=itemgetter(0), reverse=True)[
                     0]
                 logging.debug(f'best candidate: class={class_id}, score={score}, day={day.value}, hour={hour}')
-                self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,
+                self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
                                     class_id=class_id, day=day, hour_ordinal=hour, score=score,
                                     constraint_scores=constraint_scores)
                 assignments_remaining[assignment] = assignments_remaining[assignment] - 1
                 # let's see if we can attach a hour after this one, as suggested
                 if continuing:
-                    if self._struct.get_assignment_in_calendar(class_id=class_id, day=day,
+                    if self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day,
                                                                hour_ordinal=hour + 1) == Calendar.AVAILABLE:
                         (score, constraint_scores) = self.evaluate_constraints(calendar_id=class_id,
                                                                                assignment=assignment, day=day,
                                                                                hour=hour + 1)
                         if score >= 0:
                             logging.debug('can continue')
-                            self._struct.assign(subject_in_class_id=assignment.subject_in_class_id,
+                            self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
                                                 class_id=class_id, day=day, hour_ordinal=hour + 1, score=score,
                                                 constraint_scores=constraint_scores)
                             assignments_remaining[assignment] = assignments_remaining[assignment] - 1
@@ -112,18 +112,18 @@ class SimpleEngineRand(Engine):
         constraint_scores = []
         # if the constraint suggests to append a hour after the current one
         suggest_continuing = False
-        for c in self._struct.constraints:
+        for c in self.engine_support.constraints:
             if c.has_trigger(None):
-                score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                 constraint_scores.append((c, score))
                 overall_score = overall_score + score
             if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
-                score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                 constraint_scores.append((c, score))
                 overall_score = overall_score + score
             for person in [x['person_id'] for x in assignment.data['persons']]:
                 if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
-                    score = c.fire(self._struct, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                    score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
                     constraint_scores.append((c, score))
                     overall_score = overall_score + score
             suggest_continuing = suggest_continuing or c.suggest_continuing()
@@ -137,9 +137,9 @@ class SimpleEngineRand(Engine):
         class_id = assignment.data['class_id']
         for day in db.model.WeekDayEnum:
             for hour in range(1, 11):
-                candidate = self._struct.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
                 if candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
-                    (score, constraint_scores) = self._struct.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                    (score, constraint_scores) = self.engine_support.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                     if score < lowest_score[0]:
                         lowest_score = (score, day, hour)
                     if score == lowest_score[0] and random.choice(
@@ -151,7 +151,7 @@ class SimpleEngineRand(Engine):
             return lowest_score
 
     def write_calendars_to_csv(self, filename):
-        self._struct.write_calendars_to_csv(filename=filename)
+        self.engine_support.write_calendars_to_csv(filename=filename)
 
     @property
     def closed(self):
