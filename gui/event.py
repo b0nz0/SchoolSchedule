@@ -18,6 +18,8 @@ rooms_dict = {}
 subjects_dict = {}
 timetable_dict = {}
 persons_dict = {}
+assignment_dict = {}
+assignment_list = []
 
 def populate_school_combo():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -124,33 +126,42 @@ def populate_person_configuration():
 
     persons = db.query.get_persons(school_id=school_selected_dict['id'])
     persons_list = []
-    
+
     # Clear the treeview list items
     for item in ui.widgets['persons_listbox'].get_children():
         ui.widgets['persons_listbox'].delete(item)
 
     for person in persons:
+        imp = ''
         if person.is_impersonal:
-            fullname = person.fullname + " (I)"
-        else:
-            fullname = person.fullname
-        persons_list.append((fullname, person.person_type, person.id))
-        
-    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.DOCENTE.value, iid="A")
-    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.COLLABORATORE.value, iid="B")
-    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.LETTORE.value, iid="C")
-    ui.widgets['persons_listbox'].insert(parent="", index="end", text=db.model.PersonEnum.ALTRO.value, iid="D")
+            imp = '(I)'
+        ui.widgets['persons_listbox'].insert(parent="", index="end", iid=person.id,
+                                             values=(person.fullname, person.person_type.value, imp))
+        persons_list.append((person.fullname, person.person_type, person.id))
 
-    for (fullname, person_type, pid) in sorted(persons_list, key=itemgetter(0)):
-        persons_dict[fullname] = id
-        if person_type == db.model.PersonEnum.DOCENTE:
-            ui.widgets['persons_listbox'].insert(parent="A", index="end", text=fullname, iid=pid)
-        elif person_type == db.model.PersonEnum.COLLABORATORE:
-            ui.widgets['persons_listbox'].insert(parent="B", index="end", text=fullname, iid=pid)
-        elif person_type == db.model.PersonEnum.LETTORE:
-            ui.widgets['persons_listbox'].insert(parent="C", index="end", text=fullname, iid=pid)
-        elif person_type == db.model.PersonEnum.ALTRO:
-            ui.widgets['persons_listbox'].insert(parent="D", index="end", text=fullname, iid=pid)
+
+def populate_assignment_configuration():
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    subj_in_classes = db.query.get_subjects_in_class_per_school_year(school_year_id=schoolyear_selected_dict['id'])
+    global assignment_list
+    assignment_list = []
+
+    # Clear the treeview list items
+    for item in ui.widgets['assignment_listbox'].get_children():
+        ui.widgets['assignment_listbox'].delete(item)
+
+    for subj_in_class_id in subj_in_classes:
+        subj_in_class = db.query.get(db.model.SubjectInClass, subj_in_class_id)
+        persons = ','.join(list([x.fullname for x in subj_in_class.persons]))
+        subject = subj_in_class.subject.identifier
+        classe = f'{subj_in_class.class_.year.identifier} {subj_in_class.class_.section.identifier}'
+        hours = subj_in_class.hours_total
+        assignment_list.append((subj_in_class_id, persons, subject, classe, hours))
+
+    for ass in assignment_list:
+        ui.widgets['assignment_listbox'].insert(parent="", index="end", iid=ass[0],
+                                             values=ass[1:])
 
 
 def populate_timetable_combo():
@@ -214,6 +225,7 @@ def schoolyear_selected(event):
     ui.widgets['rooms_mgmt_button'].state(['!disabled'])
     ui.widgets['time_mgmt_button'].state(['!disabled'])
     ui.widgets['person_mgmt_button'].state(['!disabled'])
+    ui.widgets['assignment_mgmt_button'].state(['!disabled'])
 
 
 def schoolyear_delete():
@@ -478,6 +490,21 @@ def timetable_selected(event):
         classes_str = classes_str + str(classe.class_) + '\n'
     l.insert("1.0", classes_str)
 
+def assignment_selected(event):
+    pass
+
+
+def assignment_delete():
+    pass
+
+
+def assignment_create():
+    pass
+
+
+def assignment_duplicate():
+    pass
+
 
 def return_home():
     switch_frame(None, 'school_select_frame')
@@ -504,4 +531,6 @@ def switch_frame(from_name, to_name):
             gui.screen.configure_timetable_screen()
         elif to_name == "person_configure_frame":
             gui.screen.configure_person_screen()
+        elif to_name == "assignment_configure_frame":
+            gui.screen.configure_assignment_screen()
     ui.root.geometry(gui.screen.geometries[to_name])

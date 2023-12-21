@@ -26,6 +26,7 @@ MANAGE_LOGISTIC_LABEL = "Gestisci spazi"
 MANAGE_SUBJECTS_LABEL = "Gestisci materie"
 MANAGE_PERSONS_LABEL = "Gestisci docenti"
 MANAGE_TIMETABLE_LABEL = "Gestisci piani orari"
+MANAGE_ASSIGNMENT_LABEL = "Gestisci assegnazioni"
 MANAGE_RESTRICTIONS_LABEL = "Gestisci vincoli"
 PROCESS_LABEL = "Elabora calendari"
 
@@ -50,6 +51,11 @@ DELETE_PERSON_LABEL = "Elimina persona"
 TIMETABLE_SELECT_LABEL = "Piano orario"
 START_END = "IN/FI"
 PLAN_USED_IN = "Piano usato in"
+
+ASSIGNMENT_SELECT_LABEL = "Assegnazioni"
+ADD_ASSIGNMENT_LABEL = "Aggiungi assegnazione"
+DELETE_ASSIGNMENT_LABEL = "Elimina assegnazione"
+DUPLICATE_ASSIGNMENT_LABEL = "Duplica assegnazione"
 
 
 def school_select_screen():
@@ -141,8 +147,13 @@ def school_select_screen():
     rest_mgmt_button.grid(column=13, row=11, columnspan=2, sticky=(N, E, W, S))
     rest_mgmt_button.state(['disabled'])
 
+    ass_mgmt_button = ttk.Button(frame, text=MANAGE_ASSIGNMENT_LABEL, command=lambda: gui.event.switch_frame(
+        "school_select_frame", "assignment_configure_frame"))
+    ass_mgmt_button.grid(column=0, row=13, columnspan=2, sticky=(N, E, W, S))
+    ass_mgmt_button.state(['disabled'])
+
     proc_mgmt_button = ttk.Button(frame, text=PROCESS_LABEL)
-    proc_mgmt_button.grid(column=11, row=12, columnspan=2, sticky=(N, E, W, S))
+    proc_mgmt_button.grid(column=11, row=13, columnspan=2, sticky=(N, E, W, S))
     proc_mgmt_button.state(['disabled'])
 
     heights = []
@@ -187,6 +198,7 @@ def school_select_screen():
     ui.widgets['subjects_mgmt_button'] = sbj_mgmt_button
     ui.widgets['time_mgmt_button'] = time_mgmt_button
     ui.widgets['person_mgmt_button'] = pers_mgmt_button
+    ui.widgets['assignment_mgmt_button'] = ass_mgmt_button
 
     gui.event.populate_school_combo()
 
@@ -424,8 +436,8 @@ def configure_person_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
     global geometries
-    geometries['person_configure_frame'] = '800x400'
-    root.geometry('800x400')
+    geometries['person_configure_frame'] = '600x500'
+    root.geometry('600x500')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
     frame.grid(column=0, row=0)
@@ -434,15 +446,23 @@ def configure_person_screen():
 
     # person selection
     person_label = ttk.Label(frame, text=PERSON_SELECT_LABEL)
-    person_label.grid(column=0, row=0, sticky=(E, W))
+    person_label.grid(column=0, row=0, rowspan=2, padx=30, sticky=(N, W, E, S))
 
-    persons_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=10)
+    persons_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2", "c3"),
+                                   selectmode=EXTENDED, height=20)
     scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=persons_listbox.yview)
     persons_listbox.configure(yscroll=scrollbar.set)
     persons_listbox.grid(column=1, row=0, rowspan=2, sticky=(N, W, E, S))
     scrollbar.configure(command=persons_listbox.yview)
     scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
     persons_listbox.bind('<<TreeviewSelect>>', gui.event.person_selected)
+    tree = ttk.Treeview(root,  show="headings")
+    persons_listbox.column("#1", anchor=W, stretch=YES, width=200)
+    persons_listbox.heading("#1", text="Nome")
+    persons_listbox.column("#2", anchor=CENTER, stretch=NO, width=80)
+    persons_listbox.heading("#2", text="Tipo")
+    persons_listbox.column("#3", anchor=CENTER, stretch=NO, width=80)
+    persons_listbox.heading("#3", text="Impersonale")
 
     person_add_button = ttk.Button(frame, text=ADD_PERSON_LABEL, command=gui.event.person_create)
     person_add_button.grid(column=11, row=0, sticky=(E, W))
@@ -456,21 +476,6 @@ def configure_person_screen():
         "person_configure_frame", "school_select_frame"))
     return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
     return_button.state(['!disabled'])
-
-    heights = []
-    widths = []
-    for child in frame.winfo_children():
-        child.grid_configure(padx=5, pady=5)
-        heights.append([child.winfo_reqheight()])
-        widths.append([child.winfo_reqwidth()])
-
-    height = 40
-    width = max(widths)
-
-    frame.rowconfigure(0, minsize=height)
-    frame.rowconfigure(1, minsize=height)
-    frame.columnconfigure(0, minsize=width)
-    frame.columnconfigure(1, minsize=width)
 
     ui.frames['person_configure_frame'] = frame
     ui.widgets['persons_listbox'] = persons_listbox
@@ -563,3 +568,66 @@ def configure_timetable_screen():
     ui.widgets['text_plan_classes'] = text_plan_classes
 
     gui.event.populate_timetable_combo()
+
+def configure_assignment_screen():
+    ui = gui.setup.SchoolSchedulerGUI()
+    root = ui.root
+    global geometries
+    geometries['assignment_configure_frame'] = '800x600'
+    root.geometry('800x600')
+
+    frame = ttk.Frame(root, padding="3 3 12 12")
+    frame.grid(column=0, row=0)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+
+    # person selection
+    assignment_label = ttk.Label(frame, text=ASSIGNMENT_SELECT_LABEL)
+    assignment_label.grid(column=0, row=0, rowspan=3, padx=30, sticky=(W, E))
+
+    assignment_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2", "c3", "c4"),
+                                   selectmode=BROWSE, height=20)
+    assignment_listbox.grid(column=1, row=0, rowspan=3, sticky=(N, W, E, S))
+    scrollbary = ttk.Scrollbar(frame, orient=VERTICAL, command=assignment_listbox.yview)
+    assignment_listbox.configure(yscroll=scrollbary.set)
+    scrollbary.configure(command=assignment_listbox.yview)
+    scrollbary.grid(column=2, row=0, rowspan=3, sticky=(N, S))
+    scrollbarx = ttk.Scrollbar(frame, orient=HORIZONTAL, command=assignment_listbox.xview)
+    assignment_listbox.configure(xscroll=scrollbarx.set)
+    scrollbarx.configure(command=assignment_listbox.xview)
+    scrollbarx.grid(column=1, row=3, rowspan=1, sticky=(E, W))
+
+    assignment_listbox.bind('<<TreeviewSelect>>', gui.event.assignment_selected)
+    assignment_listbox.column("#1", anchor=W, stretch=YES, width=200)
+    assignment_listbox.heading("#1", text="Docenti")
+    assignment_listbox.column("#2", anchor=CENTER, stretch=NO, width=80)
+    assignment_listbox.heading("#2", text="Materia")
+    assignment_listbox.column("#3", anchor=CENTER, stretch=NO, width=80)
+    assignment_listbox.heading("#3", text="Classe")
+    assignment_listbox.column("#4", anchor=CENTER, stretch=NO, width=80)
+    assignment_listbox.heading("#4", text="Ore sett.")
+
+    assignment_add_button = ttk.Button(frame, text=ADD_ASSIGNMENT_LABEL, command=gui.event.assignment_create)
+    assignment_add_button.grid(column=11, row=0, padx=30, sticky=(E, W))
+    assignment_add_button.state(['!disabled'])
+
+    assignment_delete_button = ttk.Button(frame, text=DELETE_ASSIGNMENT_LABEL, command=gui.event.assignment_delete)
+    assignment_delete_button.grid(column=11, row=1, padx=30, sticky=(E, W))
+    assignment_delete_button.state(['disabled'])
+
+    assignment_duplicate_button = ttk.Button(frame, text=DUPLICATE_ASSIGNMENT_LABEL, command=gui.event.assignment_duplicate)
+    assignment_duplicate_button.grid(column=11, row=2, padx=30, sticky=(E, W))
+    assignment_duplicate_button.state(['!disabled'])
+
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
+        "assignment_configure_frame", "school_select_frame"))
+    return_button.grid(column=0, row=10, columnspan=20, sticky=(N, S))
+    return_button.state(['!disabled'])
+
+    ui.frames['assignment_configure_frame'] = frame
+    ui.widgets['assignment_listbox'] = assignment_listbox
+    ui.widgets['assignment_add_button'] = assignment_add_button
+    ui.widgets['assignment_delete_button'] = assignment_delete_button
+    ui.widgets['assignment_duplicate_button'] = assignment_duplicate_button
+
+    gui.event.populate_assignment_configuration()
