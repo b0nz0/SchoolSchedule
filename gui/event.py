@@ -21,6 +21,19 @@ persons_dict = {}
 assignment_dict = {}
 assignment_list = []
 
+def treeview_sort_column(tv, col, text, reverse):
+    l = [(tv.set(k, col), k) for k in tv.get_children('')]
+    l.sort(reverse=reverse)
+
+    # rearrange items in sorted positions
+    for index, (val, k) in enumerate(l):
+        tv.move(k, '', index)
+
+    # reverse sort next time
+    tv.heading(col, text=text, command=lambda _col=col: \
+                 treeview_sort_column(tv, _col, text, not reverse))
+    
+    
 def populate_school_combo():
     ui = gui.setup.SchoolSchedulerGUI()
     for school in db.query.get_schools():
@@ -157,7 +170,8 @@ def populate_assignment_configuration():
         subject = subj_in_class.subject.identifier
         classe = f'{subj_in_class.class_.year.identifier} {subj_in_class.class_.section.identifier}'
         hours = subj_in_class.hours_total
-        assignment_list.append((subj_in_class_id, persons, subject, classe, hours))
+        room = subj_in_class.room.identifier
+        assignment_list.append((subj_in_class_id, persons, subject, classe, hours, room))
 
     for ass in assignment_list:
         ui.widgets['assignment_listbox'].insert(parent="", index="end", iid=ass[0],
@@ -495,7 +509,27 @@ def assignment_selected(event):
 
 
 def assignment_delete():
-    pass
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    assignment_ids = ui.widgets['assignment_listbox'].selection()
+    if len(assignment_ids) == 0:
+        tkinter.messagebox.showwarning("Eliminazione assegnazione", "Selezionare una assegnazione")
+        return None
+    
+    for assignment_id in assignment_ids:
+        for assignment in assignment_list:
+            if assignment[0] == int(assignment_id):
+                confirm = tkinter.messagebox.askokcancel("Eliminazione assegnazione",
+                                             f'Confermi di eliminare l\'assegnazione di {assignment[1]} per \
+                                                 {assignment[2]} in classe {assignment[3]}?')
+
+                if confirm:
+                    db.query.delete(db.model.SubjectInClass, assignment_id)
+                    tkinter.messagebox.showinfo("Eliminazione assegnazione", "Assegnazione eliminata")
+                
+                break
+                    
+    populate_assignment_configuration()
 
 
 def assignment_create():
