@@ -327,6 +327,16 @@ def delete_plan_for_class(class_id: int):
         traceback.print_exc()
 
 
+def get_subject_in_class(subject_in_class: SubjectInClass):
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(SubjectInClass). \
+                where(SubjectInClass.class_id == subject_in_class.class_id,
+                      SubjectInClass.subject_id == subject_in_class.subject_id)
+            return session.execute(stmt).unique().scalar_one_or_none()
+    except (Exception) as error:
+        traceback.print_exc()
+
 def get_subjects_in_class(class_id: int):
     try:
         with db.connection.active_session() as session:

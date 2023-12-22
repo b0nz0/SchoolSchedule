@@ -21,6 +21,7 @@ persons_dict = {}
 assignment_dict = {}
 assignment_list = []
 
+
 def treeview_sort_column(tv, col, text, reverse):
     l = [(tv.set(k, col), k) for k in tv.get_children('')]
     l.sort(reverse=reverse)
@@ -31,9 +32,9 @@ def treeview_sort_column(tv, col, text, reverse):
 
     # reverse sort next time
     tv.heading(col, text=text, command=lambda _col=col: \
-                 treeview_sort_column(tv, _col, text, not reverse))
-    
-    
+        treeview_sort_column(tv, _col, text, not reverse))
+
+
 def populate_school_combo():
     ui = gui.setup.SchoolSchedulerGUI()
     for school in db.query.get_schools():
@@ -119,6 +120,7 @@ def populate_room_configuration():
         elif room_type == db.model.RoomEnum.ALTRO:
             ui.widgets['rooms_listbox'].insert(parent="D", index="end", text=identifier, iid=rid)
 
+
 def populate_subject_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
 
@@ -175,7 +177,7 @@ def populate_assignment_configuration():
 
     for ass in assignment_list:
         ui.widgets['assignment_listbox'].insert(parent="", index="end", iid=ass[0],
-                                             values=ass[1:])
+                                                values=ass[1:])
 
 
 def populate_timetable_combo():
@@ -353,7 +355,6 @@ def add_class_in_plan():
         tkinter.messagebox.showinfo("Abbinamento classi", "Classi abbinate")
 
 
-
 def class_delete():
     pass
 
@@ -428,6 +429,7 @@ def room_create():
             tkinter.messagebox.showinfo("Aggiunta spazio", "Spazio " + identifier + " aggiunto")
         populate_room_configuration()
 
+
 def subject_selected(event):
     pass
 
@@ -450,6 +452,7 @@ def subject_create():
             tkinter.messagebox.showinfo("Aggiunta materia", "Materia " + subject_name + " inserita")
 
         populate_subject_configuration()
+
 
 def person_selected(event):
     pass
@@ -481,6 +484,7 @@ def person_create():
             tkinter.messagebox.showinfo("Aggiunta Persona", fullname + " aggiunto")
         populate_person_configuration()
 
+
 def timetable_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     choice = ui.widgets['timetables_combo'].get()
@@ -504,6 +508,7 @@ def timetable_selected(event):
         classes_str = classes_str + str(classe.class_) + '\n'
     l.insert("1.0", classes_str)
 
+
 def assignment_selected(event):
     pass
 
@@ -515,29 +520,105 @@ def assignment_delete():
     if len(assignment_ids) == 0:
         tkinter.messagebox.showwarning("Eliminazione assegnazione", "Selezionare una assegnazione")
         return None
-    
+
     for assignment_id in assignment_ids:
         for assignment in assignment_list:
             if assignment[0] == int(assignment_id):
                 confirm = tkinter.messagebox.askokcancel("Eliminazione assegnazione",
-                                             f'Confermi di eliminare l\'assegnazione di {assignment[1]} per \
+                                                         f'Confermi di eliminare l\'assegnazione di {assignment[1]} per \
                                                  {assignment[2]} in classe {assignment[3]}?')
 
                 if confirm:
                     db.query.delete(db.model.SubjectInClass, assignment_id)
                     tkinter.messagebox.showinfo("Eliminazione assegnazione", "Assegnazione eliminata")
-                
+
                 break
-                    
+
     populate_assignment_configuration()
 
 
 def assignment_create():
-    pass
+    return _assignment_create()
+
+
+def _assignment_create(pperson1=None, pperson2=None, pperson3=None, psubject=None, pclass=None, proom=None,
+                       phours=None):
+    ui = gui.setup.SchoolSchedulerGUI()
+    options_person = {}
+    options_subject = {}
+    options_class = {}
+    options_room = {}
+
+    school_id = school_selected_dict['id']
+    schoolyear_id = schoolyear_selected_dict['id']
+
+    persons = db.query.get_persons(school_id)
+    subjects = db.query.get_subjects(school_id)
+    classes = db.query.get_classes(schoolyear_id)
+    rooms = db.query.get_rooms(school_id)
+
+    for person in persons:
+        options_person[person.id] = person.fullname
+    for subject in subjects:
+        options_subject[subject.id] = subject.identifier
+    for class_ in classes:
+        ident = f'{class_.year.identifier} {class_.section.identifier}'
+        options_class[class_.id] = ident
+    for room in rooms:
+        options_room[room.id] = room.identifier
+
+    dialog = gui.dialog.CreateAssignmentDialog(ui.root, options_persons=options_person, options_subject=options_subject,
+                                               options_class=options_class, options_room=options_room,
+                                               pre_person1=pperson1, pre_person2=pperson2, pre_person3=pperson3,
+                                               pre_subject=psubject, pre_class=pclass, pre_room=proom, pre_hours=phours)
+    ret = dialog.result
+    if ret:
+        person1_id, person2_id, person3_id, subject_id, class_id, room_id, hours = ret
+        if person1_id == '-':
+            tkinter.messagebox.showwarning("Aggiunta assegnazione",
+                                           "Almeno il primo docente va selezionato")
+            return
+
+        ass_persons = [db.query.get(db.model.Person, person1_id)]
+        if person2_id is not None:
+            ass_persons.append(db.query.get(db.model.Person, person2_id))
+        if person3_id is not None:
+            ass_persons.append(db.query.get(db.model.Person, person3_id))
+        subject_in_class = db.model.SubjectInClass()
+        subject_in_class.subject_id = subject_id
+        subject_in_class.class_id = class_id
+        subject_in_class.room_id = room_id
+        subject_in_class.hours_total = hours
+        subject_in_class.persons = ass_persons
+
+        if db.query.get_subject_in_class(subject_in_class) is not None:
+            tkinter.messagebox.showwarning("Aggiunta assegnazione",
+                                           "Associazione classe-materia già presente. Inserimento ignorato")
+        else:
+            db.query.save(subject_in_class)
+            tkinter.messagebox.showinfo("Aggiunta Assegnazione", "Associazione aggiunta")
+
+        populate_assignment_configuration()
 
 
 def assignment_duplicate():
-    pass
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    assignment_ids = ui.widgets['assignment_listbox'].selection()
+    if len(assignment_ids) == 0:
+        tkinter.messagebox.showwarning("Eliminazione assegnazione", "Selezionare una assegnazione")
+        return None
+
+    assignment_id = assignment_ids[0]
+    for assignment in assignment_list:
+        if assignment[0] == int(assignment_id):
+            persons_list = assignment[1].split(',')
+            persons_list.extend([None, None, None])
+
+            _assignment_create(persons_list[0], persons_list[1], persons_list[2],
+                               assignment[2], assignment[3], assignment[5], assignment[4])
+
+            break
 
 
 def return_home():
