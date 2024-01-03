@@ -577,34 +577,42 @@ def populate_DB():
 
     # CONSTRAINTS
     c = engine.constraint.MultipleConsecutiveForSubject()
+    c.school_year = y
     c.identifier = "Coppia compito di italiano"
     c.configure(1, 2, 1)
     db.query.save(c.to_model())
     c = engine.constraint.MultipleConsecutiveForSubject()
+    c.school_year = y
     c.identifier = "Coppia compito di matematica"
     c.configure(2, 2, 1)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
+    c.school_year = y
     c.identifier = "Educazione fisica all'ultima ora di mercoledì in classe 1"
     c.configure(person_id=None, subject_id=subj_edfisica.id, class_id=1, day=WeekDayEnum.WEDNESDAY, hour=5, score=2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
+    c.school_year = y
     c.identifier = "Educazione fisica alla seconda ora di martedì in classe 2"
     c.configure(person_id=None, subject_id=subj_edfisica.id, class_id=2, day=WeekDayEnum.TUESDAY, hour=2, score=2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
+    c.school_year = y
     c.identifier = "Educazione fisica alla seconda ora di giovedì in classe 3"
     c.configure(person_id=None, subject_id=subj_edfisica.id, class_id=3, day=WeekDayEnum.THURSDAY, hour=2, score=2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
+    c.school_year = y
     c.identifier = "Italiano no prima ora di lunedì"
     c.configure(person_id=None, subject_id=subj_italiano.id, class_id=None, day=WeekDayEnum.MONDAY, hour=1, score=-2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
+    c.school_year = y
     c.identifier = "Fisica no ultime ore"
     c.configure(person_id=None, subject_id=subj_fisica.id, class_id=None, day=None, hour=5, score=-2000)
     db.query.save(c.to_model())
     c = engine.constraint.Boost()
+    c.school_year = y
     c.identifier = "lettore mai martedì"
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     db.query.save(c.to_model())
@@ -616,7 +624,7 @@ def test():
     logging.debug(db.query.dump_school_year(id=1))
 
     eng = SimpleEngineRand()
-    for c in db.query.get_constraints():
+    for c in db.query.get_constraints(school_year_id=1):
         eng.add_constraint(c)
     c = engine.constraint.Boost()
     c.identifier = "lettore mai martedì"
@@ -633,7 +641,7 @@ def test():
     eng.write_calendars_to_csv('calendari.csv')
 
     eng = LocalOptimalEngine()
-    for c in db.query.get_constraints():
+    for c in db.query.get_constraints(school_year_id=1):
         eng.add_constraint(c)
     c = engine.constraint.Boost()
     c.identifier = "lettore mai martedì"
@@ -666,7 +674,7 @@ if __name__ == '__main__':
 
     db.connection.connect()
 
-    #    populate_DB()
+    # populate_DB()
     # test()
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()

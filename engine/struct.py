@@ -91,6 +91,7 @@ class Constraint:
         for type in Constraint.TRIGGER_TYPES:
             self._triggers[type] = set()
         self._weight = 0
+        self._school_year = None
         self._score = 0
         self._identifier = ''
 
@@ -125,6 +126,14 @@ class Constraint:
 
     def from_model(self, constraint: db.model.Constraint):
         pass
+
+    @property
+    def school_year(self):
+        return self._school_year
+
+    @school_year.setter
+    def school_year(self, school_year):
+        self._school_year = school_year
 
     @property
     def weight(self):

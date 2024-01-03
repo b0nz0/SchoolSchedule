@@ -179,6 +179,9 @@ def populate_assignment_configuration():
         ui.widgets['assignment_listbox'].insert(parent="", index="end", iid=ass[0],
                                                 values=ass[1:])
 
+def populate_constraint_configuration():
+    ui = gui.setup.SchoolSchedulerGUI()
+
 
 def populate_timetable_combo():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -242,6 +245,7 @@ def schoolyear_selected(event):
     ui.widgets['time_mgmt_button'].state(['!disabled'])
     ui.widgets['person_mgmt_button'].state(['!disabled'])
     ui.widgets['assignment_mgmt_button'].state(['!disabled'])
+    ui.widgets['restriction_mgmt_button'].state(['!disabled'])
 
 
 def schoolyear_delete():
@@ -620,6 +624,50 @@ def assignment_duplicate():
 
             break
 
+def constraint_selected(event):
+    pass
+
+
+def constraint_delete():
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    constraint_ids = ui.widgets['constraint_listbox'].selection()
+    if len(constraint_ids) == 0:
+        tkinter.messagebox.showwarning("Eliminazione vincolo/pref.", "Selezionare un vincolo/preferenza")
+        return None
+
+    for constraint_id in constraint_ids:
+        for constraint in constraint_list:
+            if constraint[0] == int(constraint_id):
+                confirm = tkinter.messagebox.askokcancel("Eliminazione vincolo/pref.",
+                                                         f'Confermi di eliminare il vincolo/preferenza {constraint[1]} di tipo \
+                                                 {constraint[2]}?')
+
+                if confirm:
+                    db.query.delete(db.model.Constraint, constraint_id)
+                    tkinter.messagebox.showinfo("Eliminazione vincolo/pref.", "Vincolo/preferenza eliminato")
+
+                break
+
+    populate_constraint_configuration()
+
+
+def constraint_create():
+    return _constraint_create()
+
+
+def _constraint_create(pnome=None, ptipo=None, pscore=None):
+    ui = gui.setup.SchoolSchedulerGUI()
+
+
+def assignment_duplicate():
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    constraint_ids = ui.widgets['constraint_listbox'].selection()
+    if len(constraint_ids) == 0:
+        tkinter.messagebox.showwarning("Eliminazione vincolo/pref.", "Selezionare un vincolo/preferenza")
+        return None
+
 
 def return_home():
     switch_frame(None, 'school_select_frame')
@@ -648,4 +696,6 @@ def switch_frame(from_name, to_name):
             gui.screen.configure_person_screen()
         elif to_name == "assignment_configure_frame":
             gui.screen.configure_assignment_screen()
+        elif to_name == "constraint_configure_frame":
+            gui.screen.configure_constraint_screen()
     ui.root.geometry(gui.screen.geometries[to_name])

@@ -65,6 +65,8 @@ class Boost(Constraint):
         constraint = db.model.Constraint()
         constraint.identifier = self.identifier
         constraint.kind = 'Boost'
+        constraint.school_year_id = self.school_year.id
+        constraint.score = self.score
         # save configuration as json string
         conf_data = dict()
         conf_data['person_id'] = self._person_id
@@ -75,7 +77,6 @@ class Boost(Constraint):
         else:
             conf_data['day'] = None
         conf_data['hour'] = self._hour
-        conf_data['score'] = self.score
         constraint.configuration = json.dumps(conf_data)
         return constraint
 
@@ -95,6 +96,7 @@ class Boost(Constraint):
         else:
             day = None
         hour = conf_data['hour']
-        score = conf_data['score']
+        score = constraint.score
+        self.school_year = db.query.get(db.model.SchoolYear, constraint.school_year_id)
         self.configure(person_id=person_id, subject_id=subject_id, class_id=class_id, day=day, hour=hour, score=score)
         return self

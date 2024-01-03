@@ -57,6 +57,11 @@ ADD_ASSIGNMENT_LABEL = "Aggiungi assegnazione"
 DELETE_ASSIGNMENT_LABEL = "Elimina assegnazione"
 DUPLICATE_ASSIGNMENT_LABEL = "Duplica assegnazione"
 
+CONSTRAINT_SELECT_LABEL = "Vincoli/Preferenze"
+ADD_CONSTRAINT_LABEL = "Aggiungi vincolo/pref."
+DELETE_CONSTRAINT_LABEL = "Elimina vincolo/pref."
+DUPLICATE_CONSTRAINT_LABEL = "Duplica vincolo/pref."
+
 
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -143,7 +148,8 @@ def school_select_screen():
     time_mgmt_button.grid(column=11, row=11, columnspan=2, sticky=(N, E, W, S))
     time_mgmt_button.state(['disabled'])
 
-    rest_mgmt_button = ttk.Button(frame, text=MANAGE_RESTRICTIONS_LABEL)
+    rest_mgmt_button = ttk.Button(frame, text=MANAGE_RESTRICTIONS_LABEL, command=lambda: gui.event.switch_frame(
+        "school_select_frame", "constraint_configure_frame"))
     rest_mgmt_button.grid(column=13, row=11, columnspan=2, sticky=(N, E, W, S))
     rest_mgmt_button.state(['disabled'])
 
@@ -199,6 +205,7 @@ def school_select_screen():
     ui.widgets['time_mgmt_button'] = time_mgmt_button
     ui.widgets['person_mgmt_button'] = pers_mgmt_button
     ui.widgets['assignment_mgmt_button'] = ass_mgmt_button
+    ui.widgets['restriction_mgmt_button'] = rest_mgmt_button
 
     gui.event.populate_school_combo()
 
@@ -436,8 +443,8 @@ def configure_person_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
     global geometries
-    geometries['person_configure_frame'] = '600x500'
-    root.geometry('600x500')
+    geometries['person_configure_frame'] = '700x500'
+    root.geometry('700x500')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
     frame.grid(column=0, row=0)
@@ -641,3 +648,67 @@ def configure_assignment_screen():
     ui.widgets['assignment_duplicate_button'] = assignment_duplicate_button
 
     gui.event.populate_assignment_configuration()
+
+def configure_constraint_screen():
+    ui = gui.setup.SchoolSchedulerGUI()
+    root = ui.root
+    global geometries
+    geometries['constraint_configure_frame'] = '1200x600'
+    root.geometry('1000x600')
+
+    frame = ttk.Frame(root, padding="3 3 12 12")
+    frame.grid(column=0, row=0)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+
+    # person selection
+    constraint_label = ttk.Label(frame, text=CONSTRAINT_SELECT_LABEL)
+    constraint_label.grid(column=0, row=0, rowspan=3, padx=30, sticky=(W, E))
+
+    constraint_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2", "c3"),
+                                   selectmode=BROWSE, height=20)
+    constraint_listbox.grid(column=1, row=0, rowspan=3, sticky=(N, W, E, S))
+    scrollbary = ttk.Scrollbar(frame, orient=VERTICAL, command=constraint_listbox.yview)
+    constraint_listbox.configure(yscroll=scrollbary.set)
+    scrollbary.configure(command=constraint_listbox.yview)
+    scrollbary.grid(column=2, row=0, rowspan=3, sticky=(N, S))
+    scrollbarx = ttk.Scrollbar(frame, orient=HORIZONTAL, command=constraint_listbox.xview)
+    constraint_listbox.configure(xscroll=scrollbarx.set)
+    scrollbarx.configure(command=constraint_listbox.xview)
+    scrollbarx.grid(column=1, row=3, rowspan=1, sticky=(E, W))
+
+    constraint_listbox.bind('<<TreeviewSelect>>', gui.event.assignment_selected)
+    constraint_listbox.column("#1", anchor=W, stretch=NO, width=200)
+    constraint_listbox.heading("#1", text="Nome", command=lambda _col="#1": \
+                     gui.event.treeview_sort_column(constraint_listbox, _col, "Nome", False))
+    constraint_listbox.column("#2", anchor=CENTER, stretch=NO, width=260)
+    constraint_listbox.heading("#2", text="Tipo", command=lambda _col="#2": \
+                     gui.event.treeview_sort_column(constraint_listbox, _col, "Tipo", False))
+    constraint_listbox.column("#3", anchor=CENTER, stretch=NO, width=80)
+    constraint_listbox.heading("#3", text="Punteggio", command=lambda _col="#3": \
+                     gui.event.treeview_sort_column(constraint_listbox, _col, "Punteggio", False))
+
+    constraint_add_button = ttk.Button(frame, text=ADD_CONSTRAINT_LABEL, command=gui.event.constraint_create)
+    constraint_add_button.grid(column=11, row=0, padx=30, sticky=(E, W))
+    constraint_add_button.state(['!disabled'])
+
+    constraint_delete_button = ttk.Button(frame, text=DELETE_CONSTRAINT_LABEL, command=gui.event.constraint_delete)
+    constraint_delete_button.grid(column=11, row=1, padx=30, sticky=(E, W))
+    constraint_delete_button.state(['!disabled'])
+
+    constraint_duplicate_button = ttk.Button(frame, text=DUPLICATE_CONSTRAINT_LABEL, command=gui.event.constraint_duplicate)
+    constraint_duplicate_button.grid(column=11, row=2, padx=30, sticky=(E, W))
+    constraint_duplicate_button.state(['!disabled'])
+
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
+        "constraint_configure_frame", "school_select_frame"))
+    return_button.grid(column=0, row=10, columnspan=20, pady=30, sticky=(N, S))
+    return_button.state(['!disabled'])
+
+    ui.frames['constraint_configure_frame'] = frame
+    ui.widgets['constraint_listbox'] = constraint_listbox
+    ui.widgets['constraint_add_button'] = constraint_add_button
+    ui.widgets['constraint_delete_button'] = constraint_delete_button
+    ui.widgets['constraint_duplicate_button'] = constraint_duplicate_button
+
+    gui.event.populate_constraint_configuration()

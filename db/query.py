@@ -364,10 +364,13 @@ def get_subjects_in_class_per_school_year(school_year_id: int, person_id=None):
         traceback.print_exc()
 
 
-def get_constraints() -> List[engine.struct.Constraint]:
+def get_constraints(school_year_id: int) -> List[engine.struct.Constraint]:
     try:
         with db.connection.active_session() as session:
-            stmt = select(Constraint).order_by(Constraint.id)
+            if school_year_id is not None:
+                stmt = select(Constraint).where(Constraint.school_year_id == school_year_id).order_by(Constraint.id)
+            else:
+                stmt = select(Constraint).order_by(Constraint.id)
             rets = []
             for c in session.execute(stmt).scalars().all():
                 if c.kind == 'NoComebacks':
