@@ -632,7 +632,7 @@ def test():
     eng.add_constraint(c)
     eng.load(1)
     for x in range(1, 6):
-        logger.info(f'eseguo SimpleEngineRand (run {x})')
+        logging.info(f'eseguo SimpleEngineRand (run {x})')
         print(f'eseguo SimpleEngineRand (run {x})')
         eng.run()
         if eng.closed: break
@@ -649,7 +649,7 @@ def test():
     eng.add_constraint(c)
     eng.load(1)
     for x in range(1, 6):
-        logger.info(f'eseguo LocalOptimalEngine (run {x})')
+        logging.info(f'eseguo LocalOptimalEngine (run {x})')
         print(f'eseguo LocalOptimalEngine (run {x})')
         eng.run()
         if eng.closed: break
