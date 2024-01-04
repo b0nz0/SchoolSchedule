@@ -9,11 +9,11 @@ class Boost(Constraint):
 
     def __init__(self) -> None:
         super().__init__()
-        self._person_id = None
-        self._subject_id = None
-        self._class_id = 0
-        self._hour = 0
-        self._day = None
+        self.person_id = None
+        self.subject_id = None
+        self.class_id = 0
+        self.hour = 0
+        self.day = None
         self.score = 1000
         self.weight = 1000
         self.noscore = 1
@@ -24,11 +24,11 @@ class Boost(Constraint):
             self.register_trigger(trigger=subject_id, trigger_type=Constraint.TRIGGER_SUBJECT)
         if person_id:
             self.register_trigger(trigger=person_id, trigger_type=Constraint.TRIGGER_PERSON)
-        self._person_id = person_id
-        self._subject_id = subject_id
-        self._class_id = class_id
-        self._hour = hour
-        self._day = day
+        self.person_id = person_id
+        self.subject_id = subject_id
+        self.class_id = class_id
+        self.hour = hour
+        self.day = day
         self.score = score
         if score > 0:
             self.noscore = 0
@@ -43,46 +43,43 @@ class Boost(Constraint):
         class_id = assignment.data['class_id']
         persons = [x['person_id'] for x in assignment.data['persons']]
 
-        if self._subject_id:
-            if subject_id == self._subject_id:
-                if (class_id == self._class_id or self._class_id is None) and \
-                        (day == self._day or self._day is None):
-                    if hour == self._hour or self._hour is None:
+        if self.subject_id:
+            if subject_id == self.subject_id:
+                if (class_id == self.class_id or self.class_id is None) and \
+                        (day == self.day or self.day is None):
+                    if hour == self.hour or self.hour is None:
                         return self.score
                 return self.noscore
 
-        elif self._person_id:
-            if self._person_id in persons:
-                if (class_id == self._class_id or self._class_id is None) and \
-                        (day == self._day or self._day is None):
-                    if hour == self._hour or self._hour is None:
+        elif self.person_id:
+            if self.person_id in persons:
+                if (class_id == self.class_id or self.class_id is None) and \
+                        (day == self.day or self.day is None):
+                    if hour == self.hour or self.hour is None:
                         return self.score
                 return self.noscore
 
         return 0
 
     def to_model(self) -> db.model.Constraint:
-        constraint = db.model.Constraint()
-        constraint.identifier = self.identifier
+        constraint = self.to_model_base()
         constraint.kind = 'Boost'
-        constraint.school_year_id = self.school_year.id
-        constraint.score = self.score
         # save configuration as json string
         conf_data = dict()
-        conf_data['person_id'] = self._person_id
-        conf_data['subject_id'] = self._subject_id
-        conf_data['class_id'] = self._class_id
-        if self._day:
-            conf_data['day'] = self._day.name
+        conf_data['person_id'] = self.person_id
+        conf_data['subject_id'] = self.subject_id
+        conf_data['class_id'] = self.class_id
+        if self.day:
+            conf_data['day'] = self.day.name
         else:
             conf_data['day'] = None
-        conf_data['hour'] = self._hour
+        conf_data['hour'] = self.hour
         constraint.configuration = json.dumps(conf_data)
         return constraint
 
     def from_model(self, constraint: db.model.Constraint):
         assert constraint.kind == 'Boost', 'returned constraint of wrong kind'
-        self.identifier = constraint.identifier
+        self.from_model_base(constraint=constraint)
         # load configuration as json string
         conf_data = json.loads(constraint.configuration)
         person_id = conf_data['person_id']
@@ -96,7 +93,5 @@ class Boost(Constraint):
         else:
             day = None
         hour = conf_data['hour']
-        score = constraint.score
-        self.school_year = db.query.get(db.model.SchoolYear, constraint.school_year_id)
-        self.configure(person_id=person_id, subject_id=subject_id, class_id=class_id, day=day, hour=hour, score=score)
+        self.configure(person_id=person_id, subject_id=subject_id, class_id=class_id, day=day, hour=hour, score=self.score)
         return self

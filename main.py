@@ -663,7 +663,7 @@ def test():
         pickle.dump(eng, outfile)
 
 
-if __name__ == '__main__':
+def startup():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     handler = logging.handlers.RotatingFileHandler(
@@ -674,12 +674,16 @@ if __name__ == '__main__':
 
     db.connection.connect()
 
-    # populate_DB()
-    # test()
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
+    engine.struct.Constraint.load_registered_constraints()    
     gui.screen.school_select_screen()
     root = ui.root
     root.title("Scuola")
     root.resizable(width=TRUE, height=TRUE)
-    ui.show()
+
+if __name__ == '__main__':
+    # populate_DB()
+    # test()
+    startup()
+    gui.setup.SchoolSchedulerGUI().show()

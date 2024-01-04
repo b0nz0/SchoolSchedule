@@ -373,14 +373,11 @@ def get_constraints(school_year_id: int) -> List[engine.struct.Constraint]:
                 stmt = select(Constraint).order_by(Constraint.id)
             rets = []
             for c in session.execute(stmt).scalars().all():
-                if c.kind == 'NoComebacks':
-                    retc = engine.constraint.NoComebacks()
-                elif c.kind == 'NonDuplicateConstraint':
-                    retc = engine.constraint.NonDuplicateConstraint()
-                elif c.kind == 'MultipleConsecutiveForSubject':
-                    retc = engine.constraint.MultipleConsecutiveForSubject()
-                elif c.kind == 'Boost':
-                    retc = engine.constraint.Boost()
+                for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
+                    if c.kind == ckind['shortname']:
+                        class_obj = getattr(engine.constraint, ckind['classname'])
+                        retc = class_obj()
+                        break
                 retc.from_model(c)
                 rets.append(retc)
             return rets

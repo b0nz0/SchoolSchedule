@@ -3,6 +3,7 @@ from tkinter import END
 
 import gui.setup, gui.screen, gui.dialog
 import db.query, db.model
+import engine.struct
 from operator import itemgetter
 import tkinter.simpledialog, tkinter.messagebox
 import datetime
@@ -20,6 +21,7 @@ timetable_dict = {}
 persons_dict = {}
 assignment_dict = {}
 assignment_list = []
+restriction_list = []
 
 
 def treeview_sort_column(tv, col, text, reverse):
@@ -179,10 +181,32 @@ def populate_assignment_configuration():
         ui.widgets['assignment_listbox'].insert(parent="", index="end", iid=ass[0],
                                                 values=ass[1:])
 
-def populate_constraint_configuration():
+def populate_restriction_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
 
+    restrictions = db.query.get_constraints(school_year_id=schoolyear_selected_dict['id'])
+    global restriction_list
+    restriction_list = []
 
+    # Clear the treeview list items
+    for item in ui.widgets['restriction_listbox'].get_children():
+        ui.widgets['restriction_listbox'].delete(item)
+
+    for restriction in restrictions:
+        identifier = restriction.identifier
+        type_name = type(restriction).__name__
+        type_ = None
+        for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
+            if type_name == ckind['classname']:
+                type_ = ckind['longname']
+                break
+        assert type_ is not None, 'impossibile trovare il tipo della restrizione'
+        score = restriction.score
+        restriction_list.append((restriction.id, identifier, type_, score))
+
+    for res in restriction_list:
+        ui.widgets['restriction_listbox'].insert(parent="", index="end", iid=res[0],
+                                                values=res[1:])
 def populate_timetable_combo():
     ui = gui.setup.SchoolSchedulerGUI()
     for plan in db.query.get_plans(school_id=school_selected_dict['id']):
@@ -624,48 +648,48 @@ def assignment_duplicate():
 
             break
 
-def constraint_selected(event):
+def restriction_selected(event):
     pass
 
 
-def constraint_delete():
+def restriction_delete():
     ui = gui.setup.SchoolSchedulerGUI()
 
-    constraint_ids = ui.widgets['constraint_listbox'].selection()
-    if len(constraint_ids) == 0:
-        tkinter.messagebox.showwarning("Eliminazione vincolo/pref.", "Selezionare un vincolo/preferenza")
+    restriction_ids = ui.widgets['restriction_listbox'].selection()
+    if len(restriction_ids) == 0:
+        tkinter.messagebox.showwarning("Eliminazione restrizione", "Selezionare una restrizione")
         return None
 
-    for constraint_id in constraint_ids:
-        for constraint in constraint_list:
-            if constraint[0] == int(constraint_id):
-                confirm = tkinter.messagebox.askokcancel("Eliminazione vincolo/pref.",
-                                                         f'Confermi di eliminare il vincolo/preferenza {constraint[1]} di tipo \
-                                                 {constraint[2]}?')
+    for restriction_id in restriction_ids:
+        for restriction in restriction_list:
+            if restriction[0] == int(restriction_id):
+                confirm = tkinter.messagebox.askokcancel("Eliminazione restrizione",
+                                                         f'Confermi di eliminare la restrizione {restriction[1]} di tipo \
+                                                 {restriction[2]}?')
 
                 if confirm:
-                    db.query.delete(db.model.Constraint, constraint_id)
-                    tkinter.messagebox.showinfo("Eliminazione vincolo/pref.", "Vincolo/preferenza eliminato")
+                    db.query.delete(db.model.restriction, restriction_id)
+                    tkinter.messagebox.showinfo("Eliminazione restrizione", "Restrizione eliminata")
 
                 break
 
-    populate_constraint_configuration()
+    populate_restriction_configuration()
 
 
-def constraint_create():
-    return _constraint_create()
+def restriction_create():
+    return _restriction_create()
 
 
-def _constraint_create(pnome=None, ptipo=None, pscore=None):
+def _restriction_create(pnome=None, ptipo=None, pscore=None):
     ui = gui.setup.SchoolSchedulerGUI()
 
 
-def assignment_duplicate():
+def restriction_duplicate():
     ui = gui.setup.SchoolSchedulerGUI()
 
-    constraint_ids = ui.widgets['constraint_listbox'].selection()
-    if len(constraint_ids) == 0:
-        tkinter.messagebox.showwarning("Eliminazione vincolo/pref.", "Selezionare un vincolo/preferenza")
+    restriction_ids = ui.widgets['restriction_listbox'].selection()
+    if len(restriction_ids) == 0:
+        tkinter.messagebox.showwarning("Eliminazione restrizione", "Selezionare una restrizione")
         return None
 
 
@@ -696,6 +720,6 @@ def switch_frame(from_name, to_name):
             gui.screen.configure_person_screen()
         elif to_name == "assignment_configure_frame":
             gui.screen.configure_assignment_screen()
-        elif to_name == "constraint_configure_frame":
-            gui.screen.configure_constraint_screen()
+        elif to_name == "restriction_configure_frame":
+            gui.screen.configure_restriction_screen()
     ui.root.geometry(gui.screen.geometries[to_name])

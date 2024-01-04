@@ -63,11 +63,8 @@ class MultipleConsecutiveForSubject(Constraint):
         return self._suggest_continuing
 
     def to_model(self) -> db.model.Constraint:
-        constraint = db.model.Constraint()
-        constraint.identifier = self.identifier
+        constraint = self.to_model_base()
         constraint.kind = 'MultipleConsecutiveForSubject'
-        constraint.school_year_id = self.school_year.id
-        constraint.score = self.score
         # save configuration as json string
         conf_data = dict()
         conf_data['subject_id'] = self._subject_id
@@ -78,14 +75,12 @@ class MultipleConsecutiveForSubject(Constraint):
 
     def from_model(self, constraint: db.model.Constraint):
         assert constraint.kind == 'MultipleConsecutiveForSubject', 'returned constraint of wrong kind'
-        self.identifier = constraint.identifier
+        self.from_model_base(constraint=constraint)
         # load configuration as json string
         conf_data = json.loads(constraint.configuration)
         subject_id = conf_data['subject_id']
         consecutive_hours = conf_data['consecutive_hours']
         times = conf_data['times']
-        self.score = constraint.score
-        self.school_year = db.query.get(db.model.SchoolYear, constraint.school_year_id)
         self.configure(subject_id=subject_id, consecutive_hours=consecutive_hours, times=times)
 
 

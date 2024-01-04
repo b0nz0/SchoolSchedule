@@ -35,16 +35,10 @@ class NoComebacks(Constraint):
         return 0
 
     def to_model(self) -> db.model.Constraint:
-        constraint = db.model.Constraint()
-        constraint.identifier = self.identifier
+        constraint = self.to_model_base()
         constraint.kind = 'NoComebacks'
-        constraint.school_year_id = self.school_year.id
-        constraint.score = self.score
-        constraint.configuration = ''
         return constraint
 
     def from_model(self, constraint: db.model.Constraint):
         assert constraint.kind == 'NoComebacks', 'returned constraint of wrong kind'
-        self.identifier = constraint.identifier
-        self.score = constraint.score
-        self.school_year = db.query.get(db.model.SchoolYear, constraint.school_year_id)
+        self.from_model_base(constraint=constraint)

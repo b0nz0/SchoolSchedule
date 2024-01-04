@@ -86,7 +86,10 @@ class Constraint:
         TRIGGER_SUBJECT
     )
 
+    REGISTERED_CONSTRAINTS = []
+
     def __init__(self) -> None:
+        _id = None
         self._triggers = {}
         for type in Constraint.TRIGGER_TYPES:
             self._triggers[type] = set()
@@ -126,6 +129,42 @@ class Constraint:
 
     def from_model(self, constraint: db.model.Constraint):
         pass
+
+    def to_model_base(self) -> db.model.Constraint:
+        constraint = db.model.Constraint()
+        constraint.identifier = self.identifier
+        constraint.kind = 'Base'
+        constraint.school_year_id = self.school_year.id
+        constraint.score = self.score
+        constraint.configuration = ''
+        if self.id is not None: constraint.id = self.id
+        else: constraint.id = None
+
+    def from_model_base(self, constraint: db.model.Constraint):
+        self.id = constraint.id
+        self.identifier = constraint.identifier
+        self.score = constraint.score
+        self.school_year = db.query.get(db.model.SchoolYear, constraint.school_year_id)
+        
+    @classmethod
+    def load_registered_constraints(cls):
+        cls.REGISTERED_CONSTRAINTS = []
+        cls.REGISTERED_CONSTRAINTS.append({'classname' :'NoComebacks', 'shortname': 'NoComebacks', \
+            'longname': 'No rientri'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname' :'NonDuplicateConstraint', 'shortname': 'NonDuplicateConstraint', \
+            'longname': 'No sovrapposizioni'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname' :'MultipleConsecutiveForSubject', 'shortname': 'MultipleConsecutiveForSubject', \
+            'longname': 'Coppia compito'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname' :'Boost', 'shortname': 'Boost', \
+            'longname': 'Aumenta probabilità'})
+        
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, id):
+        self._id = id
 
     @property
     def school_year(self):
