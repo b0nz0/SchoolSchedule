@@ -18,10 +18,12 @@ class BoostDialog(simpledialog.Dialog):
         self.entry_score = None
         self.combo_perssubj_text = None
         self.combo_perssubj = None
-        self.combo_person_text = None
-        self.combo_person = None
-        self.combo_subject_text = None
-        self.combo_subject = None
+        self.button_person_text = None
+        self.button_person = None
+        self.button_subject_text = None
+        self.button_subject = None
+        self.button_class_text = None
+        self.button_class = None
         gui.event.populate_person_configuration()
         gui.event.populate_subject_configuration()
         super().__init__(parent, title="Restrizione Aumenta/Diminuisci probabilità")
@@ -68,25 +70,38 @@ class BoostDialog(simpledialog.Dialog):
 
         l = ttk.Label(master=master, text="docente")
         l.grid(column=0, row=5, padx=30, pady=5, sticky=(E))
-        self.combo_person_text = StringVar(master)
-        self.combo_person = ttk.Entry(master=master, textvariable=self.combo_person_text)
-        self.combo_person.grid(column=1, row=5, sticky=(N, W, E, S))
-        if self.constraint.person_id is not None: 
-            self.combo_person_text = db.query.get(db.model.Person, self.constraint.person_id).fullname
+        self.button_person_text = StringVar(master)
+        self.button_person = ttk.Button(master=master, textvariable=self.button_person_text)
+        self.button_person.grid(column=1, row=5, sticky=(N, W, E, S))
+        if self.combo_perssubj.get() == 'docente':
+            self.button_person_text = db.query.get(db.model.Person, self.constraint.person_id).fullname
+            self.button_person_text.state(['!disabled'])
         else:
-            self.combo_person_text = ''
-            self.combo_person.config(state= "disabled")
+            self.button_person_text = '-'
+            self.button_person_text.state(['disabled'])
 
         l = ttk.Label(master=master, text="materia")
         l.grid(column=0, row=6, padx=30, pady=5, sticky=(E))
-        self.combo_subject_text = StringVar(master)
-        self.combo_subject = ttk.Entry(master=master, textvariable=self.combo_subject_text)
-        self.combo_subject.grid(column=1, row=6, sticky=(N, W, E, S))
-        if self.constraint.subject_id is not None: 
-            self.combo_subject_text = db.query.get(db.model.Subject, self.constraint.subject_id).identifier
+        self.button_subject_text = StringVar(master)
+        self.button_subject = ttk.Button(master=master, textvariable=self.button_subject_text)
+        self.button_subject.grid(column=1, row=6, sticky=(N, W, E, S))
+        if self.combo_perssubj.get() == 'materia':
+            self.button_subject_text = db.query.get(db.model.Subject, self.constraint.subject_id).identifier
+            self.button_subject.state(['!disabled'])
         else:
-            self.combo_subject_text = ''
-            self.combo_subject.config(state= "disabled")
+            self.button_subject_text = '-'
+            self.button_subject.state(['disabled'])
+
+        l = ttk.Label(master=master, text="classe")
+        l.grid(column=0, row=7, padx=30, pady=5, sticky=(E))
+        self.button_class_text = StringVar(master)
+        self.button_class = ttk.Button(master=master, textvariable=self.button_class_text)
+        self.button_class.grid(column=1, row=7, sticky=(N, W, E, S))
+        if self.constraint.class_id is not None:
+            self.button_class_text = db.query.get(db.model.Class, self.constraint.class_id).identifier
+        else:
+            self.button_subject_text = '-'
+        self.button_class.state(['!disabled'])
 
 
         return self.entry_nome
