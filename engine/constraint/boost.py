@@ -1,5 +1,6 @@
-from engine.struct import *
+from engine.struct import EngineSupport
 from db.model import DailyHour, WeekDayEnum
+import db.model
 import json
 
 from engine.struct import Constraint, Assignment
@@ -11,7 +12,7 @@ class Boost(Constraint):
         super().__init__()
         self.person_id = None
         self.subject_id = None
-        self.class_id = 0
+        self.class_id = None
         self.hour = 0
         self.day = None
         self.score = 1000

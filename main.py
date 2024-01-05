@@ -677,13 +677,14 @@ def startup():
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
     engine.struct.Constraint.load_registered_constraints()    
+
+if __name__ == '__main__':
+    startup()
+    # populate_DB()
+    # test()
+    ui = gui.setup.SchoolSchedulerGUI()
     gui.screen.school_select_screen()
     root = ui.root
     root.title("Scuola")
     root.resizable(width=TRUE, height=TRUE)
-
-if __name__ == '__main__':
-    # populate_DB()
-    # test()
-    startup()
-    gui.setup.SchoolSchedulerGUI().show()
+    ui.show()

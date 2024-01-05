@@ -89,7 +89,7 @@ class Constraint:
     REGISTERED_CONSTRAINTS = []
 
     def __init__(self) -> None:
-        _id = None
+        self._id = None
         self._triggers = {}
         for type in Constraint.TRIGGER_TYPES:
             self._triggers[type] = set()
@@ -139,6 +139,7 @@ class Constraint:
         constraint.configuration = ''
         if self.id is not None: constraint.id = self.id
         else: constraint.id = None
+        return constraint
 
     def from_model_base(self, constraint: db.model.Constraint):
         self.id = constraint.id

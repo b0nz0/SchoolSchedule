@@ -364,6 +364,14 @@ def get_subjects_in_class_per_school_year(school_year_id: int, person_id=None):
         traceback.print_exc()
 
 
+def get_constraint(classname: str, id: int):
+    c = db.query.get(Constraint, id)
+    class_obj = getattr(engine.constraint, classname)
+    retc = class_obj()
+    retc.from_model(c)
+    return retc
+
+
 def get_constraints(school_year_id: int) -> List[engine.struct.Constraint]:
     try:
         with db.connection.active_session() as session:

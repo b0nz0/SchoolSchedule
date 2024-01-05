@@ -1,7 +1,7 @@
 import logging
 from tkinter import END
 
-import gui.setup, gui.screen, gui.dialog
+import gui.setup, gui.screen, gui.dialog, gui.constraint_dialog
 import db.query, db.model
 import engine.struct
 from operator import itemgetter
@@ -651,6 +651,40 @@ def assignment_duplicate():
 def restriction_selected(event):
     pass
 
+def restriction_edit(event):
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    restriction_ids = ui.widgets['restriction_listbox'].selection()
+    if len(restriction_ids) != 1:
+        tkinter.messagebox.showwarning("Modifica restrizione", "Selezionare una restrizione")
+        return None
+
+    constraint = None
+    shortname = ''
+    for restriction_id in restriction_ids:
+        for restriction in restriction_list:
+            if restriction[0] == int(restriction_id):
+                type_name = restriction[2]
+                type_ = None
+                for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
+                    if type_name == ckind['longname']:
+                        type_ = ckind['classname']
+                        shortname = ckind['shortname']
+                        break
+                assert type_ is not None, 'impossibile trovare il tipo della restrizione'
+                constraint = db.query.get_constraint(type_, int(restriction_id))
+                break
+
+    assert constraint is not None, 'impossibile trovare la restrizione'
+
+    dialog_obj = getattr(gui.constraint_dialog, shortname + 'Dialog')
+    assert dialog_obj is not None, 'impossibile trovare la finestra di dialogo per la restrizione di tipo ' + shortname
+
+    dialog = dialog_obj(ui.root, constraint)
+
+    ret = dialog.result
+
+    populate_restriction_configuration()
 
 def restriction_delete():
     ui = gui.setup.SchoolSchedulerGUI()

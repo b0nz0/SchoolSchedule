@@ -58,6 +58,7 @@ DELETE_ASSIGNMENT_LABEL = "Elimina assegnazione"
 DUPLICATE_ASSIGNMENT_LABEL = "Duplica assegnazione"
 
 RESTRICTION_SELECT_LABEL = "Restrizioni"
+EDIT_RESTRICTION_LABEL = "Modifica restrizione"
 ADD_RESTRICTION_LABEL = "Aggiungi restrizione"
 DELETE_RESTRICTION_LABEL = "Elimina restrizione"
 DUPLICATE_RESTRICTION_LABEL = "Duplica restrizione"
@@ -667,15 +668,18 @@ def configure_restriction_screen():
 
     restriction_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2"),
                                    selectmode=BROWSE, height=20)
-    restriction_listbox.grid(column=1, row=0, rowspan=3, sticky=(N, W, E, S))
+    restriction_listbox.grid(column=1, row=0, rowspan=4, sticky=(N, W, E, S))
+    # bind double-click to edit
+    restriction_listbox.bind("<Double-1>", gui.event.restriction_edit)
+    
     scrollbary = ttk.Scrollbar(frame, orient=VERTICAL, command=restriction_listbox.yview)
     restriction_listbox.configure(yscroll=scrollbary.set)
     scrollbary.configure(command=restriction_listbox.yview)
-    scrollbary.grid(column=2, row=0, rowspan=3, sticky=(N, S))
+    scrollbary.grid(column=2, row=0, rowspan=4, sticky=(N, S))
     scrollbarx = ttk.Scrollbar(frame, orient=HORIZONTAL, command=restriction_listbox.xview)
     restriction_listbox.configure(xscroll=scrollbarx.set)
     scrollbarx.configure(command=restriction_listbox.xview)
-    scrollbarx.grid(column=1, row=3, rowspan=1, sticky=(E, W))
+    scrollbarx.grid(column=1, row=4, rowspan=1, sticky=(E, W))
 
     restriction_listbox.bind('<<TreeviewSelect>>', gui.event.assignment_selected)
     restriction_listbox.column("#1", anchor=W, stretch=NO, width=460)
@@ -685,16 +689,20 @@ def configure_restriction_screen():
     restriction_listbox.heading("#2", text="Tipo", command=lambda _col="#2": \
                      gui.event.treeview_sort_column(restriction_listbox, _col, "Tipo", False))
 
+    restriction_edit_button = ttk.Button(frame, text=EDIT_RESTRICTION_LABEL, command=gui.event.restriction_edit)
+    restriction_edit_button.grid(column=11, row=0, padx=30, sticky=(E, W))
+    restriction_edit_button.state(['!disabled'])
+
     restriction_add_button = ttk.Button(frame, text=ADD_RESTRICTION_LABEL, command=gui.event.restriction_create)
-    restriction_add_button.grid(column=11, row=0, padx=30, sticky=(E, W))
+    restriction_add_button.grid(column=11, row=1, padx=30, sticky=(E, W))
     restriction_add_button.state(['!disabled'])
 
     restriction_delete_button = ttk.Button(frame, text=DELETE_RESTRICTION_LABEL, command=gui.event.restriction_delete)
-    restriction_delete_button.grid(column=11, row=1, padx=30, sticky=(E, W))
+    restriction_delete_button.grid(column=11, row=2, padx=30, sticky=(E, W))
     restriction_delete_button.state(['!disabled'])
 
     restriction_duplicate_button = ttk.Button(frame, text=DUPLICATE_RESTRICTION_LABEL, command=gui.event.restriction_duplicate)
-    restriction_duplicate_button.grid(column=11, row=2, padx=30, sticky=(E, W))
+    restriction_duplicate_button.grid(column=11, row=3, padx=30, sticky=(E, W))
     restriction_duplicate_button.state(['!disabled'])
 
     return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
@@ -704,6 +712,7 @@ def configure_restriction_screen():
 
     ui.frames['restriction_configure_frame'] = frame
     ui.widgets['restriction_listbox'] = restriction_listbox
+    ui.widgets['restriction_edit_button'] = restriction_edit_button
     ui.widgets['restriction_add_button'] = restriction_add_button
     ui.widgets['restriction_delete_button'] = restriction_delete_button
     ui.widgets['restriction_duplicate_button'] = restriction_duplicate_button

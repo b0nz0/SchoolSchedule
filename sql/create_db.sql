@@ -24,7 +24,7 @@ DROP DATABASE IF EXISTS school_schedule;
 -- Name: school_schedule; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE school_schedule WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'it_IT.UTF-8';
+CREATE DATABASE school_schedule WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'it_IT.UTF-8';
 
 
 ALTER DATABASE school_schedule OWNER TO postgres;
