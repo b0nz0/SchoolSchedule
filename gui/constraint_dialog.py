@@ -81,7 +81,7 @@ class BoostDialog(simpledialog.Dialog):
         self.button_person = ttk.Button(master=master, width=25)
         self.button_person.grid(column=1, row=5, pady=5, sticky=(N, S))
         if self.combo_perssubj.get() == 'docente':
-            self.button_person_text = '-'
+            self.button_person_text = '<SELEZIONA>'
             if self.constraint.person_id is not None:
                 self.button_person_text = db.query.get(db.model.Person, self.constraint.person_id).fullname
             self.button_person.configure(text=self.button_person_text)
@@ -97,7 +97,7 @@ class BoostDialog(simpledialog.Dialog):
         self.button_subject = ttk.Button(master=master, width=25)
         self.button_subject.grid(column=1, row=6, pady=5, sticky=(N, S))
         if self.combo_perssubj.get() == 'materia':
-            self.button_subject_text = '-'
+            self.button_subject_text = '<SELEZIONA>'
             if self.constraint.subject_id is not None:
                 self.button_subject_text = db.query.get(db.model.Subject, self.constraint.subject_id).identifier
             self.button_subject.configure(text=self.button_subject_text)
@@ -150,7 +150,7 @@ class BoostDialog(simpledialog.Dialog):
 
     def combo_perssubj_selected(self, event):
         if self.combo_perssubj.get() == 'docente':
-            self.button_person_text = '-'
+            self.button_person_text = '<SELEZIONA>'
             if self.constraint.person_id is not None:
                 self.button_person_text = db.query.get(db.model.Person, self.constraint.person_id).fullname
             self.button_person.configure(text=self.button_person_text)
@@ -161,7 +161,7 @@ class BoostDialog(simpledialog.Dialog):
             self.button_person.state(['disabled'])
 
         if self.combo_perssubj.get() == 'materia':
-            self.button_subject_text = '-'
+            self.button_subject_text = '<SELEZIONA>'
             if self.constraint.subject_id is not None:
                 self.button_subject_text = db.query.get(db.model.Subject, self.constraint.subject_id).identifier
             self.button_subject.configure(text=self.button_subject_text)
