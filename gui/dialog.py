@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import ttk, simpledialog
-
+from gui.autocomplete import AutocompleteEntry
 
 class AddClassInPlanDialog(simpledialog.Dialog):
     def __init__(self, parent, plans, classes: str):
@@ -278,3 +278,52 @@ class CreateAssignmentDialog(simpledialog.Dialog):
         hours = int(self.selected_hours.get())
 
         self.result = person1, person2, person3, subject, class_, room, hours
+
+class SelectPersonDialog(simpledialog.Dialog):
+    def __init__(self, parent, type_options):
+        self.result = None
+        self.parent = parent
+        self.options = type_options
+        self.selected_option = None
+        self.options_combo = None
+        self.autocomplete_frame = AutocompleteEntry(parent)
+        
+        super().__init__(parent, title="Seleziona docente")
+
+    def body(self, master):
+        l = ttk.Label(master=master, text="Scegli il tipo e cerca per nome")
+        l.grid(column=0, row=0, columnspan=2, pady=5, sticky=(N, W, E, S))
+
+        self.selected_option = StringVar(master)
+        self.options_combo = ttk.Combobox(master=master, textvariable=self.selected_option)
+        self.options_combo.grid(column=0, row=1, pady=5, sticky=(N, S))
+        self.options_combo['values'] = list(self.options.values())
+        self.options_combo.current(0)
+
+        l = ttk.Label(master=master, text="nome")
+        l.grid(column=0, row=1, padx=30, pady=5, sticky=(E))
+        self.autocomplete_frame.grid(column=1, row=1, pady=5, sticky=(N, W, E, S))
+        self.build_autocomplete_frame()
+
+    def build_autocomplete_frame(self):
+        type_value = self.options_combo.get()
+        type_id = None
+        for option in self.options.keys():
+            pass
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def apply(self):
+        self.result = self.selected_type.get()
+

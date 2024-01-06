@@ -651,7 +651,7 @@ def assignment_duplicate():
 def restriction_selected(event):
     pass
 
-def restriction_edit(event):
+def restriction_edit(event=None):
     ui = gui.setup.SchoolSchedulerGUI()
 
     restriction_ids = ui.widgets['restriction_listbox'].selection()
