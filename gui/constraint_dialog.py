@@ -1,7 +1,7 @@
 import engine.constraint
 import logging
 import db.query, db.model
-import gui.event
+import gui.event, gui.dialog
 from tkinter import *
 import tkinter.messagebox
 from tkinter import ttk, simpledialog
@@ -78,7 +78,7 @@ class BoostDialog(simpledialog.Dialog):
         l = ttk.Label(master=master, text="docente")
         l.grid(column=0, row=5, padx=30, pady=5, sticky=(E))
         self.button_person_text = StringVar(master)
-        self.button_person = ttk.Button(master=master, width=25)
+        self.button_person = ttk.Button(master=master, width=25, command=self.show_person_dialog)
         self.button_person.grid(column=1, row=5, pady=5, sticky=(N, S))
         if self.combo_perssubj.get() == 'docente':
             self.button_person_text = '<SELEZIONA>'
@@ -94,7 +94,7 @@ class BoostDialog(simpledialog.Dialog):
         l = ttk.Label(master=master, text="materia")
         l.grid(column=0, row=6, padx=30, pady=5, sticky=(E))
         self.button_subject_text = StringVar(master)
-        self.button_subject = ttk.Button(master=master, width=25)
+        self.button_subject = ttk.Button(master=master, width=25, command=self.show_subject_dialog)
         self.button_subject.grid(column=1, row=6, pady=5, sticky=(N, S))
         if self.combo_perssubj.get() == 'materia':
             self.button_subject_text = '<SELEZIONA>'
@@ -110,12 +110,11 @@ class BoostDialog(simpledialog.Dialog):
         l = ttk.Label(master=master, text="classe")
         l.grid(column=0, row=7, padx=30, pady=5, sticky=(E))
         self.button_class_text = StringVar(master)
-        self.button_class = ttk.Button(master=master, width=25)
+        self.button_class = ttk.Button(master=master, width=25, command=self.show_class_dialog)
         self.button_class.grid(column=1, row=7, pady=5, sticky=(N, S))
         if self.constraint.class_id is not None:
             class_ = db.query.get(db.model.Class, self.constraint.class_id)
-            class_text = f'{class_.year.identifier} {class_.section.identifier}'
-            self.button_class_text = class_text
+            self.button_class_text = str(class_)
             self.button_class.configure(text=self.button_class_text)
         else:
             self.button_class.configure(text='OGNI CLASSE')
@@ -171,19 +170,83 @@ class BoostDialog(simpledialog.Dialog):
             self.button_subject.configure(text=self.button_subject_text)
             self.button_subject.state(['disabled'])
         
-
+    def show_person_dialog(self):
+        persons_db = db.query.get_persons(school_id=gui.event.school_selected_dict['id'])
+        persons = dict()
+        for pe in db.model.PersonEnum:
+            persons[pe.value] = dict()
+        for person in persons_db:
+            persons[person.person_type.value][person.fullname] = person.id
+        dialog = gui.dialog.SelectPersonDialog(self, persons)
+        result = dialog.result
+        if result is not None:
+            fullname, id = result
+            self.constraint.person_id = id
+            self.combo_perssubj_selected(None)
+                    
+    def show_subject_dialog(self):
+        subjects_db = db.query.get_subjects(school_id=gui.event.school_selected_dict['id'])
+        subjects = dict()
+        for subject in subjects_db:
+            subjects[subject.identifier] = subject.id
+        dialog = gui.dialog.SelectSubjectDialog(self, subjects)
+        result = dialog.result
+        if result is not None:
+            subject_text, id = result
+            self.constraint.subject_id = id
+            self.combo_perssubj_selected(None)
+                    
+    def show_class_dialog(self):
+        classes_db = db.query.get_classes(schoolyear_id=gui.event.schoolyear_selected_dict['id'])
+        classes = dict() # {'OGNI CLASSE': None}
+        for class_ in classes_db:
+            classes[str(class_)] = class_.id
+        dialog = gui.dialog.SelectClassDialog(self, classes)
+        result = dialog.result
+        if result is not None:
+            class_text, id = result
+            self.constraint.class_id = id
+            self.button_class_text = class_text
+            self.button_class.configure(text=self.button_class_text)
+                    
     def buttonbox(self):
         box = ttk.Frame(self)
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
         ok_button.grid(column=0, row=2, pady=5, sticky=(N, W, E, S))
 
-        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
         cancel_button.grid(column=0, row=3, pady=5, sticky=(N, W, E, S))
 
         box.pack()
 
         self.bind("<Return>", self.ok)
         self.bind("<Escape>", self.cancel)
+
+    def ok(self, event=None):
+        if len(self.entry_nome_text.get()) < 1:
+            tkinter.messagebox.showwarning("Salvataggio restrizione", "Assegnare un nome alla restrizione")
+            return           
+        if not self.entry_score_text.get().isdigit() or \
+            int(self.entry_score_text.get()) < 1 or \
+                int(self.entry_score_text.get()) > 2000: 
+            tkinter.messagebox.showwarning("Salvataggio restrizione", "Il punteggio deve essere un numero compreso tra 1 e 2000")
+            return           
+        if self.combo_perssubj.get() == 'docente' and self.constraint.person_id is None:
+            tkinter.messagebox.showwarning("Salvataggio restrizione", "Selezionare un docente")
+            return           
+        if self.combo_perssubj.get() == 'materia' and self.constraint.subject_id is None:
+            tkinter.messagebox.showwarning("Salvataggio restrizione", "Selezionare una materia")
+            return           
+        self.constraint.identifier = self.entry_nome_text.get().strip()
+        if self.combo_type.get() == 'aumenta':
+            self.constraint.score = int(self.entry_score_text.get())
+        else:
+            self.constraint.score = -int(self.entry_score_text.get())
+        
+        # TODO
+        #GIORNO
+        #ORA            
+        super().ok(event=event)
 
     def apply(self):
         self.result = self.constraint

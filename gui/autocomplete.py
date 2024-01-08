@@ -51,7 +51,7 @@ class AutocompleteEntry(tk.Frame, object):
         Returns:
         None
         """
-        super(AutocompleteEntry, self).__init__(*args, **kwargs)
+        super(AutocompleteEntry, self).__init__(master=master, *args, **kwargs)
         self.text = tk.StringVar()
         self.entry = tk.Entry(
             self,
@@ -91,12 +91,13 @@ class AutocompleteEntry(tk.Frame, object):
         Returns:
         None
         """
+        _entries =  {}
         if not case_sensitive:
-            _entries =  {}
             for entry_val in entries.keys():
-                _entries[entry_val.lower()] = entries[entry_val]
+                _entries[entry_val.lower()] = entry_val, entries[entry_val]
         else:
-            _entries = entries
+            for entry_val in entries.keys():
+                _entries[entry_val] = entry_val, entries[entry_val]
 
         self._case_sensitive = case_sensitive
         self._entries = _entries
@@ -163,6 +164,6 @@ class AutocompleteEntry(tk.Frame, object):
         """
         widget = event.widget
         value = widget.get(int(widget.curselection()[0]))
-        self.text.set(value)
-        self.value = value
-        self.id = self._entries[value]
+        self.text.set(self._entries[value][0])
+        self.value = self._entries[value][0]
+        self.id = self._entries[value][1]

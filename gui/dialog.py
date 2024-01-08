@@ -28,7 +28,7 @@ class AddClassInPlanDialog(simpledialog.Dialog):
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
         ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
 
-        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
         cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
 
         box.pack()
@@ -71,10 +71,10 @@ class CreateRoomDialog(simpledialog.Dialog):
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
         ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
 
-        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
         cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
 
-        box.pack()
+        box.ttk.pack()
 
         self.bind("<Return>", self.ok)
         self.bind("<Escape>", self.cancel)
@@ -121,7 +121,7 @@ class CreatePersonDialog(simpledialog.Dialog):
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
         ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
 
-        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
         cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
 
         box.pack()
@@ -256,7 +256,7 @@ class CreateAssignmentDialog(simpledialog.Dialog):
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
         ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
 
-        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
         cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
 
         box.pack()
@@ -280,13 +280,12 @@ class CreateAssignmentDialog(simpledialog.Dialog):
         self.result = person1, person2, person3, subject, class_, room, hours
 
 class SelectPersonDialog(simpledialog.Dialog):
-    def __init__(self, parent, type_options):
+    def __init__(self, parent, options):
         self.result = None
         self.parent = parent
-        self.options = type_options
+        self.options = options
         self.selected_option = None
         self.options_combo = None
-        self.autocomplete_frame = AutocompleteEntry(parent)
         
         super().__init__(parent, title="Seleziona docente")
 
@@ -294,29 +293,31 @@ class SelectPersonDialog(simpledialog.Dialog):
         l = ttk.Label(master=master, text="Scegli il tipo e cerca per nome")
         l.grid(column=0, row=0, columnspan=2, pady=5, sticky=(N, W, E, S))
 
+        l = ttk.Label(master=master, text="tipo")
+        l.grid(column=0, row=1, padx=30, pady=5, sticky=(E))
         self.selected_option = StringVar(master)
         self.options_combo = ttk.Combobox(master=master, textvariable=self.selected_option)
-        self.options_combo.grid(column=0, row=1, pady=5, sticky=(N, S))
-        self.options_combo['values'] = list(self.options.values())
+        self.options_combo.grid(column=1, row=1, pady=5, sticky=(N, S))
+        self.options_combo['values'] = list(self.options.keys())
         self.options_combo.current(0)
+        self.options_combo.bind('<<ComboboxSelected>>', self._build_autocomplete_frame)
 
         l = ttk.Label(master=master, text="nome")
-        l.grid(column=0, row=1, padx=30, pady=5, sticky=(E))
-        self.autocomplete_frame.grid(column=1, row=1, pady=5, sticky=(N, W, E, S))
-        self.build_autocomplete_frame()
+        l.grid(column=0, row=2, padx=30, pady=5, sticky=(E))
+        self.autocomplete_frame = AutocompleteEntry(master=master)
+        self.autocomplete_frame.grid(column=1, row=2, pady=5, sticky=(N, W, E, S))
+        self._build_autocomplete_frame()
 
-    def build_autocomplete_frame(self):
+    def _build_autocomplete_frame(self, event=None):
         type_value = self.options_combo.get()
-        type_id = None
-        for option in self.options.keys():
-            pass
+        self.autocomplete_frame.build(entries=self.options[type_value])
 
     def buttonbox(self):
         box = ttk.Frame(self)
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
         ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
 
-        cancel_button = Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
         cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
 
         box.pack()
@@ -325,5 +326,87 @@ class SelectPersonDialog(simpledialog.Dialog):
         self.bind("<Escape>", self.cancel)
 
     def apply(self):
-        self.result = self.selected_type.get()
+        self.result = self.autocomplete_frame.value, self.autocomplete_frame.id
+
+class SelectSubjectDialog(simpledialog.Dialog):
+    def __init__(self, parent, options):
+        self.result = None
+        self.parent = parent
+        self.options = options
+        self.selected_option = None
+        self.options_combo = None
+        
+        super().__init__(parent, title="Seleziona materia")
+
+    def body(self, master):
+        l = ttk.Label(master=master, text="Cerca per nome")
+        l.grid(column=0, row=0, columnspan=2, pady=5, sticky=(N, W, E, S))
+
+        l = ttk.Label(master=master, text="nome")
+        l.grid(column=0, row=2, padx=30, pady=5, sticky=(E))
+        self.autocomplete_frame = AutocompleteEntry(master=master)
+        self.autocomplete_frame.grid(column=1, row=2, pady=5, sticky=(N, W, E, S))
+        self.autocomplete_frame.build(entries=self.options)
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def apply(self):
+        self.result = self.autocomplete_frame.value, self.autocomplete_frame.id
+
+class SelectClassDialog(simpledialog.Dialog):
+    def __init__(self, parent, options):
+        self.result = None
+        self.parent = parent
+        self.options = options
+        self.every_class = None
+        self.selected_option = None
+        self.options_combo = None
+        
+        super().__init__(parent, title="Seleziona classe")
+
+    def body(self, master):
+        l = ttk.Label(master=master, text="Cerca per nome o seleziona OGNI CLASSE")
+        l.grid(column=0, row=0, columnspan=2, pady=5, sticky=(N, W, E, S))
+
+        l = ttk.Label(master=master, text="nome")
+        l.grid(column=0, row=2, padx=30, pady=5, sticky=(E))
+        self.autocomplete_frame = AutocompleteEntry(master=master)
+        self.autocomplete_frame.grid(column=1, row=2, pady=5, sticky=(N, W, E, S))
+        self.autocomplete_frame.build(entries=self.options, case_sensitive=True)
+
+        self.every_class = ttk.Checkbutton(master=master, text='OGNI CLASSE')
+        self.every_class.state(['!alternate'])
+        self.every_class.state(['!disabled', '!selected'])
+        self.every_class.grid(column=0, row=3, columnspan=2, sticky=(N, S))
+
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def apply(self):
+        if self.every_class.instate(['selected']):
+            self.result = 'OGNI CLASSE', None
+        else:
+            self.result = self.autocomplete_frame.value, self.autocomplete_frame.id
 

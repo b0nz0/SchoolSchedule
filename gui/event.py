@@ -533,7 +533,7 @@ def timetable_selected(event):
     l.delete('1.0', END)
     classes_str = str()
     for classe in db.query.get_classes_in_plan(timetable_dict[choice]):
-        classes_str = classes_str + str(classe.class_) + '\n'
+        classes_str = classes_str + classe.class_.long_repr() + '\n'
     l.insert("1.0", classes_str)
 
 
