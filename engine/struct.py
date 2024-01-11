@@ -131,14 +131,15 @@ class Constraint:
         pass
 
     def to_model_base(self) -> db.model.Constraint:
-        constraint = db.model.Constraint()
+        if self.id is not None:
+            constraint = db.query.get(db.model.Constraint, int(self.id))
+        else:
+            constraint = db.model.Constraint()
         constraint.identifier = self.identifier
         constraint.kind = 'Base'
         constraint.school_year_id = self.school_year.id
         constraint.score = self.score
         constraint.configuration = ''
-        if self.id is not None: constraint.id = self.id
-        else: constraint.id = None
         return constraint
 
     def from_model_base(self, constraint: db.model.Constraint):
@@ -146,19 +147,20 @@ class Constraint:
         self.identifier = constraint.identifier
         self.score = constraint.score
         self.school_year = db.query.get(db.model.SchoolYear, constraint.school_year_id)
-        
+
     @classmethod
     def load_registered_constraints(cls):
         cls.REGISTERED_CONSTRAINTS = []
-        cls.REGISTERED_CONSTRAINTS.append({'classname' :'NoComebacks', 'shortname': 'NoComebacks', \
-            'longname': 'No rientri'})
-        cls.REGISTERED_CONSTRAINTS.append({'classname' :'NonDuplicateConstraint', 'shortname': 'NonDuplicateConstraint', \
-            'longname': 'No sovrapposizioni'})
-        cls.REGISTERED_CONSTRAINTS.append({'classname' :'MultipleConsecutiveForSubject', 'shortname': 'MultipleConsecutiveForSubject', \
-            'longname': 'Coppia compito'})
-        cls.REGISTERED_CONSTRAINTS.append({'classname' :'Boost', 'shortname': 'Boost', \
-            'longname': 'Aumenta probabilità'})
-        
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'NoComebacks', 'shortname': 'NoComebacks', \
+                                           'longname': 'No rientri'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'NonDuplicateConstraint', 'shortname': 'NonDuplicateConstraint', \
+                                           'longname': 'No sovrapposizioni'})
+        cls.REGISTERED_CONSTRAINTS.append(
+            {'classname': 'MultipleConsecutiveForSubject', 'shortname': 'MultipleConsecutiveForSubject', \
+             'longname': 'Coppia compito'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'Boost', 'shortname': 'Boost', \
+                                           'longname': 'Aumenta probabilità'})
+
     @property
     def id(self):
         return self._id

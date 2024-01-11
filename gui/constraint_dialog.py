@@ -7,6 +7,12 @@ import tkinter.messagebox
 from tkinter import ttk, simpledialog
 
 class BoostDialog(simpledialog.Dialog):
+
+    ANY_HOUR = 'OGNI ORA'
+    ANY_DAY = 'OGNI GIORNO'
+    ANY_CLASS = 'OGNI CLASSE'
+    SELECT = '<SELEZIONA>'
+
     def __init__(self, parent, constraint: engine.constraint.Boost or None):
         self.parent = parent
         if constraint is None:
@@ -81,7 +87,7 @@ class BoostDialog(simpledialog.Dialog):
         self.button_person = ttk.Button(master=master, width=25, command=self.show_person_dialog)
         self.button_person.grid(column=1, row=5, pady=5, sticky=(N, S))
         if self.combo_perssubj.get() == 'docente':
-            self.button_person_text = '<SELEZIONA>'
+            self.button_person_text = BoostDialog.SELECT
             if self.constraint.person_id is not None:
                 self.button_person_text = db.query.get(db.model.Person, self.constraint.person_id).fullname
             self.button_person.configure(text=self.button_person_text)
@@ -97,7 +103,7 @@ class BoostDialog(simpledialog.Dialog):
         self.button_subject = ttk.Button(master=master, width=25, command=self.show_subject_dialog)
         self.button_subject.grid(column=1, row=6, pady=5, sticky=(N, S))
         if self.combo_perssubj.get() == 'materia':
-            self.button_subject_text = '<SELEZIONA>'
+            self.button_subject_text = BoostDialog.SELECT
             if self.constraint.subject_id is not None:
                 self.button_subject_text = db.query.get(db.model.Subject, self.constraint.subject_id).identifier
             self.button_subject.configure(text=self.button_subject_text)
@@ -117,7 +123,7 @@ class BoostDialog(simpledialog.Dialog):
             self.button_class_text = str(class_)
             self.button_class.configure(text=self.button_class_text)
         else:
-            self.button_class.configure(text='OGNI CLASSE')
+            self.button_class.configure(text=BoostDialog.ANY_CLASS)
         self.button_class.state(['!disabled'])
 
         l = ttk.Label(master=master, text="giorno")
@@ -125,31 +131,31 @@ class BoostDialog(simpledialog.Dialog):
         self.combo_day_text = StringVar(master)
         self.combo_day = ttk.Combobox(master=master, textvariable=self.combo_day_text, width=15)
         self.combo_day.grid(column=1, row=8, pady=5, sticky=(N, S))
-        daylist = ['OGNI GIORNO']
+        daylist = [BoostDialog.ANY_DAY]
         for day in db.model.WeekDayEnum:
             daylist.append(day.value)
         self.combo_day['values'] = daylist
         if self.constraint.day is not None:
             self.combo_day.set(self.constraint.day.value)
         else:
-            self.combo_day.set('OGNI GIORNO')
+            self.combo_day.set(BoostDialog.ANY_DAY)
         
         l = ttk.Label(master=master, text="ora")
         l.grid(column=0, row=9, padx=30, pady=5, sticky=(E))
         self.combo_hour_text = StringVar(master)
         self.combo_hour = ttk.Combobox(master=master, textvariable=self.combo_hour_text, width=15)
         self.combo_hour.grid(column=1, row=9, pady=5, sticky=(N, S))
-        self.combo_hour['values'] = ['OGNI ORA', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+        self.combo_hour['values'] = [BoostDialog.ANY_HOUR, '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
         if self.constraint.hour != 0 and self.constraint.hour is not None:
             self.combo_hour.set(str(self.constraint.hour))
         else:
-            self.combo_hour.set('OGNI ORA')
+            self.combo_hour.set(BoostDialog.ANY_HOUR)
         
         return self.entry_nome
 
     def combo_perssubj_selected(self, event):
         if self.combo_perssubj.get() == 'docente':
-            self.button_person_text = '<SELEZIONA>'
+            self.button_person_text = BoostDialog.SELECT
             if self.constraint.person_id is not None:
                 self.button_person_text = db.query.get(db.model.Person, self.constraint.person_id).fullname
             self.button_person.configure(text=self.button_person_text)
@@ -160,7 +166,7 @@ class BoostDialog(simpledialog.Dialog):
             self.button_person.state(['disabled'])
 
         if self.combo_perssubj.get() == 'materia':
-            self.button_subject_text = '<SELEZIONA>'
+            self.button_subject_text = BoostDialog.SELECT
             if self.constraint.subject_id is not None:
                 self.button_subject_text = db.query.get(db.model.Subject, self.constraint.subject_id).identifier
             self.button_subject.configure(text=self.button_subject_text)
@@ -226,26 +232,41 @@ class BoostDialog(simpledialog.Dialog):
         if len(self.entry_nome_text.get()) < 1:
             tkinter.messagebox.showwarning("Salvataggio restrizione", "Assegnare un nome alla restrizione")
             return           
+
         if not self.entry_score_text.get().isdigit() or \
             int(self.entry_score_text.get()) < 1 or \
                 int(self.entry_score_text.get()) > 2000: 
             tkinter.messagebox.showwarning("Salvataggio restrizione", "Il punteggio deve essere un numero compreso tra 1 e 2000")
             return           
+
         if self.combo_perssubj.get() == 'docente' and self.constraint.person_id is None:
             tkinter.messagebox.showwarning("Salvataggio restrizione", "Selezionare un docente")
             return           
+
         if self.combo_perssubj.get() == 'materia' and self.constraint.subject_id is None:
             tkinter.messagebox.showwarning("Salvataggio restrizione", "Selezionare una materia")
             return           
+
         self.constraint.identifier = self.entry_nome_text.get().strip()
+
         if self.combo_type.get() == 'aumenta':
             self.constraint.score = int(self.entry_score_text.get())
         else:
             self.constraint.score = -int(self.entry_score_text.get())
-        
-        # TODO
-        #GIORNO
-        #ORA            
+
+        self.constraint.day = None
+        if self.combo_day.get() != BoostDialog.ANY_DAY:
+            for day_enum in db.model.WeekDayEnum:
+                if day_enum.value == self.combo_day.get():
+                    self.constraint.day = day_enum
+                    break
+            assert self.constraint.day is not None, 'impossibile attribuire un giorno'
+
+        if self.combo_hour.get() == BoostDialog.ANY_HOUR:
+            self.constraint.hour = None
+        else:
+            self.constraint.hour = int(self.combo_hour.get())
+
         super().ok(event=event)
 
     def apply(self):

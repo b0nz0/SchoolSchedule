@@ -683,6 +683,9 @@ def restriction_edit(event=None):
     dialog = dialog_obj(ui.root, constraint)
 
     ret = dialog.result
+    if ret is not None:
+        db.query.save(ret.to_model())
+        tkinter.messagebox.showinfo("Modifica restrizione", "Restrizione modificata correttamente")
 
     populate_restriction_configuration()
 

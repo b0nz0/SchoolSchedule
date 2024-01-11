@@ -410,3 +410,40 @@ class SelectClassDialog(simpledialog.Dialog):
         else:
             self.result = self.autocomplete_frame.value, self.autocomplete_frame.id
 
+
+class NewRestrictionDialog(simpledialog.Dialog):
+    def __init__(self, parent, options):
+        self.result = None
+        self.parent = parent
+        self.options = options
+        self.selected_option = None
+        self.options_combo = None
+
+        super().__init__(parent, title="Seleziona tipo restrizione")
+
+    def body(self, master):
+        l = ttk.Label(master=master, text="Scegli il tipo della nuova restrizione")
+        l.grid(column=0, row=0, pady=5, sticky=(N, W, E, S))
+
+        self.selected_option = StringVar(master)
+        self.options_combo = ttk.Combobox(master=master, textvariable=self.selected_option)
+        self.options_combo.grid(column=0, row=1, pady=5, sticky=(N, S))
+        self.options_combo['values'] = list(self.options.keys())
+        self.options_combo.current(0)
+
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def apply(self):
+        self.result = list(self.options.keys())[list(self.options_combo.values()).index(self.selected_option.get())]
