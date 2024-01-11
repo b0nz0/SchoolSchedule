@@ -23,6 +23,9 @@ class LocalOptimalEngine(Engine):
         constraint = NoComebacks()
         constraint.identifier = "no comebacks"
         self.engine_support.constraints.add(constraint)
+        constraint = FillFirstHours()
+        constraint.identifier = "riempi prime ore"
+        self.engine_support.constraints.add(constraint)
 
     def run(self):
         assignments_remaining = {}

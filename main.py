@@ -681,7 +681,7 @@ def startup():
 if __name__ == '__main__':
     startup()
     # populate_DB()
-    # test()
+    test()
     ui = gui.setup.SchoolSchedulerGUI()
     gui.screen.school_select_screen()
     root = ui.root

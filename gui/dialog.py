@@ -291,7 +291,7 @@ class SelectPersonDialog(simpledialog.Dialog):
 
     def body(self, master):
         l = ttk.Label(master=master, text="Scegli il tipo e cerca per nome")
-        l.grid(column=0, row=0, columnspan=2, pady=5, sticky=(N, W, E, S))
+        l.grid(column=0, row=0, columnspan=2, pady=5)
 
         l = ttk.Label(master=master, text="tipo")
         l.grid(column=0, row=1, padx=30, pady=5, sticky=(E))
@@ -340,7 +340,7 @@ class SelectSubjectDialog(simpledialog.Dialog):
 
     def body(self, master):
         l = ttk.Label(master=master, text="Cerca per nome")
-        l.grid(column=0, row=0, columnspan=2, pady=5, sticky=(N, W, E, S))
+        l.grid(column=0, row=0, columnspan=2, pady=5)
 
         l = ttk.Label(master=master, text="nome")
         l.grid(column=0, row=2, padx=30, pady=5, sticky=(E))
@@ -377,7 +377,7 @@ class SelectClassDialog(simpledialog.Dialog):
 
     def body(self, master):
         l = ttk.Label(master=master, text="Cerca per nome o seleziona OGNI CLASSE")
-        l.grid(column=0, row=0, columnspan=2, pady=5, sticky=(N, W, E, S))
+        l.grid(column=0, row=0, columnspan=2, pady=5)
 
         l = ttk.Label(master=master, text="nome")
         l.grid(column=0, row=2, padx=30, pady=5, sticky=(E))
@@ -446,4 +446,4 @@ class NewRestrictionDialog(simpledialog.Dialog):
         self.bind("<Escape>", self.cancel)
 
     def apply(self):
-        self.result = list(self.options.keys())[list(self.options_combo.values()).index(self.selected_option.get())]
+        self.result = self.selected_option.get(), self.options[self.selected_option.get()]

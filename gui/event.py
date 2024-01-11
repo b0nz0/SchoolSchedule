@@ -687,7 +687,7 @@ def restriction_edit(event=None):
         db.query.save(ret.to_model())
         tkinter.messagebox.showinfo("Modifica restrizione", "Restrizione modificata correttamente")
 
-    populate_restriction_configuration()
+        populate_restriction_configuration()
 
 def restriction_delete():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -705,7 +705,7 @@ def restriction_delete():
                                                  {restriction[2]}?')
 
                 if confirm:
-                    db.query.delete(db.model.restriction, restriction_id)
+                    db.query.delete(db.model.Constraint, restriction_id)
                     tkinter.messagebox.showinfo("Eliminazione restrizione", "Restrizione eliminata")
 
                 break
@@ -714,20 +714,72 @@ def restriction_delete():
 
 
 def restriction_create():
-    return _restriction_create()
-
-
-def _restriction_create(pnome=None, ptipo=None, pscore=None):
     ui = gui.setup.SchoolSchedulerGUI()
+
+    options = dict()    
+    for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
+        try:
+            dialog_obj = getattr(gui.constraint_dialog, ckind['shortname'] + 'Dialog')
+            options[ckind['longname']] = ckind['shortname']
+        except (AttributeError) as e:
+            pass
+        
+    dialog = gui.dialog.NewRestrictionDialog(parent=ui.root, options=options)
+
+    ret = dialog.result
+    if ret is not None:
+        longname, shortname = ret
+        dialog_obj = getattr(gui.constraint_dialog, shortname + 'Dialog')
+        assert dialog_obj is not None, 'impossibile trovare la finestra di dialogo per la restrizione di tipo ' + shortname
+
+        dialog = dialog_obj(ui.root, None)
+
+        ret = dialog.result
+        if ret is not None:
+            db.query.save(ret.to_model())
+            tkinter.messagebox.showinfo("Creazione restrizione", "Restrizione creata correttamente")
+            populate_restriction_configuration()
 
 
 def restriction_duplicate():
     ui = gui.setup.SchoolSchedulerGUI()
 
     restriction_ids = ui.widgets['restriction_listbox'].selection()
-    if len(restriction_ids) == 0:
-        tkinter.messagebox.showwarning("Eliminazione restrizione", "Selezionare una restrizione")
+    if len(restriction_ids) != 1:
+        tkinter.messagebox.showwarning("Duplica restrizione", "Selezionare una restrizione")
         return None
+
+    constraint = None
+    shortname = ''
+    for restriction_id in restriction_ids:
+        for restriction in restriction_list:
+            if restriction[0] == int(restriction_id):
+                type_name = restriction[2]
+                type_ = None
+                for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
+                    if type_name == ckind['longname']:
+                        type_ = ckind['classname']
+                        shortname = ckind['shortname']
+                        break
+                assert type_ is not None, 'impossibile trovare il tipo della restrizione'
+                constraint = db.query.get_constraint(type_, int(restriction_id))
+                break
+
+    assert constraint is not None, 'impossibile trovare la restrizione'
+
+    dialog_obj = getattr(gui.constraint_dialog, shortname + 'Dialog')
+    assert dialog_obj is not None, 'impossibile trovare la finestra di dialogo per la restrizione di tipo ' + shortname
+    
+    constraint.id = None
+
+    dialog = dialog_obj(ui.root, constraint)
+
+    ret = dialog.result
+    if ret is not None:
+        db.query.save(ret.to_model())
+        tkinter.messagebox.showinfo("Duplica restrizione", "Restrizione creata correttamente")
+
+        populate_restriction_configuration()
 
 
 def return_home():

@@ -155,6 +155,8 @@ class Constraint:
                                            'longname': 'No rientri'})
         cls.REGISTERED_CONSTRAINTS.append({'classname': 'NonDuplicateConstraint', 'shortname': 'NonDuplicateConstraint', \
                                            'longname': 'No sovrapposizioni'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'FillFirstHours', 'shortname': 'FillFirstHours', \
+                                           'longname': 'Riempire le prime ore'})
         cls.REGISTERED_CONSTRAINTS.append(
             {'classname': 'MultipleConsecutiveForSubject', 'shortname': 'MultipleConsecutiveForSubject', \
              'longname': 'Coppia compito'})

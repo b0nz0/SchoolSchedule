@@ -91,7 +91,7 @@ class Class(Base):
     section: Mapped["Section"] = relationship(back_populates="classes", lazy="joined")
 
     def long_repr(self) -> str:
-        class_text = f'{self.year.identifier} {self.section.identifier} {self.school_year.identifier}'
+        return f'{self.year.identifier} {self.section.identifier} {self.school_year.identifier}'
 
     def __repr__(self) -> str:
         return f'{self.year.identifier} {self.section.identifier}'
