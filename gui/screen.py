@@ -53,6 +53,7 @@ START_END = "IN/FI"
 PLAN_USED_IN = "Piano usato in"
 
 ASSIGNMENT_SELECT_LABEL = "Assegnazioni"
+EDIT_ASSIGNMENT_LABEL = "Modifica assegnazione"
 ADD_ASSIGNMENT_LABEL = "Aggiungi assegnazione"
 DELETE_ASSIGNMENT_LABEL = "Elimina assegnazione"
 DUPLICATE_ASSIGNMENT_LABEL = "Duplica assegnazione"
@@ -598,15 +599,18 @@ def configure_assignment_screen():
 
     assignment_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2", "c3", "c4", "c5"),
                                    selectmode=BROWSE, height=20)
-    assignment_listbox.grid(column=1, row=0, rowspan=3, sticky=(N, W, E, S))
+    assignment_listbox.grid(column=1, row=0, rowspan=4, sticky=(N, W, E, S))
     scrollbary = ttk.Scrollbar(frame, orient=VERTICAL, command=assignment_listbox.yview)
     assignment_listbox.configure(yscroll=scrollbary.set)
     scrollbary.configure(command=assignment_listbox.yview)
-    scrollbary.grid(column=2, row=0, rowspan=3, sticky=(N, S))
+    scrollbary.grid(column=2, row=0, rowspan=4, sticky=(N, S))
     scrollbarx = ttk.Scrollbar(frame, orient=HORIZONTAL, command=assignment_listbox.xview)
     assignment_listbox.configure(xscroll=scrollbarx.set)
     scrollbarx.configure(command=assignment_listbox.xview)
-    scrollbarx.grid(column=1, row=3, rowspan=1, sticky=(E, W))
+    scrollbarx.grid(column=1, row=4, rowspan=1, sticky=(E, W))
+    # bind double-click to edit
+    assignment_listbox.bind("<Double-1>", gui.event.assignment_edit)
+
 
     assignment_listbox.bind('<<TreeviewSelect>>', gui.event.assignment_selected)
     assignment_listbox.column("#1", anchor=W, stretch=NO, width=200)
@@ -625,16 +629,20 @@ def configure_assignment_screen():
     assignment_listbox.heading("#5", text="Aula", command=lambda _col="#5": \
                      gui.event.treeview_sort_column(assignment_listbox, _col, "Aula", False))
 
+    assignment_edit_button = ttk.Button(frame, text=EDIT_RESTRICTION_LABEL, command=gui.event.assignment_edit)
+    assignment_edit_button.grid(column=11, row=0, padx=30, sticky=(E, W))
+    assignment_edit_button.state(['!disabled'])
+
     assignment_add_button = ttk.Button(frame, text=ADD_ASSIGNMENT_LABEL, command=gui.event.assignment_create)
-    assignment_add_button.grid(column=11, row=0, padx=30, sticky=(E, W))
+    assignment_add_button.grid(column=11, row=1, padx=30, sticky=(E, W))
     assignment_add_button.state(['!disabled'])
 
     assignment_delete_button = ttk.Button(frame, text=DELETE_ASSIGNMENT_LABEL, command=gui.event.assignment_delete)
-    assignment_delete_button.grid(column=11, row=1, padx=30, sticky=(E, W))
+    assignment_delete_button.grid(column=11, row=2, padx=30, sticky=(E, W))
     assignment_delete_button.state(['!disabled'])
 
     assignment_duplicate_button = ttk.Button(frame, text=DUPLICATE_ASSIGNMENT_LABEL, command=gui.event.assignment_duplicate)
-    assignment_duplicate_button.grid(column=11, row=2, padx=30, sticky=(E, W))
+    assignment_duplicate_button.grid(column=11, row=3, padx=30, sticky=(E, W))
     assignment_duplicate_button.state(['!disabled'])
 
     return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
@@ -644,6 +652,7 @@ def configure_assignment_screen():
 
     ui.frames['assignment_configure_frame'] = frame
     ui.widgets['assignment_listbox'] = assignment_listbox
+    ui.widgets['assignment_edit_button'] = assignment_edit_button
     ui.widgets['assignment_add_button'] = assignment_add_button
     ui.widgets['assignment_delete_button'] = assignment_delete_button
     ui.widgets['assignment_duplicate_button'] = assignment_duplicate_button
@@ -662,7 +671,7 @@ def configure_restriction_screen():
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
 
-    # person selection
+    # restriction selection
     restriction_label = ttk.Label(frame, text=RESTRICTION_SELECT_LABEL)
     restriction_label.grid(column=0, row=0, rowspan=3, padx=30, sticky=(W, E))
 
@@ -681,7 +690,7 @@ def configure_restriction_screen():
     scrollbarx.configure(command=restriction_listbox.xview)
     scrollbarx.grid(column=1, row=4, rowspan=1, sticky=(E, W))
 
-    restriction_listbox.bind('<<TreeviewSelect>>', gui.event.assignment_selected)
+    restriction_listbox.bind('<<TreeviewSelect>>', gui.event.restriction_selected)
     restriction_listbox.column("#1", anchor=W, stretch=NO, width=460)
     restriction_listbox.heading("#1", text="Nome", command=lambda _col="#1": \
                      gui.event.treeview_sort_column(restriction_listbox, _col, "Nome", False))

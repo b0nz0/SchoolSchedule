@@ -174,7 +174,10 @@ def populate_assignment_configuration():
         subject = subj_in_class.subject.identifier
         classe = f'{subj_in_class.class_.year.identifier} {subj_in_class.class_.section.identifier}'
         hours = subj_in_class.hours_total
-        room = subj_in_class.room.identifier
+        if subj_in_class.room is not None:
+            room = subj_in_class.room.identifier
+        else:
+            room = ''
         assignment_list.append((subj_in_class_id, persons, subject, classe, hours, room))
 
     for ass in assignment_list:
@@ -539,6 +542,49 @@ def timetable_selected(event):
 
 def assignment_selected(event):
     pass
+
+
+def assignment_edit(event=None):
+    ui = gui.setup.SchoolSchedulerGUI()
+    assignment_ids = ui.widgets['assignment_listbox'].selection()
+    if len(assignment_ids) == 0:
+        tkinter.messagebox.showwarning("Modifica assegnazione", "Selezionare una assegnazione")
+        return None
+
+    for assignment_id in assignment_ids:
+        assignment = db.query.get(db.model.SubjectInClass, assignment_id)
+        options_person = {}
+        options_subject = {}
+        options_class = {}
+        options_room = {}
+
+        school_id = school_selected_dict['id']
+        schoolyear_id = schoolyear_selected_dict['id']
+
+        persons = db.query.get_persons(school_id)
+        subjects = db.query.get_subjects(school_id)
+        classes = db.query.get_classes(schoolyear_id)
+        rooms = db.query.get_rooms(school_id)
+
+        for person in persons:
+            options_person[person.id] = person.fullname
+        for subject in subjects:
+            options_subject[subject.id] = subject.identifier
+        for class_ in classes:
+            ident = f'{class_.year.identifier} {class_.section.identifier}'
+            options_class[class_.id] = ident
+        for room in rooms:
+            options_room[room.id] = room.identifier
+
+        dialog = gui.dialog.EditAssignmentDialog(ui.root, assignment=assignment,
+                                                options_persons=options_person, options_subject=options_subject,
+                                                options_class=options_class, options_room=options_room)
+        ret = dialog.result
+        if ret is not None:
+            db.query.save(ret)
+            tkinter.messagebox.showinfo("Modifica assegnazione", "Assegnazione modificata correttamente")
+
+            populate_assignment_configuration()
 
 
 def assignment_delete():

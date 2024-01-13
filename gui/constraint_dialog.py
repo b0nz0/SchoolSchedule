@@ -15,6 +15,7 @@ class BoostDialog(simpledialog.Dialog):
 
     def __init__(self, parent, constraint: engine.constraint.Boost or None):
         self.parent = parent
+        self.result = None
         if constraint is None:
             constraint = engine.constraint.Boost()
             

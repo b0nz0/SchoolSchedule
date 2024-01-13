@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk, simpledialog
+import db
 from gui.autocomplete import AutocompleteEntry
 
 class AddClassInPlanDialog(simpledialog.Dialog):
@@ -278,6 +279,176 @@ class CreateAssignmentDialog(simpledialog.Dialog):
         hours = int(self.selected_hours.get())
 
         self.result = person1, person2, person3, subject, class_, room, hours
+
+class EditAssignmentDialog(simpledialog.Dialog):
+    NO_ROOM = ''
+    
+    def __init__(self, parent, assignment: db.model.SubjectInClass or None, 
+                 options_persons, options_subject, options_class, options_room, lock=True):
+        self.result = None
+        if assignment is None:
+            assignment = db.model.SubjectInClass()
+        self.assignment = assignment
+        
+        self.selected_person1 = None
+        self.selected_person2 = None
+        self.selected_person3 = None
+        self.selected_subject = None
+        self.selected_class = None
+        self.selected_room = None
+        self.selected_hours = None
+        self.combo_person1 = None
+        self.combo_person2 = None
+        self.combo_person3 = None
+        self.combo_subject = None
+        self.combo_class = None
+        self.combo_room = None
+        self.combo_hours = None
+        self.options_persons = options_persons
+        self.options_subject = options_subject
+        self.options_class = options_class
+        self.options_room = options_room
+        self.options_hours = {1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10'}
+        self.parent = parent
+        self.lock = lock
+        super().__init__(parent, title="Modifica assegnazione")
+
+    def body(self, master):
+        self.geometry("500x400")
+        master.columnconfigure(1, minsize=300)
+        l = ttk.Label(master=master, text="Scegli docenti (minimo 1, massimo 3), materia, classe, \n \
+            aula e numero di ore settimanali", anchor=CENTER, justify=CENTER)
+        l.grid(column=0, row=0, pady=10, columnspan=3, sticky=(N, W, E, S))
+
+        self.selected_person1 = StringVar(master)
+        self.selected_person2 = StringVar(master)
+        self.selected_person3 = StringVar(master)
+        self.selected_subject = StringVar(master)
+        self.selected_class = StringVar(master)
+        self.selected_hours = StringVar(master)
+        self.selected_room = StringVar(master)
+
+        l = ttk.Label(master=master, text="Docente 1")
+        l.grid(column=0, row=1, padx=30, pady=5, sticky=(E))
+        self.combo_person1 = ttk.Combobox(master=master, textvariable=self.selected_person1)
+        self.combo_person1.grid(column=1, row=1, sticky=(N, S, E, W))
+        self.combo_person1['values'] = list(self.options_persons.values())
+        if len(self.assignment.persons) > 0:
+            self.combo_person1.set(self.assignment.persons[0].fullname)
+        else:
+            self.combo_person1.current(0)
+
+        l = ttk.Label(master=master, text="Docente 2")
+        l.grid(column=0, row=2, padx=30, pady=5, sticky=(E))
+        self.combo_person2 = ttk.Combobox(master=master, textvariable=self.selected_person2)
+        self.combo_person2.grid(column=1, row=2, sticky=(N, S, E, W))
+        self.combo_person2['values'] = list(self.options_persons.values())
+        if len(self.assignment.persons) > 1:
+            self.combo_person2.set(self.assignment.persons[1].fullname)
+
+        l = ttk.Label(master=master, text="Docente 3")
+        l.grid(column=0, row=3, padx=30, pady=5, sticky=(E))
+        self.combo_person3 = ttk.Combobox(master=master, textvariable=self.selected_person3)
+        self.combo_person3.grid(column=1, row=3, sticky=(N, S, E, W))
+        self.combo_person3['values'] = list(self.options_persons.values())
+        if len(self.assignment.persons) > 2:
+            self.combo_person2.set(self.assignment.persons[2].fullname)
+
+        l = ttk.Label(master=master, text="Materia")
+        l.grid(column=0, row=4, padx=30, pady=5, sticky=(E))
+        self.combo_subject = ttk.Combobox(master=master, textvariable=self.selected_subject)
+        self.combo_subject.grid(column=1, row=4, sticky=(N, S, E, W))
+        self.combo_subject['values'] = list(self.options_subject.values())
+        if self.assignment.subject is not None:
+            self.combo_subject.set(self.assignment.subject.identifier)
+        else:
+            self.combo_subject.current(0)
+        if self.lock:
+            self.combo_subject.state(['disabled'])     
+
+        l = ttk.Label(master=master, text="Classe")
+        l.grid(column=0, row=5, padx=30, pady=5, sticky=(E))
+        self.combo_class = ttk.Combobox(master=master, textvariable=self.selected_class)
+        self.combo_class.grid(column=1, row=5, sticky=(N, S))
+        self.combo_class['values'] = list(self.options_class.values())
+        if self.assignment.class_ is not None:
+            self.combo_class.set(str(self.assignment.class_))
+        else:
+            self.combo_class.current(0)
+        if self.lock:
+            self.combo_class.state(['disabled'])     
+
+        l = ttk.Label(master=master, text="Aula")
+        l.grid(column=0, row=6, padx=30, pady=5, sticky=(E))
+        self.combo_room = ttk.Combobox(master=master, textvariable=self.selected_room)
+        self.combo_room.grid(column=1, row=6, sticky=(N, S))
+        room_list = [EditAssignmentDialog.NO_ROOM]
+        room_list.extend(list(self.options_room.values()))
+        self.combo_room['values'] = room_list
+        if self.assignment.room is not None:
+            self.combo_room.set(self.assignment.room.identifier)
+        else:
+            self.combo_room.current(0)
+
+        l = ttk.Label(master=master, text="Ore sett.")
+        l.grid(column=0, row=7, padx=30, pady=5, sticky=(E))
+        self.combo_hours = ttk.Combobox(master=master, textvariable=self.selected_hours)
+        self.combo_hours.grid(column=1, row=7, sticky=(N, S))
+        self.combo_hours['values'] = list(self.options_hours.values())
+        if self.assignment.hours_total is not None:
+            self.combo_hours.set(str(self.assignment.hours_total))
+        else:
+            self.combo_hours.current(0)
+
+        return self.combo_hours
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def apply(self):
+        for person in self.assignment.persons:
+            if person.fullname != self.selected_person1.get() and \
+                person.fullname != self.selected_person2.get() and \
+                person.fullname != self.selected_person3.get():
+                    self.assignment.persons.remove(person)
+        person_id = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person1.get())]
+        if person_id not in [p.id for p in self.assignment.persons]:
+            self.assignment.persons.append(db.query.get(db.model.Person, person_id))
+        if self.selected_person2.get() != '':
+            person_id = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person2.get())]
+            if person_id not in [p.id for p in self.assignment.persons]:
+                self.assignment.persons.append(db.query.get(db.model.Person, person_id))
+        if self.selected_person3.get() != '':
+            person_id = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person3.get())]
+            if person_id not in [p.id for p in self.assignment.persons]:
+                self.assignment.persons.append(db.query.get(db.model.Person, person_id))
+        
+        subject_id = list(self.options_subject.keys())[list(self.options_subject.values()).index(self.selected_subject.get())]
+        if self.assignment.subject is None or subject_id != self.assignment.subject.id:
+            self.assignment.subject = db.query.get(db.model.Subject, subject_id)
+        class_id = list(self.options_class.keys())[list(self.options_class.values()).index(self.selected_class.get())]
+        if self.assignment.class_ is None or class_id != self.assignment.class_.id:
+            self.assignment.class_ = db.query.get(db.model.Class, class_id)
+        if self.selected_room.get() != EditAssignmentDialog.NO_ROOM:
+            room_id = list(self.options_room.keys())[list(self.options_room.values()).index(self.selected_room.get())]
+            if self.assignment.room is None or room_id != self.assignment.room.id:
+                self.assignment.room = db.query.get(db.model.Room, room_id)
+        else:
+            self.assignment.room = None
+        
+        self.assignment.hours_total = int(self.selected_hours.get())
+
+        self.result = self.assignment
 
 class SelectPersonDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
