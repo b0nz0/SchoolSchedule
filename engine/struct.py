@@ -151,17 +151,19 @@ class Constraint:
     @classmethod
     def load_registered_constraints(cls):
         cls.REGISTERED_CONSTRAINTS = []
-        cls.REGISTERED_CONSTRAINTS.append({'classname': 'NoComebacks', 'shortname': 'NoComebacks', \
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'NoComebacks', 'shortname': 'NoComebacks',
                                            'longname': 'No rientri'})
-        cls.REGISTERED_CONSTRAINTS.append({'classname': 'NonDuplicateConstraint', 'shortname': 'NonDuplicateConstraint', \
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'NonDuplicateConstraint', 'shortname': 'NonDuplicateConstraint',
                                            'longname': 'No sovrapposizioni'})
-        cls.REGISTERED_CONSTRAINTS.append({'classname': 'FillFirstHours', 'shortname': 'FillFirstHours', \
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'FillFirstHours', 'shortname': 'FillFirstHours',
                                            'longname': 'Riempire le prime ore'})
         cls.REGISTERED_CONSTRAINTS.append(
-            {'classname': 'MultipleConsecutiveForSubject', 'shortname': 'MultipleConsecutiveForSubject', \
+            {'classname': 'MultipleConsecutiveForSubject', 'shortname': 'MultipleConsecutiveForSubject',
              'longname': 'Coppia compito'})
-        cls.REGISTERED_CONSTRAINTS.append({'classname': 'Boost', 'shortname': 'Boost', \
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'Boost', 'shortname': 'Boost',
                                            'longname': 'Aumenta probabilità'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'CalendarDays', 'shortname': 'CalendarDays',
+                                           'longname': 'Giorni disponibili'})
 
     @property
     def id(self):

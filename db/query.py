@@ -263,7 +263,7 @@ def save(entity, log_user="-"):
     try:
         with db.connection.active_session() as session:
             entity.log_user = log_user
-            session.add(entity)
+            session.merge(entity)
             session.commit()
             return entity
     except (Exception) as error:

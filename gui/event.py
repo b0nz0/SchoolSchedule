@@ -638,6 +638,7 @@ def _assignment_create(pperson1=None, pperson2=None, pperson3=None, psubject=Non
     for class_ in classes:
         ident = f'{class_.year.identifier} {class_.section.identifier}'
         options_class[class_.id] = ident
+    options_room[None] = ''
     for room in rooms:
         options_room[room.id] = room.identifier
 

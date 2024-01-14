@@ -3,6 +3,7 @@ from tkinter import ttk, simpledialog
 import db
 from gui.autocomplete import AutocompleteEntry
 
+
 class AddClassInPlanDialog(simpledialog.Dialog):
     def __init__(self, parent, plans, classes: str):
         self.result = None
@@ -266,30 +267,40 @@ class CreateAssignmentDialog(simpledialog.Dialog):
         self.bind("<Escape>", self.cancel)
 
     def apply(self):
-        person1 = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person1.get())]
+        person1 = list(self.options_persons.keys())[
+            list(self.options_persons.values()).index(self.selected_person1.get())]
         if self.selected_person2.get() != '':
-            person2 = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person2.get())]
-        else: person2 = None
+            person2 = list(self.options_persons.keys())[
+                list(self.options_persons.values()).index(self.selected_person2.get())]
+        else:
+            person2 = None
         if self.selected_person3.get() != '':
-            person3 = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person3.get())]
-        else: person3 = None
-        subject = list(self.options_subject.keys())[list(self.options_subject.values()).index(self.selected_subject.get())]
+            person3 = list(self.options_persons.keys())[
+                list(self.options_persons.values()).index(self.selected_person3.get())]
+        else:
+            person3 = None
+        subject = list(self.options_subject.keys())[
+            list(self.options_subject.values()).index(self.selected_subject.get())]
         class_ = list(self.options_class.keys())[list(self.options_class.values()).index(self.selected_class.get())]
-        room = list(self.options_room.keys())[list(self.options_room.values()).index(self.selected_room.get())]
+        if len(self.selected_room.get()) > 0:
+            room = list(self.options_room.keys())[list(self.options_room.values()).index(self.selected_room.get())]
+        else:
+            room = None
         hours = int(self.selected_hours.get())
 
         self.result = person1, person2, person3, subject, class_, room, hours
 
+
 class EditAssignmentDialog(simpledialog.Dialog):
     NO_ROOM = ''
-    
-    def __init__(self, parent, assignment: db.model.SubjectInClass or None, 
+
+    def __init__(self, parent, assignment: db.model.SubjectInClass or None,
                  options_persons, options_subject, options_class, options_room, lock=True):
         self.result = None
         if assignment is None:
             assignment = db.model.SubjectInClass()
         self.assignment = assignment
-        
+
         self.selected_person1 = None
         self.selected_person2 = None
         self.selected_person3 = None
@@ -364,7 +375,7 @@ class EditAssignmentDialog(simpledialog.Dialog):
         else:
             self.combo_subject.current(0)
         if self.lock:
-            self.combo_subject.state(['disabled'])     
+            self.combo_subject.state(['disabled'])
 
         l = ttk.Label(master=master, text="Classe")
         l.grid(column=0, row=5, padx=30, pady=5, sticky=(E))
@@ -376,7 +387,7 @@ class EditAssignmentDialog(simpledialog.Dialog):
         else:
             self.combo_class.current(0)
         if self.lock:
-            self.combo_class.state(['disabled'])     
+            self.combo_class.state(['disabled'])
 
         l = ttk.Label(master=master, text="Aula")
         l.grid(column=0, row=6, padx=30, pady=5, sticky=(E))
@@ -418,22 +429,26 @@ class EditAssignmentDialog(simpledialog.Dialog):
     def apply(self):
         for person in self.assignment.persons:
             if person.fullname != self.selected_person1.get() and \
-                person.fullname != self.selected_person2.get() and \
-                person.fullname != self.selected_person3.get():
-                    self.assignment.persons.remove(person)
-        person_id = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person1.get())]
+                    person.fullname != self.selected_person2.get() and \
+                    person.fullname != self.selected_person3.get():
+                self.assignment.persons.remove(person)
+        person_id = list(self.options_persons.keys())[
+            list(self.options_persons.values()).index(self.selected_person1.get())]
         if person_id not in [p.id for p in self.assignment.persons]:
             self.assignment.persons.append(db.query.get(db.model.Person, person_id))
         if self.selected_person2.get() != '':
-            person_id = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person2.get())]
+            person_id = list(self.options_persons.keys())[
+                list(self.options_persons.values()).index(self.selected_person2.get())]
             if person_id not in [p.id for p in self.assignment.persons]:
                 self.assignment.persons.append(db.query.get(db.model.Person, person_id))
         if self.selected_person3.get() != '':
-            person_id = list(self.options_persons.keys())[list(self.options_persons.values()).index(self.selected_person3.get())]
+            person_id = list(self.options_persons.keys())[
+                list(self.options_persons.values()).index(self.selected_person3.get())]
             if person_id not in [p.id for p in self.assignment.persons]:
                 self.assignment.persons.append(db.query.get(db.model.Person, person_id))
-        
-        subject_id = list(self.options_subject.keys())[list(self.options_subject.values()).index(self.selected_subject.get())]
+
+        subject_id = list(self.options_subject.keys())[
+            list(self.options_subject.values()).index(self.selected_subject.get())]
         if self.assignment.subject is None or subject_id != self.assignment.subject.id:
             self.assignment.subject = db.query.get(db.model.Subject, subject_id)
         class_id = list(self.options_class.keys())[list(self.options_class.values()).index(self.selected_class.get())]
@@ -445,10 +460,11 @@ class EditAssignmentDialog(simpledialog.Dialog):
                 self.assignment.room = db.query.get(db.model.Room, room_id)
         else:
             self.assignment.room = None
-        
+
         self.assignment.hours_total = int(self.selected_hours.get())
 
         self.result = self.assignment
+
 
 class SelectPersonDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
@@ -457,7 +473,7 @@ class SelectPersonDialog(simpledialog.Dialog):
         self.options = options
         self.selected_option = None
         self.options_combo = None
-        
+
         super().__init__(parent, title="Seleziona docente")
 
     def body(self, master):
@@ -499,6 +515,7 @@ class SelectPersonDialog(simpledialog.Dialog):
     def apply(self):
         self.result = self.autocomplete_frame.value, self.autocomplete_frame.id
 
+
 class SelectSubjectDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
         self.result = None
@@ -506,7 +523,7 @@ class SelectSubjectDialog(simpledialog.Dialog):
         self.options = options
         self.selected_option = None
         self.options_combo = None
-        
+
         super().__init__(parent, title="Seleziona materia")
 
     def body(self, master):
@@ -535,6 +552,7 @@ class SelectSubjectDialog(simpledialog.Dialog):
     def apply(self):
         self.result = self.autocomplete_frame.value, self.autocomplete_frame.id
 
+
 class SelectClassDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
         self.result = None
@@ -543,7 +561,7 @@ class SelectClassDialog(simpledialog.Dialog):
         self.every_class = None
         self.selected_option = None
         self.options_combo = None
-        
+
         super().__init__(parent, title="Seleziona classe")
 
     def body(self, master):
@@ -560,7 +578,6 @@ class SelectClassDialog(simpledialog.Dialog):
         self.every_class.state(['!alternate'])
         self.every_class.state(['!disabled', '!selected'])
         self.every_class.grid(column=0, row=3, columnspan=2, sticky=(N, S))
-
 
     def buttonbox(self):
         box = ttk.Frame(self)
@@ -601,7 +618,6 @@ class NewRestrictionDialog(simpledialog.Dialog):
         self.options_combo.grid(column=0, row=1, pady=5, sticky=(N, S))
         self.options_combo['values'] = list(self.options.keys())
         self.options_combo.current(0)
-
 
     def buttonbox(self):
         box = ttk.Frame(self)
