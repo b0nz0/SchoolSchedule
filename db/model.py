@@ -13,7 +13,7 @@ from datetime import datetime, time, timedelta
 
 class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
-    start_datetime: Mapped[Optional[datetime]]
+    start_datetime: Mapped[Optional[datetime]] = mapped_column(default=datetime.now, onupdate=datetime.now)
     log_user: Mapped[Optional[str]]
 
 
@@ -136,13 +136,15 @@ class Person(Base):
     #    subjects_in_class: Mapped[List["SubjectInClass"]] = relationship(secondary="person_to_subject_in_class", lazy="joined")
 
     def __repr__(self) -> str:
-        return f"{self.title} {self.firstname} {self.lastname}"
+        return f"{self.title} {self.fullname}"
 
 
 class Subject(Base):
     __tablename__ = "subject"
 
     identifier: Mapped[str]
+    default_hours: Mapped[int]
+
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="subjects")
 

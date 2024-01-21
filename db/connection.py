@@ -1,7 +1,6 @@
-import psycopg
-from psycopg.rows import dict_row
 from configparser import ConfigParser
 
+import psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -9,6 +8,7 @@ active_connection = None
 connection_parameters = None
 active_engine = None
 active_session = None
+sqlite_path = "school_schedule.db"
 
 
 def config(filename='database.ini', section='postgresql'):
@@ -33,6 +33,7 @@ def connect():
     global connection_parameters
     global active_engine
     global active_session
+    global sqlite_path
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
@@ -40,11 +41,12 @@ def connect():
             # read connection parameters
             connection_parameters = config()
 
-        active_engine = create_engine("postgresql+psycopg://" + connection_parameters['user'] + \
-                                      ":" + connection_parameters['password'] + \
-                                      "@" + connection_parameters['host'] + \
-                                      ":" + connection_parameters['port'] + \
-                                      "/" + connection_parameters['dbname'], echo=False)
+        # active_engine = create_engine("postgresql+psycopg://" + connection_parameters['user'] + \
+        #                               ":" + connection_parameters['password'] + \
+        #                               "@" + connection_parameters['host'] + \
+        #                               ":" + connection_parameters['port'] + \
+        #                               "/" + connection_parameters['dbname'], echo=False)
+        active_engine = create_engine(f"sqlite:///{sqlite_path}", echo=False)
         active_session = sessionmaker(active_engine, expire_on_commit=False)
 
     except (Exception, psycopg.DatabaseError) as error:

@@ -1,12 +1,16 @@
 import logging
+import tkinter.messagebox
+import tkinter.simpledialog
+from operator import itemgetter
 from tkinter import END
 
-import gui.setup, gui.screen, gui.dialog, gui.constraint_dialog
-import db.query, db.model
+import db.model
+import db.query
 import engine.struct
-from operator import itemgetter
-import tkinter.simpledialog, tkinter.messagebox
-import datetime
+import gui.constraint_dialog
+import gui.dialog
+import gui.screen
+import gui.setup
 
 school_dict = {}
 schoolyears_dict = {}
@@ -768,7 +772,7 @@ def restriction_create():
         try:
             dialog_obj = getattr(gui.constraint_dialog, ckind['shortname'] + 'Dialog')
             options[ckind['longname']] = ckind['shortname']
-        except (AttributeError) as e:
+        except AttributeError as e:
             pass
         
     dialog = gui.dialog.NewRestrictionDialog(parent=ui.root, options=options)

@@ -76,7 +76,7 @@ class CreateRoomDialog(simpledialog.Dialog):
         cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
         cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
 
-        box.ttk.pack()
+        box.pack()
 
         self.bind("<Return>", self.ok)
         self.bind("<Escape>", self.cancel)

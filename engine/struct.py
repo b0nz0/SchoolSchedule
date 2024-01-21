@@ -247,8 +247,12 @@ class EngineSupport:
                 if p.id not in self._persons.keys():
                     self._persons[p.id] = []
                 self._persons[p.id].append(subject_in_class_id)
-            assignment.data['room_id'] = sic.room.id
-            assignment.data['room'] = sic.room.identifier
+            if sic.room is not None:
+                assignment.data['room_id'] = sic.room.id
+                assignment.data['room'] = sic.room.identifier
+            else:
+                assignment.data['room_id'] = None
+                assignment.data['room'] = ''
             assignment.score = 0
             self.get_calendar(sic.class_id)
 
