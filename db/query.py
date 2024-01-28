@@ -1,13 +1,12 @@
 import traceback
-import logging
-from typing import List
-import psycopg
+
 import sqlalchemy
+from sqlalchemy import select
 
 import db.connection
-from sqlalchemy import select
+import engine.constraint
+import engine.struct
 from db.model import *
-import engine.constraint, engine.struct
 
 
 def get_schools() -> List[School]:

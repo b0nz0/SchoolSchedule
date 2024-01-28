@@ -681,8 +681,8 @@ def startup():
     #    db.model.Base.metadata.create_all(db.connection.active_engine)
     logging.info(f'loaded db file')
 
-    ui = gui.setup.SchoolSchedulerGUI()
-    ui.startup()
+    _ui = gui.setup.SchoolSchedulerGUI()
+    _ui.startup()
     engine.struct.Constraint.load_registered_constraints()
 
 

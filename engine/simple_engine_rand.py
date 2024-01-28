@@ -1,10 +1,9 @@
-from operator import itemgetter
 import logging
 import random
-from typing import Tuple, Union, Any, List
+from operator import itemgetter
 
-from engine.struct import *
 from engine.constraint import *
+from engine.struct import *
 
 
 class SimpleEngineRand(Engine):

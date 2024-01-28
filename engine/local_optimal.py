@@ -1,9 +1,8 @@
-from operator import itemgetter
 import logging
 import random
-from engine.struct import *
+
 from engine.constraint import *
-from engine.simple_engine import SimpleEngine
+from engine.struct import *
 
 
 class LocalOptimalEngine(Engine):

@@ -35,7 +35,7 @@ def connect():
     global active_session
     global sqlite_path
     """ Connect to the PostgreSQL database server """
-    conn = None
+
     try:
         if connection_parameters is None:
             # read connection parameters

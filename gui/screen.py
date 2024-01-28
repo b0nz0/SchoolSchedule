@@ -381,6 +381,7 @@ def configure_room_screen():
 
     gui.event.populate_room_configuration()
 
+
 def configure_subject_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
@@ -465,16 +466,15 @@ def configure_person_screen():
     scrollbar.configure(command=persons_listbox.yview)
     scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
     persons_listbox.bind('<<TreeviewSelect>>', gui.event.person_selected)
-    tree = ttk.Treeview(root,  show="headings")
     persons_listbox.column("#1", anchor=W, stretch=NO, width=200)
-    persons_listbox.heading("#1", text="Nome", command=lambda _col="#1": \
-                     gui.event.treeview_sort_column(persons_listbox, _col, "Nome", False))
+    persons_listbox.heading("#1", text="Nome", command=lambda _col="#1":
+        gui.event.treeview_sort_column(persons_listbox, _col, "Nome", False))
     persons_listbox.column("#2", anchor=CENTER, stretch=NO, width=80)
-    persons_listbox.heading("#2", text="Tipo", command=lambda _col="#2": \
-                     gui.event.treeview_sort_column(persons_listbox, _col, "Tipo", False))
+    persons_listbox.heading("#2", text="Tipo", command=lambda _col="#2":
+        gui.event.treeview_sort_column(persons_listbox, _col, "Tipo", False))
     persons_listbox.column("#3", anchor=CENTER, stretch=NO, width=80)
-    persons_listbox.heading("#3", text="Impersonale", command=lambda _col="#3": \
-                     gui.event.treeview_sort_column(persons_listbox, _col, "Impersonale", False))
+    persons_listbox.heading("#3", text="Impersonale", command=lambda _col="#3":
+        gui.event.treeview_sort_column(persons_listbox, _col, "Impersonale", False))
 
     person_add_button = ttk.Button(frame, text=ADD_PERSON_LABEL, command=gui.event.person_create)
     person_add_button.grid(column=11, row=0, sticky=(E, W))
@@ -560,7 +560,7 @@ def configure_timetable_screen():
 
     l = ttk.Label(frame, text=PLAN_USED_IN, padding="5 5 5 5")
     l.grid(column=0, row=10, sticky=(N, W, E, S))
-    lwidth = l.winfo_reqwidth() * 2
+    # lwidth = l.winfo_reqwidth() * 2
     text_plan_classes = Text(frame, height=8, width=10)
     text_plan_classes.grid(column=1, row=10, columnspan=1, sticky=(W, E))
     scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=text_plan_classes.yview)
@@ -581,6 +581,7 @@ def configure_timetable_screen():
 
     gui.event.populate_timetable_combo()
 
+
 def configure_assignment_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
@@ -598,7 +599,7 @@ def configure_assignment_screen():
     assignment_label.grid(column=0, row=0, rowspan=3, padx=30, sticky=(W, E))
 
     assignment_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2", "c3", "c4", "c5"),
-                                   selectmode=BROWSE, height=20)
+                                      selectmode=BROWSE, height=20)
     assignment_listbox.grid(column=1, row=0, rowspan=4, sticky=(N, W, E, S))
     scrollbary = ttk.Scrollbar(frame, orient=VERTICAL, command=assignment_listbox.yview)
     assignment_listbox.configure(yscroll=scrollbary.set)
@@ -611,23 +612,22 @@ def configure_assignment_screen():
     # bind double-click to edit
     assignment_listbox.bind("<Double-1>", gui.event.assignment_edit)
 
-
     assignment_listbox.bind('<<TreeviewSelect>>', gui.event.assignment_selected)
     assignment_listbox.column("#1", anchor=W, stretch=NO, width=200)
     assignment_listbox.heading("#1", text="Docenti", command=lambda _col="#1": \
-                     gui.event.treeview_sort_column(assignment_listbox, _col, "Docenti", False))
+        gui.event.treeview_sort_column(assignment_listbox, _col, "Docenti", False))
     assignment_listbox.column("#2", anchor=CENTER, stretch=NO, width=100)
     assignment_listbox.heading("#2", text="Materia", command=lambda _col="#2": \
-                     gui.event.treeview_sort_column(assignment_listbox, _col, "Materia", False))
+        gui.event.treeview_sort_column(assignment_listbox, _col, "Materia", False))
     assignment_listbox.column("#3", anchor=CENTER, stretch=NO, width=80)
     assignment_listbox.heading("#3", text="Classe", command=lambda _col="#3": \
-                     gui.event.treeview_sort_column(assignment_listbox, _col, "Classe", False))
+        gui.event.treeview_sort_column(assignment_listbox, _col, "Classe", False))
     assignment_listbox.column("#4", anchor=CENTER, stretch=NO, width=80)
     assignment_listbox.heading("#4", text="Ore sett.", command=lambda _col="#4": \
-                     gui.event.treeview_sort_column(assignment_listbox, _col, "Ore sett.", False))
+        gui.event.treeview_sort_column(assignment_listbox, _col, "Ore sett.", False))
     assignment_listbox.column("#5", anchor=CENTER, stretch=NO, width=100)
     assignment_listbox.heading("#5", text="Aula", command=lambda _col="#5": \
-                     gui.event.treeview_sort_column(assignment_listbox, _col, "Aula", False))
+        gui.event.treeview_sort_column(assignment_listbox, _col, "Aula", False))
 
     assignment_edit_button = ttk.Button(frame, text=EDIT_RESTRICTION_LABEL, command=gui.event.assignment_edit)
     assignment_edit_button.grid(column=11, row=0, padx=30, sticky=(E, W))
@@ -641,7 +641,8 @@ def configure_assignment_screen():
     assignment_delete_button.grid(column=11, row=2, padx=30, sticky=(E, W))
     assignment_delete_button.state(['!disabled'])
 
-    assignment_duplicate_button = ttk.Button(frame, text=DUPLICATE_ASSIGNMENT_LABEL, command=gui.event.assignment_duplicate)
+    assignment_duplicate_button = ttk.Button(frame, text=DUPLICATE_ASSIGNMENT_LABEL,
+                                             command=gui.event.assignment_duplicate)
     assignment_duplicate_button.grid(column=11, row=3, padx=30, sticky=(E, W))
     assignment_duplicate_button.state(['!disabled'])
 
@@ -658,6 +659,7 @@ def configure_assignment_screen():
     ui.widgets['assignment_duplicate_button'] = assignment_duplicate_button
 
     gui.event.populate_assignment_configuration()
+
 
 def configure_restriction_screen():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -676,11 +678,11 @@ def configure_restriction_screen():
     restriction_label.grid(column=0, row=0, rowspan=3, padx=30, sticky=(W, E))
 
     restriction_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2"),
-                                   selectmode=BROWSE, height=20)
+                                       selectmode=BROWSE, height=20)
     restriction_listbox.grid(column=1, row=0, rowspan=4, sticky=(N, W, E, S))
     # bind double-click to edit
     restriction_listbox.bind("<Double-1>", gui.event.restriction_edit)
-    
+
     scrollbary = ttk.Scrollbar(frame, orient=VERTICAL, command=restriction_listbox.yview)
     restriction_listbox.configure(yscroll=scrollbary.set)
     scrollbary.configure(command=restriction_listbox.yview)
@@ -693,10 +695,10 @@ def configure_restriction_screen():
     restriction_listbox.bind('<<TreeviewSelect>>', gui.event.restriction_selected)
     restriction_listbox.column("#1", anchor=W, stretch=NO, width=460)
     restriction_listbox.heading("#1", text="Nome", command=lambda _col="#1": \
-                     gui.event.treeview_sort_column(restriction_listbox, _col, "Nome", False))
+        gui.event.treeview_sort_column(restriction_listbox, _col, "Nome", False))
     restriction_listbox.column("#2", anchor=CENTER, stretch=NO, width=300)
     restriction_listbox.heading("#2", text="Tipo", command=lambda _col="#2": \
-                     gui.event.treeview_sort_column(restriction_listbox, _col, "Tipo", False))
+        gui.event.treeview_sort_column(restriction_listbox, _col, "Tipo", False))
 
     restriction_edit_button = ttk.Button(frame, text=EDIT_RESTRICTION_LABEL, command=gui.event.restriction_edit)
     restriction_edit_button.grid(column=11, row=0, padx=30, sticky=(E, W))
@@ -710,7 +712,8 @@ def configure_restriction_screen():
     restriction_delete_button.grid(column=11, row=2, padx=30, sticky=(E, W))
     restriction_delete_button.state(['!disabled'])
 
-    restriction_duplicate_button = ttk.Button(frame, text=DUPLICATE_RESTRICTION_LABEL, command=gui.event.restriction_duplicate)
+    restriction_duplicate_button = ttk.Button(frame, text=DUPLICATE_RESTRICTION_LABEL,
+                                              command=gui.event.restriction_duplicate)
     restriction_duplicate_button.grid(column=11, row=3, padx=30, sticky=(E, W))
     restriction_duplicate_button.state(['!disabled'])
 

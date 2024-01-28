@@ -72,17 +72,21 @@ class SimpleEngine(Engine):
                 else:
                     (score, constraint_scores, day, hour, continuing) = sorted(candidates, key=itemgetter(0), reverse=True)[0]
                     logging.debug(f'best candidate: class={class_id}, score={score}, day={day.value}, hour={hour}')
-                    self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                        class_id=class_id, day=day, hour_ordinal=hour, score=score, constraint_scores=constraint_scores)
+                    self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
+                                               class_id=class_id, day=day, hour_ordinal=hour, score=score,
+                                               constraint_scores=constraint_scores)
                     assignments_remaining[assignment] = assignments_remaining[assignment] - 1
                     # let's see if we can attach a hour after this one, as suggested
                     if continuing:
                         if self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour+1) == Calendar.AVAILABLE:
-                            (score, constraint_scores) = self.evaluate_constraints(calendar_id=class_id, assignment=assignment, day=day, hour=hour)
+                            (score, constraint_scores) = self.evaluate_constraints(calendar_id=class_id,
+                                                                                   assignment=assignment,
+                                                                                   day=day, hour=hour)
                             if score >= 0:
                                 logging.debug('can continue')
-                                self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                            class_id=class_id, day=day, hour_ordinal=hour+1, score=score, constraint_scores=constraint_scores)
+                                self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
+                                                           class_id=class_id, day=day, hour_ordinal=hour+1, score=score,
+                                                           constraint_scores=constraint_scores)
                                 assignments_remaining[assignment] = assignments_remaining[assignment] - 1
         self._closed = working
 

@@ -1,3 +1,4 @@
+import db
 from engine.struct import *
 from db.model import DailyHour, WeekDayEnum
 from engine.struct import Constraint, EngineSupport
@@ -31,7 +32,6 @@ class CalendarDays(Constraint):
         if self.person_id not in [x['person_id'] for x in assignment.data['persons']]:
             return 0
 
-        allowed = False
         for (allowed_day, allowed_hour) in self.allowed_hours_list:
             if allowed_day == day and allowed_hour == hour:
                 return self.allowed_score

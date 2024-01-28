@@ -1,3 +1,4 @@
+import db
 from engine.struct import *
 from db.model import DailyHour, WeekDayEnum
 from engine.struct import Constraint

@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import ttk, simpledialog
-import db
+import db, db.model
 from gui.autocomplete import AutocompleteEntry
 
 
@@ -44,6 +44,7 @@ class AddClassInPlanDialog(simpledialog.Dialog):
 
 class CreateRoomDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
+        self.entry = None
         self.result = None
         self.selected_option = None
         self.entry_text = ""
@@ -88,6 +89,7 @@ class CreateRoomDialog(simpledialog.Dialog):
 
 class CreatePersonDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
+        self.entry = None
         self.result = None
         self.selected_option = None
         self.entry_text = ""
@@ -468,6 +470,7 @@ class EditAssignmentDialog(simpledialog.Dialog):
 
 class SelectPersonDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
+        self.autocomplete_frame = None
         self.result = None
         self.parent = parent
         self.options = options
@@ -518,6 +521,7 @@ class SelectPersonDialog(simpledialog.Dialog):
 
 class SelectSubjectDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
+        self.autocomplete_frame = None
         self.result = None
         self.parent = parent
         self.options = options
@@ -555,6 +559,7 @@ class SelectSubjectDialog(simpledialog.Dialog):
 
 class SelectClassDialog(simpledialog.Dialog):
     def __init__(self, parent, options):
+        self.autocomplete_frame = None
         self.result = None
         self.parent = parent
         self.options = options

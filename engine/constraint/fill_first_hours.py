@@ -1,12 +1,11 @@
-from engine.struct import Calendar, Constraint, Assignment, EngineSupport
 import db.model
-import json
+from engine.struct import Constraint, Assignment, EngineSupport
 
 
 class FillFirstHours(Constraint):
-    ''' 
+    """
     boost assigning to first hours
-    '''
+    """
 
     def __init__(self) -> None:
         super().__init__()

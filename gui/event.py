@@ -131,7 +131,6 @@ def populate_subject_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
 
     subjects = db.query.get_subjects(school_id=school_selected_dict['id'])
-    subjects_list = []
 
     # Clear the treeview list items
     for item in ui.widgets['subjects_listbox'].get_children():
@@ -264,7 +263,6 @@ def school_add():
 def schoolyear_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     choice = ui.widgets['schoolyears_combo'].get()
-    schoolyear = db.query.get(db.model.SchoolYear, schoolyears_dict[choice])
     schoolyear_selected_dict['name'] = choice
     schoolyear_selected_dict['id'] = schoolyears_dict[choice]
     ui.widgets['schoolyear_delete_button'].state(['disabled'])
@@ -351,8 +349,6 @@ def section_add():
 def class_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
     selected = ui.widgets['classes_listbox'].selection()
-    for item in selected:
-        pass
 
 
 def add_class_in_plan():
@@ -770,9 +766,8 @@ def restriction_create():
     options = dict()    
     for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
         try:
-            dialog_obj = getattr(gui.constraint_dialog, ckind['shortname'] + 'Dialog')
             options[ckind['longname']] = ckind['shortname']
-        except AttributeError as e:
+        except AttributeError:
             pass
         
     dialog = gui.dialog.NewRestrictionDialog(parent=ui.root, options=options)
@@ -843,7 +838,7 @@ def switch_frame(from_name, to_name):
         from_frame = ui.frames[from_name]
         from_frame.grid_remove()
     else:
-        from_frame = None
+        pass
     if to_name in ui.frames:
         to_frame = ui.frames[to_name]
         to_frame.grid()

@@ -1,13 +1,14 @@
-from engine.struct import Calendar, Constraint, Assignment, EngineSupport
-import db.model
 import json
+
+import db.model
+from engine.struct import Constraint, Assignment, EngineSupport
 
 
 class MultipleConsecutiveForSubject(Constraint):
-    ''' 
+    """
     boost 'consecutive_hours' consecutive hours, given that it has not been already assigned at least 'times' times.
     no boost if current hour > 4, because this constraint is targeted at early hours
-    '''
+    """
 
     def __init__(self) -> None:
         super().__init__()

@@ -87,6 +87,7 @@ class Boost(Constraint):
         subject_id = conf_data['subject_id']
         class_id = conf_data['class_id']
         loadday = conf_data['day']
+        day = None
         if loadday:
             for wd in WeekDayEnum:
                 if loadday == wd.name:

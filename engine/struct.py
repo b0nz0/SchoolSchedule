@@ -1,6 +1,5 @@
 import db.query
 import db.model
-from engine.constraint import *
 
 
 class Assignment:
@@ -91,8 +90,8 @@ class Constraint:
     def __init__(self) -> None:
         self._id = None
         self._triggers = {}
-        for type in Constraint.TRIGGER_TYPES:
-            self._triggers[type] = set()
+        for ctype in Constraint.TRIGGER_TYPES:
+            self._triggers[ctype] = set()
         self._weight = 0
         self._school_year = None
         self._score = 0
@@ -328,7 +327,7 @@ class EngineSupport:
                             wstr = wstr + f'---;'
                         else:
                             subject = assignment.data['subject']
-                            (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                            # (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
                             persons_list = [x['person'] for x in assignment.data['persons']]
                             persons_string = ",".join(persons_list)
                             wstr = wstr + f'{subject} ({persons_string});'
@@ -377,10 +376,6 @@ class Engine:
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
         for row in rows:
             self.engine_support.load_assignment_from_subject_in_class(int(row))
-        constraint = NonDuplicateConstraint()
-        self.engine_support.constraints.add(constraint)
-        constraint = NoComebacks()
-        self.engine_support.constraints.add(constraint)
 
     def clear_assignments(self):
         for calendar_id in self.engine_support.get_calendar_ids():

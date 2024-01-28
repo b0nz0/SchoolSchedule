@@ -1,6 +1,7 @@
+import db
 from engine.struct import *
 from db.model import DailyHour, WeekDayEnum
-from engine.struct import Constraint
+from engine.struct import Constraint, EngineSupport
 
 
 class NonDuplicateConstraint(Constraint):

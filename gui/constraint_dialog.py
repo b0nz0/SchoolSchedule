@@ -193,8 +193,8 @@ class BoostDialog(simpledialog.Dialog):
         dialog = gui.dialog.SelectPersonDialog(self, persons)
         result = dialog.result
         if result is not None:
-            fullname, id = result
-            self.constraint.person_id = id
+            fullname, rid = result
+            self.constraint.person_id = rid
             self.combo_perssubj_selected(None)
 
     def show_subject_dialog(self):
@@ -205,8 +205,8 @@ class BoostDialog(simpledialog.Dialog):
         dialog = gui.dialog.SelectSubjectDialog(self, subjects)
         result = dialog.result
         if result is not None:
-            subject_text, id = result
-            self.constraint.subject_id = id
+            subject_text, rid = result
+            self.constraint.subject_id = rid
             self.combo_perssubj_selected(None)
 
     def show_class_dialog(self):
@@ -217,8 +217,8 @@ class BoostDialog(simpledialog.Dialog):
         dialog = gui.dialog.SelectClassDialog(self, classes)
         result = dialog.result
         if result is not None:
-            class_text, id = result
-            self.constraint.class_id = id
+            class_text, rid = result
+            self.constraint.class_id = rid
             self.button_class_text = class_text
             self.button_class.configure(text=self.button_class_text)
 
@@ -291,6 +291,7 @@ class MultipleConsecutiveForSubjectDialog(simpledialog.Dialog):
     SELECT = '<SELEZIONA>'
 
     def __init__(self, parent, constraint: engine.constraint.MultipleConsecutiveForSubject or None):
+        self.result = None
         self.parent = parent
         if constraint is None:
             constraint = engine.constraint.MultipleConsecutiveForSubject()
@@ -373,8 +374,8 @@ class MultipleConsecutiveForSubjectDialog(simpledialog.Dialog):
         dialog = gui.dialog.SelectSubjectDialog(self, subjects)
         result = dialog.result
         if result is not None:
-            subject_text, id = result
-            self.constraint.subject_id = id
+            subject_text, rid = result
+            self.constraint.subject_id = rid
             if self.constraint.subject_id is not None:
                 self.button_subject_text = db.query.get(db.model.Subject, self.constraint.subject_id).identifier
                 self.button_subject.configure(text=self.button_subject_text)
