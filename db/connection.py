@@ -46,6 +46,8 @@ def connect():
         #                               "@" + connection_parameters['host'] + \
         #                               ":" + connection_parameters['port'] + \
         #                               "/" + connection_parameters['dbname'], echo=False)
+
+        # for SQLite
         active_engine = create_engine(f"sqlite:///{sqlite_path}", echo=False)
         active_session = sessionmaker(active_engine, expire_on_commit=False)
 
@@ -76,10 +78,13 @@ def print_connection_status():
 
 def unconnect():
     global active_connection
+    global active_engine
     if active_connection is not None:
         active_connection.close()
         print('Database connection closed.')
-
+    if active_engine is not None:
+        active_engine.dispose()
+        print('Database connection closed.')
 
 ''' default database.ini
 [postgresql]

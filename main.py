@@ -1,6 +1,5 @@
 from db.model import *
 import db.connection, db.query, db.model
-from engine.simple_engine import SimpleEngine
 from engine.simple_engine_rand import SimpleEngineRand
 from engine.local_optimal import LocalOptimalEngine
 import gui.setup, gui.screen
@@ -8,6 +7,8 @@ import engine.struct, engine.constraint
 from tkinter import *
 import pickle
 import logging, logging.handlers
+from datetime import datetime, time
+import shutil
 
 
 def populate_DB():
@@ -635,8 +636,10 @@ def test():
         print(f'eseguo SimpleEngineRand (run {x})')
         eng.run()
         if eng.closed: break
-    if eng.closed: print('Calendario chiuso')
-    else: print('Calendario non chiuso')
+    if eng.closed:
+        print('Calendario chiuso')
+    else:
+        print('Calendario non chiuso')
     eng.write_calendars_to_csv('calendari.csv')
 
     eng = LocalOptimalEngine()
@@ -651,11 +654,14 @@ def test():
         logging.info(f'eseguo LocalOptimalEngine (run {x})')
         print(f'eseguo LocalOptimalEngine (run {x})')
         eng.run()
-        if eng.closed: break
-    if eng.closed: print('Calendario chiuso')
-    else: print('Calendario non chiuso')        
+        if eng.closed:
+            break
+    if eng.closed:
+        print('Calendario chiuso')
+    else:
+        print('Calendario non chiuso')
     eng.write_calendars_to_csv('calendari_lo.csv')
-    
+
     with open("test_ser_school.ser", "wb") as outfile:
         pickle.dump(s, outfile)
     with open("test_ser_eng.ser", "wb") as outfile:
@@ -664,7 +670,7 @@ def test():
 
 def startup():
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     handler = logging.handlers.RotatingFileHandler(
         filename='school_schedule.log', maxBytes=10000000, backupCount=5)
     bf = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -672,16 +678,26 @@ def startup():
     logger.addHandler(handler)
 
     db.connection.connect()
-#    db.model.Base.metadata.create_all(db.connection.active_engine)
-
+    #    db.model.Base.metadata.create_all(db.connection.active_engine)
+    logging.info(f'loaded db file')
 
     ui = gui.setup.SchoolSchedulerGUI()
     ui.startup()
-    engine.struct.Constraint.load_registered_constraints()    
+    engine.struct.Constraint.load_registered_constraints()
+
+
+def shutdown():
+    db.connection.unconnect()
+    sqlite_path = db.connection.sqlite_path
+    name, ext = sqlite_path.split('.')
+    newname = name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.' + ext
+    shutil.copy2(sqlite_path, 'backup/' + newname)
+    logging.info(f'backup file created ({newname})')
+
 
 if __name__ == '__main__':
     startup()
-    #populate_DB()
+    # populate_DB()
     test()
     ui = gui.setup.SchoolSchedulerGUI()
     gui.screen.school_select_screen()
@@ -689,3 +705,4 @@ if __name__ == '__main__':
     root.title("Scuola")
     root.resizable(width=TRUE, height=TRUE)
     ui.show()
+    shutdown()

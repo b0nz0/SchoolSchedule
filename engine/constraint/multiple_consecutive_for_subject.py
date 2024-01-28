@@ -52,7 +52,7 @@ class MultipleConsecutiveForSubject(Constraint):
         if ntimes < self.times:
             self._suggest_continuing = False
             ass_m1 = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour - 1)
-            if type(ass_m1) == Assignment and ass_m1.data['subject_id'] == self.subject_id:
+            if type(ass_m1) == Assignment and ass_m1.data['subject_id'] == self.subject_id and hour < 5:
                 return self.score * 10
             ass_p1 = engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour + 1)
             if type(ass_p1) == Assignment and ass_p1.data['subject_id'] == self.subject_id and hour < 4:

@@ -6,3 +6,4 @@ database.ini
 *.csv
 *.csv#
 *.xlsx
+/backup/
