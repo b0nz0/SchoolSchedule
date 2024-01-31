@@ -456,3 +456,4 @@ def dump_subject_in_class(id: int) -> str:
 
     except (Exception) as error:
         traceback.print_exc()
+

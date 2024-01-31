@@ -1,3 +1,4 @@
+import tkinter.messagebox
 from tkinter import *
 from tkinter import ttk, simpledialog
 import db, db.model
@@ -85,6 +86,86 @@ class CreateRoomDialog(simpledialog.Dialog):
     def apply(self):
         self.result = list(self.options.keys())[
             list(self.options.values()).index(self.selected_option.get())], self.entry_text.get()
+
+
+class CreateSubjectDialog(simpledialog.Dialog):
+    NO_PREFERENCE = '<NESSUNA PREFERENZA>'
+
+    def __init__(self, parent, subject: db.model.Subject or None):
+        self.con_hour_combo = None
+        self.selected_con_hour = None
+        self.def_hour_combo = None
+        self.selected_def_hour = None
+        self.entry = None
+        self.result = None
+        self.entry_text = ""
+        self.parent = parent
+        if subject is not None:
+            self.subject = subject
+        else:
+            self.subject = db.model.Subject()
+            self.subject.identifier = ''
+            self.subject.default_hours = 1
+            self.subject.preferred_consecutive_hours = 1
+        super().__init__(parent, title="Materia")
+
+    def body(self, master):
+        l = ttk.Label(master=master, text="Scegli nome, ore settimanali di default e preferenza su ore consecutive giornaliere per la materia")
+        l.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        self.entry_text = StringVar(master)
+        self.entry_text.set(self.subject.identifier)
+        self.entry = ttk.Entry(master=master, textvariable=self.entry_text)
+        self.entry.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        self.selected_def_hour = StringVar(master)
+        self.def_hour_combo = ttk.Combobox(master=master, textvariable=self.selected_def_hour)
+        self.def_hour_combo.grid(column=0, row=10, sticky=(N, S))
+        self.def_hour_combo['values'] = [CreateSubjectDialog.NO_PREFERENCE, '1', '2', '3', '4', '5', '6', '7', '8']
+        if self.subject.default_hours is not None:
+            self.def_hour_combo.set(str(self.subject.default_hours))
+
+        self.selected_con_hour = StringVar(master)
+        self.con_hour_combo = ttk.Combobox(master=master, textvariable=self.selected_con_hour)
+        self.con_hour_combo.grid(column=0, row=20, sticky=(N, S))
+        self.con_hour_combo['values'] = [CreateSubjectDialog.NO_PREFERENCE, '1', '2', '3']
+        if self.subject.preferred_consecutive_hours is not None:
+            self.con_hour_combo.set(str(self.subject.preferred_consecutive_hours))
+
+        return self.entry
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def apply(self):
+        identifier = str(self.entry_text.get())
+        if len(identifier) < 1:
+            tkinter.messagebox.showwarning("Materia", "Dare un nome alla materia")
+            self.result = None
+            return
+        else:
+            self.subject.identifier = identifier
+        def_hour = self.def_hour_combo.get()
+        if def_hour == CreateSubjectDialog.NO_PREFERENCE or len(def_hour) < 1:
+            self.subject.default_hours = None
+        else:
+            self.subject.default_hours = int(def_hour)
+        con_hour = self.con_hour_combo.get()
+        if con_hour == CreateSubjectDialog.NO_PREFERENCE or len(con_hour) < 1:
+            self.subject.preferred_consecutive_hours = None
+        else:
+            self.subject.preferred_consecutive_hours = int(con_hour)
+        self.result = self.subject
 
 
 class CreatePersonDialog(simpledialog.Dialog):

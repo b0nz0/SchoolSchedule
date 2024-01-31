@@ -631,7 +631,7 @@ def test():
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     eng.add_constraint(c)
     eng.load(1)
-    for x in range(1, 6):
+    for x in range(1, 10):
         logging.info(f'eseguo SimpleEngineRand (run {x})')
         print(f'eseguo SimpleEngineRand (run {x})')
         eng.run()
@@ -650,7 +650,7 @@ def test():
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     eng.add_constraint(c)
     eng.load(1)
-    for x in range(1, 6):
+    for x in range(1, 10):
         logging.info(f'eseguo LocalOptimalEngine (run {x})')
         print(f'eseguo LocalOptimalEngine (run {x})')
         eng.run()

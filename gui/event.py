@@ -131,6 +131,7 @@ def populate_subject_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
 
     subjects = db.query.get_subjects(school_id=school_selected_dict['id'])
+    subjects_list = []
 
     # Clear the treeview list items
     for item in ui.widgets['subjects_listbox'].get_children():
@@ -138,7 +139,15 @@ def populate_subject_configuration():
 
     for subject in subjects:
         subjects_dict[subject.identifier] = subject.id
-        ui.widgets['subjects_listbox'].insert(parent="", index="end", text=subject.identifier, iid=subject.id)
+        def_h = ''
+        if subject.default_hours:
+            def_h = str(subject.default_hours)
+        con_h = ''
+        if subject.preferred_consecutive_hours:
+            con_h = str(subject.preferred_consecutive_hours)
+        ui.widgets['subjects_listbox'].insert(parent="", index="end", iid=subject.id,
+                                              values=(subject.identifier, def_h, con_h))
+        subjects_list.append((subject.identifier, def_h, con_h))
 
 
 def populate_person_configuration():
@@ -187,6 +196,7 @@ def populate_assignment_configuration():
         ui.widgets['assignment_listbox'].insert(parent="", index="end", iid=ass[0],
                                                 values=ass[1:])
 
+
 def populate_restriction_configuration():
     ui = gui.setup.SchoolSchedulerGUI()
 
@@ -212,7 +222,9 @@ def populate_restriction_configuration():
 
     for res in restriction_list:
         ui.widgets['restriction_listbox'].insert(parent="", index="end", iid=res[0],
-                                                values=res[1:])
+                                                 values=res[1:])
+
+
 def populate_timetable_combo():
     ui = gui.setup.SchoolSchedulerGUI()
     for plan in db.query.get_plans(school_id=school_selected_dict['id']):
@@ -468,19 +480,36 @@ def subject_selected(event):
 def subject_delete():
     pass
 
+def subject_edit(event=None):
+    ui = gui.setup.SchoolSchedulerGUI()
+    subjects_ids = ui.widgets['subjects_listbox'].selection()
+    if len(subjects_ids) == 0:
+        tkinter.messagebox.showwarning("Modifica materia", "Selezionare una materia")
+        return None
+
+    for subject_id in subjects_ids:
+        subject = db.query.get(db.model.Subject, subject_id)
+        dialog = gui.dialog.CreateSubjectDialog(ui.root, subject=subject)
+        ret = dialog.result
+        if ret is not None:
+            db.query.save(ret)
+            tkinter.messagebox.showinfo("Modifica materia", "Materia modificata correttamente")
+
+        populate_subject_configuration()
+
 
 def subject_create():
-    subject_name = tkinter.simpledialog.askstring("Aggiungi materia", "Materia")
-    if subject_name is not None and subject_name != '':
-        subject = db.model.Subject()
-        subject.identifier = subject_name
+    ui = gui.setup.SchoolSchedulerGUI()
+    dialog = gui.dialog.CreateSubjectDialog(ui.root, subject=None)
+    subject = dialog.result
+    if subject:
         subject.school_id = school_selected_dict['id']
         if db.query.get_subject(subject) is not None:
             tkinter.messagebox.showwarning("Aggiunta materia",
-                                           "Materia " + subject_name + " già presente")
+                                           "Materia " + subject.identifier + " già presente")
         else:
             db.query.save(subject)
-            tkinter.messagebox.showinfo("Aggiunta materia", "Materia " + subject_name + " inserita")
+            tkinter.messagebox.showinfo("Aggiunta materia", "Materia " + subject.identifier + " inserita")
 
         populate_subject_configuration()
 
@@ -577,8 +606,8 @@ def assignment_edit(event=None):
             options_room[room.id] = room.identifier
 
         dialog = gui.dialog.EditAssignmentDialog(ui.root, assignment=assignment,
-                                                options_persons=options_person, options_subject=options_subject,
-                                                options_class=options_class, options_room=options_room)
+                                                 options_persons=options_person, options_subject=options_subject,
+                                                 options_class=options_class, options_room=options_room)
         ret = dialog.result
         if ret is not None:
             db.query.save(ret)
@@ -695,8 +724,10 @@ def assignment_duplicate():
 
             break
 
+
 def restriction_selected(event):
     pass
+
 
 def restriction_edit(event=None):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -736,6 +767,7 @@ def restriction_edit(event=None):
 
         populate_restriction_configuration()
 
+
 def restriction_delete():
     ui = gui.setup.SchoolSchedulerGUI()
 
@@ -763,13 +795,13 @@ def restriction_delete():
 def restriction_create():
     ui = gui.setup.SchoolSchedulerGUI()
 
-    options = dict()    
+    options = dict()
     for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
         try:
             options[ckind['longname']] = ckind['shortname']
         except AttributeError:
             pass
-        
+
     dialog = gui.dialog.NewRestrictionDialog(parent=ui.root, options=options)
 
     ret = dialog.result
@@ -815,7 +847,7 @@ def restriction_duplicate():
 
     dialog_obj = getattr(gui.constraint_dialog, shortname + 'Dialog')
     assert dialog_obj is not None, 'impossibile trovare la finestra di dialogo per la restrizione di tipo ' + shortname
-    
+
     constraint.id = None
 
     dialog = dialog_obj(ui.root, constraint)

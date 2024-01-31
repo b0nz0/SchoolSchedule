@@ -386,8 +386,8 @@ def configure_subject_screen():
     ui = gui.setup.SchoolSchedulerGUI()
     root = ui.root
     global geometries
-    geometries['subject_configure_frame'] = '800x400'
-    root.geometry('800x400')
+    geometries['subject_configure_frame'] = '1000x600'
+    root.geometry('1000x600')
 
     frame = ttk.Frame(root, padding="3 3 12 12")
     frame.grid(column=0, row=0)
@@ -396,15 +396,28 @@ def configure_subject_screen():
 
     # subject selection
     subject_label = ttk.Label(frame, text=SUBJECT_SELECT_LABEL)
-    subject_label.grid(column=0, row=0, sticky=(E, W))
+    subject_label.grid(column=0, row=0, padx=5, rowspan=20)
 
-    subjects_listbox = ttk.Treeview(frame, show="tree", selectmode=EXTENDED, height=10)
+    subjects_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2", "c3"),
+                                   selectmode=EXTENDED, height=20)
     scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=subjects_listbox.yview)
     subjects_listbox.configure(yscroll=scrollbar.set)
     subjects_listbox.grid(column=1, row=0, rowspan=2, sticky=(N, W, E, S))
     scrollbar.configure(command=subjects_listbox.yview)
     scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
     subjects_listbox.bind('<<TreeviewSelect>>', gui.event.subject_selected)
+
+    subjects_listbox.column("#1", anchor=W, stretch=NO, width=200)
+    subjects_listbox.heading("#1", text="Materia", command=lambda _col="#1":
+        gui.event.treeview_sort_column(subjects_listbox, _col, "Materia", False))
+    subjects_listbox.column("#2", anchor=CENTER, stretch=NO, width=80)
+    subjects_listbox.heading("#2", text="Ore default", command=lambda _col="#2":
+        gui.event.treeview_sort_column(subjects_listbox, _col, "Ore default", False))
+    subjects_listbox.column("#3", anchor=CENTER, stretch=NO, width=80)
+    subjects_listbox.heading("#3", text="Ore consecutive max", command=lambda _col="#3":
+        gui.event.treeview_sort_column(subjects_listbox, _col, "Ore consecutive max", False))
+    # bind double-click to edit
+    subjects_listbox.bind("<Double-1>", gui.event.subject_edit)
 
     subject_add_button = ttk.Button(frame, text=ADD_SUBJECT_LABEL, command=gui.event.subject_create)
     subject_add_button.grid(column=11, row=0, sticky=(E, W))
@@ -431,7 +444,7 @@ def configure_subject_screen():
 
     frame.rowconfigure(0, minsize=height)
     frame.rowconfigure(1, minsize=height)
-    frame.columnconfigure(0, minsize=width)
+    frame.columnconfigure(0, minsize=100)
     frame.columnconfigure(1, minsize=width)
 
     ui.frames['subject_configure_frame'] = frame

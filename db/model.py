@@ -144,6 +144,7 @@ class Subject(Base):
 
     identifier: Mapped[str]
     default_hours: Mapped[int]
+    preferred_consecutive_hours: Mapped[int]
 
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="subjects")
