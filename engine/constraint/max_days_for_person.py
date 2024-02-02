@@ -15,7 +15,6 @@ class MaximumDaysForPerson(Constraint):
         self.allowed_score = 2
         self.weight = 100
         self.register_trigger(None)
-        self.presence = list()
 
     def configure(self, person_id: int, max_days: int, score=-20):
         self.register_trigger(trigger=person_id, trigger_type=Constraint.TRIGGER_PERSON)
@@ -44,10 +43,10 @@ class MaximumDaysForPerson(Constraint):
                         if self.person_id in [x['person_id'] for x in ass_in_calendar.data['persons']]:
                             days_presence.add(day_ordinal)
 
-        if day in self.presence:
+        if day in days_presence:
             return self.allowed_score
         else:
-            if len(self.presence) >= self.max_days:
+            if len(days_presence) >= self.max_days:
                 return self.score
 
         return 1
