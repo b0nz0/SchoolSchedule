@@ -319,7 +319,7 @@ class MultipleConsecutiveForSubjectDialog(simpledialog.Dialog):
         self.entry_nome = ttk.Entry(master=master, textvariable=self.entry_nome_text, width=50)
         self.entry_nome.grid(column=1, row=1, pady=5, sticky=(N, W, E, S))
 
-        l = ttk.Label(master=master, text="punteggio (minimo 1, massimo 10)")
+        l = ttk.Label(master=master, text="punteggio (minimo 1, massimo 20)")
         l.grid(column=0, row=3, padx=30, pady=5, sticky=(E))
         self.entry_score_text = StringVar(master)
         if self.constraint.score > 0:
@@ -401,9 +401,9 @@ class MultipleConsecutiveForSubjectDialog(simpledialog.Dialog):
 
         if not self.entry_score_text.get().isdigit() or \
                 int(self.entry_score_text.get()) < 1 or \
-                int(self.entry_score_text.get()) > 100:
+                int(self.entry_score_text.get()) > 20:
             tkinter.messagebox.showwarning("Salvataggio restrizione",
-                                           "Il punteggio deve essere un numero compreso tra 1 e 10")
+                                           "Il punteggio deve essere un numero compreso tra 1 e 20")
             return
 
         if self.constraint.subject_id is None:
@@ -556,3 +556,122 @@ class CalendarDaysDialog(simpledialog.Dialog):
 
     def apply(self):
         self.result = self.constraint
+
+class MaximumDaysForPersonDialog(simpledialog.Dialog):
+    SELECT = '<SELEZIONA>'
+    def __init__(self, parent, constraint: engine.constraint.MaximumDaysForPerson or None):
+        self.result = None
+        self.parent = parent
+        if constraint is None:
+            constraint = engine.constraint.MaximumDaysForPerson()
+
+        self.constraint = constraint
+        self.entry_nome_text = None
+        self.entry_nome = None
+        self.entry_score_text = None
+        self.entry_score = None
+        self.button_person_text = None
+        self.button_person = None
+        self.combo_max_days_text = None
+        self.combo_max_days = None
+
+        super().__init__(parent, title="Giorni massimi a settimana")
+
+    def body(self, master):
+        l = ttk.Label(master=master, text="nome")
+        l.grid(column=0, row=1, padx=30, pady=5, sticky=(E))
+        self.entry_nome_text = StringVar(master)
+        if self.constraint.identifier is not None and len(self.constraint.identifier) > 0:
+            self.entry_nome_text.set(self.constraint.identifier)
+        self.entry_nome = ttk.Entry(master=master, textvariable=self.entry_nome_text, width=50)
+        self.entry_nome.grid(column=1, row=1, pady=5, sticky=(N, W, E, S))
+
+        l = ttk.Label(master=master, text="punteggio (minimo 1, massimo 100)")
+        l.grid(column=0, row=3, padx=30, pady=5, sticky=(E))
+        self.entry_score_text = StringVar(master)
+        if self.constraint.score > 0:
+            self.entry_score_text.set(str(self.constraint.score))
+        else:
+            self.entry_score_text.set(str(-self.constraint.score))
+        self.entry_score = ttk.Entry(master=master, textvariable=self.entry_score_text, width=8)
+        self.entry_score.grid(column=1, row=3, pady=5, sticky=(N, S))
+
+        l = ttk.Label(master=master, text="docente")
+        l.grid(column=0, row=5, padx=30, pady=5, sticky=(E))
+        self.button_person_text = StringVar(master)
+        self.button_person = ttk.Button(master=master, width=25, command=self.show_person_dialog)
+        self.button_person.grid(column=1, row=5, pady=5, sticky=(N, S))
+        self.button_person_text = MaximumDaysForPersonDialog.SELECT
+        if self.constraint.person_id is not None:
+            self.button_person_text = db.query.get(db.model.Person, self.constraint.person_id).fullname
+        self.button_person.configure(text=self.button_person_text)
+        self.button_person.state(['!disabled'])
+
+        l = ttk.Label(master=master, text="giorni massimi")
+        l.grid(column=0, row=8, padx=30, pady=5, sticky=(E))
+        self.combo_max_days_text = StringVar(master)
+        self.combo_max_days = ttk.Combobox(master=master, textvariable=self.combo_max_days_text, width=15)
+        self.combo_max_days.grid(column=1, row=8, pady=5, sticky=(N, S))
+        self.combo_max_days['values'] = ['1', '2', '3', '4', '5']
+        self.combo_max_days.set(str(self.constraint.max_days))
+
+        return self.entry_nome
+
+    def show_person_dialog(self):
+        persons_db = db.query.get_persons(school_id=gui.event.school_selected_dict['id'])
+        persons = dict()
+        for pe in db.model.PersonEnum:
+            persons[pe.value] = dict()
+        for person in persons_db:
+            persons[person.person_type.value][person.fullname] = person.id
+        dialog = gui.dialog.SelectPersonDialog(self, persons)
+        result = dialog.result
+        if result is not None:
+            fullname, pid = result
+            self.constraint.person_id = pid
+            self.button_person_text = fullname
+            self.button_person.configure(text=self.button_person_text)
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, pady=5, sticky=(N, W, E, S))
+
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, pady=5, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def ok(self, event=None):
+        if len(self.entry_nome_text.get()) < 1:
+            tkinter.messagebox.showwarning("Salvataggio restrizione", "Assegnare un nome alla restrizione")
+            return
+
+        if not self.entry_score_text.get().isdigit() or \
+                int(self.entry_score_text.get()) < 1 or \
+                int(self.entry_score_text.get()) > 100:
+            tkinter.messagebox.showwarning("Salvataggio restrizione",
+                                           "Il punteggio deve essere un numero compreso tra 1 e 100")
+            return
+
+        if self.constraint.person_id is None:
+            tkinter.messagebox.showwarning("Salvataggio restrizione", "Selezionare un docente")
+            return
+
+        self.constraint.identifier = self.entry_nome_text.get().strip()
+
+        self.constraint.score = 0 - int(self.entry_score_text.get())
+
+        self.constraint.max_days = int(self.combo_max_days_text.get())
+
+        if self.constraint.school_year is None:
+            self.constraint.school_year = db.query.get(db.model.SchoolYear, gui.event.schoolyear_selected_dict['id'])
+
+        super().ok(event=event)
+
+    def apply(self):
+        self.result = self.constraint
+

@@ -2,6 +2,7 @@ import logging
 import random
 from operator import itemgetter
 
+import db.model
 from engine.constraint import *
 from engine.struct import *
 
@@ -15,7 +16,14 @@ class SimpleEngineRand(Engine):
     def load(self, school_year_id: int):
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
         for row in rows:
-            self.engine_support.load_assignment_from_subject_in_class(int(row))
+            subject_in_class = db.query.get(db.model.SubjectInClass, int(row))
+            self.engine_support.load_assignment_from_subject_in_class(subject_in_class)
+            subject = db.query.get(db.model.Subject, subject_in_class.subject_id)
+            if subject.preferred_consecutive_hours is not None:
+                constraint = MaximumConsecutiveForSubject()
+                constraint.identifier = 'max consecutive ' + subject.identifier
+                constraint.configure(subject_id=subject.id, consecutive_hours=subject.preferred_consecutive_hours)
+                self.engine_support.constraints.add(constraint)
         constraint = NonDuplicateConstraint()
         constraint.identifier = "non-duplicate"
         self.engine_support.constraints.add(constraint)

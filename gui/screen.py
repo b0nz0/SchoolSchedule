@@ -41,6 +41,7 @@ ADD_ROOM_LABEL = "Aggiungi spazio"
 DELETE_ROOM_LABEL = "Elimina spazio"
 
 SUBJECT_SELECT_LABEL = "Materie"
+EDIT_SUBJECT_LABEL = "Modifica materia"
 ADD_SUBJECT_LABEL = "Aggiungi materia"
 DELETE_SUBJECT_LABEL = "Elimina materia"
 
@@ -402,9 +403,9 @@ def configure_subject_screen():
                                    selectmode=EXTENDED, height=20)
     scrollbar = ttk.Scrollbar(frame, orient=VERTICAL, command=subjects_listbox.yview)
     subjects_listbox.configure(yscroll=scrollbar.set)
-    subjects_listbox.grid(column=1, row=0, rowspan=2, sticky=(N, W, E, S))
+    subjects_listbox.grid(column=1, row=0, rowspan=3, sticky=(N, W, E, S))
     scrollbar.configure(command=subjects_listbox.yview)
-    scrollbar.grid(column=2, row=0, rowspan=2, sticky=(N, S))
+    scrollbar.grid(column=2, row=0, rowspan=3, sticky=(N, S))
     subjects_listbox.bind('<<TreeviewSelect>>', gui.event.subject_selected)
 
     subjects_listbox.column("#1", anchor=W, stretch=NO, width=200)
@@ -419,12 +420,16 @@ def configure_subject_screen():
     # bind double-click to edit
     subjects_listbox.bind("<Double-1>", gui.event.subject_edit)
 
-    subject_add_button = ttk.Button(frame, text=ADD_SUBJECT_LABEL, command=gui.event.subject_create)
+    subject_add_button = ttk.Button(frame, text=EDIT_SUBJECT_LABEL, command=gui.event.subject_edit)
     subject_add_button.grid(column=11, row=0, sticky=(E, W))
     subject_add_button.state(['!disabled'])
 
+    subject_add_button = ttk.Button(frame, text=ADD_SUBJECT_LABEL, command=gui.event.subject_create)
+    subject_add_button.grid(column=11, row=1, sticky=(E, W))
+    subject_add_button.state(['!disabled'])
+
     subject_delete_button = ttk.Button(frame, text=DELETE_SUBJECT_LABEL, command=gui.event.subject_delete)
-    subject_delete_button.grid(column=11, row=1, sticky=(E, W))
+    subject_delete_button.grid(column=11, row=2, sticky=(E, W))
     subject_delete_button.state(['disabled'])
 
     return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(

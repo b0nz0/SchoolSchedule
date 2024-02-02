@@ -110,24 +110,24 @@ class CreateSubjectDialog(simpledialog.Dialog):
         super().__init__(parent, title="Materia")
 
     def body(self, master):
-        l = ttk.Label(master=master, text="Scegli nome, ore settimanali di default e preferenza su ore consecutive giornaliere per la materia")
-        l.grid(column=0, row=0, sticky=(N, W, E, S))
+        l = ttk.Label(master=master, text="Scegli nome, ore settimanali di default e \npreferenza su ore consecutive giornaliere per la materia")
+        l.grid(column=0, row=0, pady=5)
 
         self.entry_text = StringVar(master)
         self.entry_text.set(self.subject.identifier)
         self.entry = ttk.Entry(master=master, textvariable=self.entry_text)
-        self.entry.grid(column=0, row=2, sticky=(N, W, E, S))
+        self.entry.grid(column=0, row=2, pady=5, sticky=(N, W, E, S))
 
         self.selected_def_hour = StringVar(master)
         self.def_hour_combo = ttk.Combobox(master=master, textvariable=self.selected_def_hour)
-        self.def_hour_combo.grid(column=0, row=10, sticky=(N, S))
+        self.def_hour_combo.grid(column=0, pady=5, row=10, sticky=(N, S))
         self.def_hour_combo['values'] = [CreateSubjectDialog.NO_PREFERENCE, '1', '2', '3', '4', '5', '6', '7', '8']
         if self.subject.default_hours is not None:
             self.def_hour_combo.set(str(self.subject.default_hours))
 
         self.selected_con_hour = StringVar(master)
         self.con_hour_combo = ttk.Combobox(master=master, textvariable=self.selected_con_hour)
-        self.con_hour_combo.grid(column=0, row=20, sticky=(N, S))
+        self.con_hour_combo.grid(column=0, pady=5, row=20, sticky=(N, S))
         self.con_hour_combo['values'] = [CreateSubjectDialog.NO_PREFERENCE, '1', '2', '3']
         if self.subject.preferred_consecutive_hours is not None:
             self.con_hour_combo.set(str(self.subject.preferred_consecutive_hours))
@@ -298,7 +298,8 @@ class CreateAssignmentDialog(simpledialog.Dialog):
         l.grid(column=0, row=4, padx=30, pady=5, sticky=(E))
         self.combo_subject = ttk.Combobox(master=master, textvariable=self.selected_subject)
         self.combo_subject.grid(column=1, row=4, sticky=(N, S, E, W))
-        self.combo_subject['values'] = list(self.options_subject.values())
+        self.combo_subject['values'] = [ident for ident, hours in self.options_subject.values()]
+        self.combo_subject.bind('<<ComboboxSelected>>', self.set_preferred_hours)
         if self.pre_subject is not None:
             self.combo_subject.set(self.pre_subject)
         else:
@@ -336,6 +337,16 @@ class CreateAssignmentDialog(simpledialog.Dialog):
 
         return self.combo_hours
 
+    def set_preferred_hours(self, event):
+        for sid in self.options_subject:
+            ident, hours = self.options_subject[sid]
+            if ident == self.selected_subject.get():
+                if hours is not None:
+                    self.combo_hours.set(str(hours))
+                else:
+                    self.combo_hours.set('1')
+                return
+
     def buttonbox(self):
         box = ttk.Frame(self)
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
@@ -362,8 +373,13 @@ class CreateAssignmentDialog(simpledialog.Dialog):
                 list(self.options_persons.values()).index(self.selected_person3.get())]
         else:
             person3 = None
-        subject = list(self.options_subject.keys())[
-            list(self.options_subject.values()).index(self.selected_subject.get())]
+#        subject = list(self.options_subject.keys())[
+#            list(self.options_subject.values()).index(self.selected_subject.get())]
+        for sid in self.options_subject:
+            ident, hours = self.options_subject[sid]
+            if ident == self.selected_subject.get():
+                subject = sid
+                break
         class_ = list(self.options_class.keys())[list(self.options_class.values()).index(self.selected_class.get())]
         if len(self.selected_room.get()) > 0:
             room = list(self.options_room.keys())[list(self.options_room.values()).index(self.selected_room.get())]

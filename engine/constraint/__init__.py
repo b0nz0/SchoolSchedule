@@ -4,3 +4,5 @@ from engine.constraint.no_comebacks import *
 from engine.constraint.boost import *
 from engine.constraint.fill_first_hours import *
 from engine.constraint.calendar_constraint import *
+from engine.constraint.max_consecutive_for_subject import *
+from engine.constraint.max_days_for_person import *

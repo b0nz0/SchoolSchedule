@@ -156,13 +156,18 @@ class Constraint:
                                            'longname': 'No sovrapposizioni'})
         cls.REGISTERED_CONSTRAINTS.append({'classname': 'FillFirstHours', 'shortname': 'FillFirstHours',
                                            'longname': 'Riempire le prime ore'})
-        cls.REGISTERED_CONSTRAINTS.append(
-            {'classname': 'MultipleConsecutiveForSubject', 'shortname': 'MultipleConsecutiveForSubject',
-             'longname': 'Coppia compito'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'MultipleConsecutiveForSubject',
+                                           'shortname': 'MultipleConsecutiveForSubject',
+                                           'longname': 'Coppia compito'})
         cls.REGISTERED_CONSTRAINTS.append({'classname': 'Boost', 'shortname': 'Boost',
                                            'longname': 'Aumenta probabilità'})
         cls.REGISTERED_CONSTRAINTS.append({'classname': 'CalendarDays', 'shortname': 'CalendarDays',
                                            'longname': 'Giorni disponibili'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'MaximumConsecutiveForSubject',
+                                           'shortname': 'MaximumConsecutiveForSubject',
+                                           'longname': 'Limita ore consecutive'})
+        cls.REGISTERED_CONSTRAINTS.append({'classname': 'MaximumDaysForPerson', 'shortname': 'MaximumDaysForPerson',
+                                           'longname': 'Giorni massimi a settimana'})
 
     @property
     def id(self):
@@ -224,36 +229,34 @@ class EngineSupport:
             self._assignments[subject_in_class_id] = Assignment(id=subject_in_class_id)
             return self._assignments[subject_in_class_id]
 
-    def load_assignment_from_subject_in_class(self, subject_in_class_id: int):
-        sic = db.query.get(db.model.SubjectInClass, id=subject_in_class_id)
-        if sic:
-            assignment = self.get_assignment(subject_in_class_id=subject_in_class_id)
-            assignment.subject_in_class_id = subject_in_class_id
-            assignment.data['class_id'] = sic.class_id
-            assignment.data['section'] = sic.class_.section.identifier
-            assignment.data['year'] = sic.class_.year.identifier
-            assignment.data['subject_id'] = sic.subject.id
-            assignment.data['subject'] = sic.subject.identifier
-            assignment.data['hours_total'] = sic.hours_total
-            assignment.data['persons'] = []
-            # add all persons to the assignment
-            for p in sic.persons:
-                d = dict()
-                d['person_id'] = p.id
-                d['person'] = p.fullname
-                assignment.data['persons'].append(d)
-                # link the identifier to each person, for later use
-                if p.id not in self._persons.keys():
-                    self._persons[p.id] = []
-                self._persons[p.id].append(subject_in_class_id)
-            if sic.room is not None:
-                assignment.data['room_id'] = sic.room.id
-                assignment.data['room'] = sic.room.identifier
-            else:
-                assignment.data['room_id'] = None
-                assignment.data['room'] = ''
-            assignment.score = 0
-            self.get_calendar(sic.class_id)
+    def load_assignment_from_subject_in_class(self, subject_in_class: db.model.SubjectInClass):
+        assignment = self.get_assignment(subject_in_class_id=subject_in_class.id)
+        assignment.subject_in_class_id = subject_in_class.id
+        assignment.data['class_id'] = subject_in_class.class_id
+        assignment.data['section'] = subject_in_class.class_.section.identifier
+        assignment.data['year'] = subject_in_class.class_.year.identifier
+        assignment.data['subject_id'] = subject_in_class.subject.id
+        assignment.data['subject'] = subject_in_class.subject.identifier
+        assignment.data['hours_total'] = subject_in_class.hours_total
+        assignment.data['persons'] = []
+        # add all persons to the assignment
+        for p in subject_in_class.persons:
+            d = dict()
+            d['person_id'] = p.id
+            d['person'] = p.fullname
+            assignment.data['persons'].append(d)
+            # link the identifier to each person, for later use
+            if p.id not in self._persons.keys():
+                self._persons[p.id] = []
+            self._persons[p.id].append(subject_in_class.id)
+        if subject_in_class.room is not None:
+            assignment.data['room_id'] = subject_in_class.room.id
+            assignment.data['room'] = subject_in_class.room.identifier
+        else:
+            assignment.data['room_id'] = None
+            assignment.data['room'] = ''
+        assignment.score = 0
+        self.get_calendar(subject_in_class.class_id)
 
     def get_calendar(self, class_id=None) -> Calendar:
         if class_id in self._calendars.keys():

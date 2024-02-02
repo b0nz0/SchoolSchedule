@@ -663,7 +663,7 @@ def _assignment_create(pperson1=None, pperson2=None, pperson3=None, psubject=Non
     for person in persons:
         options_person[person.id] = person.fullname
     for subject in subjects:
-        options_subject[subject.id] = subject.identifier
+        options_subject[subject.id] = (subject.identifier, subject.preferred_consecutive_hours)
     for class_ in classes:
         ident = f'{class_.year.identifier} {class_.section.identifier}'
         options_class[class_.id] = ident
@@ -798,7 +798,9 @@ def restriction_create():
     options = dict()
     for ckind in engine.struct.Constraint.REGISTERED_CONSTRAINTS:
         try:
-            options[ckind['longname']] = ckind['shortname']
+            dialog_obj = getattr(gui.constraint_dialog, ckind['shortname'] + 'Dialog')
+            if dialog_obj is not None:
+                options[ckind['longname']] = ckind['shortname']
         except AttributeError:
             pass
 
