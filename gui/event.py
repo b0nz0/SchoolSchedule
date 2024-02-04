@@ -353,9 +353,11 @@ def section_add():
         else:
             s.school_id = school_selected_dict['id']
             db.query.save(s)
-            ui.frames['school_select_frame'].destroy()
-            gui.screen.school_select_screen()
+            # ui.frames['school_select_frame'].destroy()
+            # gui.screen.school_select_screen()
             tkinter.messagebox.showinfo("Aggiunta sezione", "Sezione " + section_name + " inserita")
+
+    populate_school_configuration()
 
 
 def class_selected(event):
@@ -480,6 +482,7 @@ def subject_selected(event):
 def subject_delete():
     pass
 
+
 def subject_edit(event=None):
     ui = gui.setup.SchoolSchedulerGUI()
     subjects_ids = ui.widgets['subjects_listbox'].selection()
@@ -598,12 +601,15 @@ def assignment_edit(event=None):
         for person in persons:
             options_person[person.id] = person.fullname
         for subject in subjects:
-            options_subject[subject.id] = subject.identifier
+            options_subject[subject.id] = (subject.identifier, subject.default_hours)
         for class_ in classes:
             ident = f'{class_.year.identifier} {class_.section.identifier}'
             options_class[class_.id] = ident
         for room in rooms:
             options_room[room.id] = room.identifier
+
+        # sort by class identifiers
+        options_class = dict(sorted(options_class.items(), key=lambda x: x[1]))
 
         dialog = gui.dialog.EditAssignmentDialog(ui.root, assignment=assignment,
                                                  options_persons=options_person, options_subject=options_subject,
@@ -611,7 +617,7 @@ def assignment_edit(event=None):
         ret = dialog.result
         if ret is not None:
             db.query.save(ret)
-            tkinter.messagebox.showinfo("Modifica assegnazione", "Assegnazione modificata correttamente")
+            # tkinter.messagebox.showinfo("Modifica assegnazione", "Assegnazione modificata correttamente")
 
             populate_assignment_configuration()
 
@@ -663,13 +669,16 @@ def _assignment_create(pperson1=None, pperson2=None, pperson3=None, psubject=Non
     for person in persons:
         options_person[person.id] = person.fullname
     for subject in subjects:
-        options_subject[subject.id] = (subject.identifier, subject.preferred_consecutive_hours)
+        options_subject[subject.id] = (subject.identifier, subject.default_hours)
     for class_ in classes:
         ident = f'{class_.year.identifier} {class_.section.identifier}'
         options_class[class_.id] = ident
     options_room[None] = ''
     for room in rooms:
         options_room[room.id] = room.identifier
+
+    # sort by class identifiers
+    options_class = dict(sorted(options_class.items(), key=itemgetter(1)))
 
     dialog = gui.dialog.CreateAssignmentDialog(ui.root, options_persons=options_person, options_subject=options_subject,
                                                options_class=options_class, options_room=options_room,
@@ -700,7 +709,7 @@ def _assignment_create(pperson1=None, pperson2=None, pperson3=None, psubject=Non
                                            "Associazione classe-materia già presente. Inserimento ignorato")
         else:
             db.query.save(subject_in_class)
-            tkinter.messagebox.showinfo("Aggiunta Assegnazione", "Associazione aggiunta")
+            # tkinter.messagebox.showinfo("Aggiunta Assegnazione", "Associazione aggiunta")
 
         populate_assignment_configuration()
 

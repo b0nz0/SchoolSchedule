@@ -647,7 +647,7 @@ def configure_assignment_screen():
     assignment_listbox.heading("#5", text="Aula", command=lambda _col="#5": \
         gui.event.treeview_sort_column(assignment_listbox, _col, "Aula", False))
 
-    assignment_edit_button = ttk.Button(frame, text=EDIT_RESTRICTION_LABEL, command=gui.event.assignment_edit)
+    assignment_edit_button = ttk.Button(frame, text=EDIT_ASSIGNMENT_LABEL, command=gui.event.assignment_edit)
     assignment_edit_button.grid(column=11, row=0, padx=30, sticky=(E, W))
     assignment_edit_button.state(['!disabled'])
 

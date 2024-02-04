@@ -242,7 +242,7 @@ class CreateAssignmentDialog(simpledialog.Dialog):
         self.options_subject = options_subject
         self.options_class = options_class
         self.options_room = options_room
-        self.options_hours = {1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6'}
+        self.options_hours = {1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10'}
         self.pre_person1 = pre_person1
         self.pre_person2 = pre_person2
         self.pre_person3 = pre_person3
@@ -468,7 +468,8 @@ class EditAssignmentDialog(simpledialog.Dialog):
         l.grid(column=0, row=4, padx=30, pady=5, sticky=(E))
         self.combo_subject = ttk.Combobox(master=master, textvariable=self.selected_subject)
         self.combo_subject.grid(column=1, row=4, sticky=(N, S, E, W))
-        self.combo_subject['values'] = list(self.options_subject.values())
+        self.combo_subject['values'] = [ident for ident, hours in self.options_subject.values()]
+        self.combo_subject.bind('<<ComboboxSelected>>', self.set_preferred_hours)
         if self.assignment.subject is not None:
             self.combo_subject.set(self.assignment.subject.identifier)
         else:
@@ -512,6 +513,16 @@ class EditAssignmentDialog(simpledialog.Dialog):
 
         return self.combo_hours
 
+    def set_preferred_hours(self, event):
+        for sid in self.options_subject:
+            ident, hours = self.options_subject[sid]
+            if ident == self.selected_subject.get():
+                if hours is not None:
+                    self.combo_hours.set(str(hours))
+                else:
+                    self.combo_hours.set('1')
+                return
+
     def buttonbox(self):
         box = ttk.Frame(self)
         ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
@@ -546,8 +557,13 @@ class EditAssignmentDialog(simpledialog.Dialog):
             if person_id not in [p.id for p in self.assignment.persons]:
                 self.assignment.persons.append(db.query.get(db.model.Person, person_id))
 
-        subject_id = list(self.options_subject.keys())[
-            list(self.options_subject.values()).index(self.selected_subject.get())]
+        #        subject = list(self.options_subject.keys())[
+        #            list(self.options_subject.values()).index(self.selected_subject.get())]
+        for sid in self.options_subject:
+            ident, hours = self.options_subject[sid]
+            if ident == self.selected_subject.get():
+                subject = sid
+                break
         if self.assignment.subject is None or subject_id != self.assignment.subject.id:
             self.assignment.subject = db.query.get(db.model.Subject, subject_id)
         class_id = list(self.options_class.keys())[list(self.options_class.values()).index(self.selected_class.get())]

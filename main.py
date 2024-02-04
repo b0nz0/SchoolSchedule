@@ -617,6 +617,49 @@ def populate_DB():
     c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
     db.query.save(c.to_model())
 
+def temp_load():
+    s = db.query.get(School, 1)
+
+    h6 = Hour()
+    h6.start = time(13, 0)
+    h6.minutes = 60
+    h6.school = s
+    h6 = db.query.save(h6)
+
+    d = DailyHour()
+    d.week_day = WeekDayEnum.MONDAY
+    d.plan_id = 1
+    d.hour = h6
+    d.ordinal = 6
+    db.query.save(d)
+
+    d = DailyHour()
+    d.week_day = WeekDayEnum.TUESDAY
+    d.plan_id = 1
+    d.hour = h6
+    d.ordinal = 6
+    db.query.save(d)
+
+    d = DailyHour()
+    d.week_day = WeekDayEnum.WEDNESDAY
+    d.plan_id = 1
+    d.hour = h6
+    d.ordinal = 6
+    db.query.save(d)
+
+    d = DailyHour()
+    d.week_day = WeekDayEnum.THURSDAY
+    d.plan_id = 1
+    d.hour = h6
+    d.ordinal = 6
+    db.query.save(d)
+
+    d = DailyHour()
+    d.week_day = WeekDayEnum.FRIDAY
+    d.plan_id = 1
+    d.hour = h6
+    d.ordinal = 6
+    db.query.save(d)
 
 def test():
     s = db.query.get(School, 1)
@@ -698,7 +741,8 @@ def shutdown():
 if __name__ == '__main__':
     startup()
     # populate_DB()
-    test()
+    # test()
+    # temp_load()
     ui = gui.setup.SchoolSchedulerGUI()
     gui.screen.school_select_screen()
     root = ui.root
