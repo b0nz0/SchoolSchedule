@@ -1,15 +1,21 @@
-from db.model import *
-import db.connection, db.query, db.model
-from engine.simple_engine_rand import SimpleEngineRand
-from engine.local_optimal import LocalOptimalEngine
-import gui.setup, gui.screen
-import engine.struct, engine.constraint
-from tkinter import *
+import logging
+import logging.handlers
 import pickle
-import logging, logging.handlers
-from datetime import datetime, time
 import shutil
-
+from datetime import datetime, time
+from tkinter import *
+import multiprocessing as mp
+import db.connection
+import db.model
+import db.query
+import engine.constraint
+import engine.struct
+import gui.screen
+import gui.setup
+from db.model import *
+from engine.local_optimal import LocalOptimalEngine
+from engine.simple_engine_rand import SimpleEngineRand
+from engine.process_coordinator import ProcessCoordinator
 
 def populate_DB():
     # one school
@@ -713,7 +719,7 @@ def test():
 
 def startup():
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     handler = logging.handlers.RotatingFileHandler(
         filename='school_schedule.log', maxBytes=10000000, backupCount=5)
     bf = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -728,6 +734,8 @@ def startup():
     _ui.startup()
     engine.struct.Constraint.load_registered_constraints()
 
+    mp.set_start_method('spawn')
+
 
 def shutdown():
     db.connection.unconnect()
@@ -736,7 +744,10 @@ def shutdown():
     newname = name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.' + ext
     shutil.copy2(sqlite_path, 'backup/' + newname)
     logging.info(f'backup file created ({newname})')
-
+    pc = ProcessCoordinator()
+    if pc.is_running():
+        logging.warning("engine process stopped while running")
+        pc.stop()
 
 if __name__ == '__main__':
     startup()

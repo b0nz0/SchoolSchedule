@@ -1,4 +1,5 @@
 import tkinter.messagebox
+from datetime import datetime
 from tkinter import *
 from tkinter import ttk, simpledialog
 import db, db.model
@@ -110,7 +111,8 @@ class CreateSubjectDialog(simpledialog.Dialog):
         super().__init__(parent, title="Materia")
 
     def body(self, master):
-        l = ttk.Label(master=master, text="Scegli nome, ore settimanali di default e \npreferenza su ore consecutive giornaliere per la materia")
+        l = ttk.Label(master=master,
+                      text="Scegli nome, ore settimanali di default e \npreferenza su ore consecutive giornaliere per la materia")
         l.grid(column=0, row=0, pady=5)
 
         self.entry_text = StringVar(master)
@@ -373,8 +375,8 @@ class CreateAssignmentDialog(simpledialog.Dialog):
                 list(self.options_persons.values()).index(self.selected_person3.get())]
         else:
             person3 = None
-#        subject = list(self.options_subject.keys())[
-#            list(self.options_subject.values()).index(self.selected_subject.get())]
+        #        subject = list(self.options_subject.keys())[
+        #            list(self.options_subject.values()).index(self.selected_subject.get())]
         for sid in self.options_subject:
             ident, hours = self.options_subject[sid]
             if ident == self.selected_subject.get():
@@ -562,7 +564,7 @@ class EditAssignmentDialog(simpledialog.Dialog):
         for sid in self.options_subject:
             ident, hours = self.options_subject[sid]
             if ident == self.selected_subject.get():
-                subject = sid
+                subject_id = sid
                 break
         if self.assignment.subject is None or subject_id != self.assignment.subject.id:
             self.assignment.subject = db.query.get(db.model.Subject, subject_id)
@@ -752,3 +754,122 @@ class NewRestrictionDialog(simpledialog.Dialog):
 
     def apply(self):
         self.result = self.selected_option.get(), self.options[self.selected_option.get()]
+
+
+class NewProcessDialog(simpledialog.Dialog):
+    CYCLES_MAX = 10000
+
+    def __init__(self, parent, options):
+        self.entry = None
+        self.entry_text = None
+        self.result = None
+        self.parent = parent
+        self.options = options
+        self.selected_option = None
+        self.options_combo = None
+        self.process = None
+
+        super().__init__(parent, title="Avvia una nuova elaborazione")
+
+    def body(self, master):
+        self.geometry("400x200")
+        master.columnconfigure(1, minsize=300)
+        l = ttk.Label(master=master,
+                      text=f'Scegli il tipo di motore e il numero di cicli di esecuzione (max {NewProcessDialog.CYCLES_MAX})',
+                      anchor=CENTER, justify=CENTER)
+        l.grid(column=0, row=0, pady=10, sticky=(N, W, E, S))
+
+        self.selected_option = StringVar(master)
+        self.options_combo = ttk.Combobox(master=master, textvariable=self.selected_option)
+        self.options_combo.grid(column=0, row=1, pady=5, sticky=(N, S))
+        self.options_combo['values'] = list(self.options.keys())
+        self.options_combo.current(2)
+
+        self.entry_text = StringVar(master)
+        self.entry_text.set("1")
+        self.entry = ttk.Entry(master=master, textvariable=self.entry_text)
+        self.entry.grid(column=0, row=2, sticky=(N, S))
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        cancel_button = ttk.Button(box, text="Cancel", width=10, command=self.cancel)
+        cancel_button.grid(column=0, row=3, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+    def ok(self, event=None):
+        if len(self.entry.get()) < 1:
+            tkinter.messagebox.showwarning("Nuova elaborazione", "Indicare il numero di cicli")
+            return
+
+        if not self.entry.get().isdigit() or \
+                int(self.entry.get()) < 1 or \
+                int(self.entry.get()) > NewProcessDialog.CYCLES_MAX:
+            tkinter.messagebox.showwarning("Nuova elaborazione",
+                                           f'Il numero di cicli deve essere un numero compreso tra 1 e {NewProcessDialog.CYCLES_MAX}')
+            return
+
+        self.process = db.model.Process()
+        self.process.kind = self.selected_option.get()
+        self.process.cycles = int(self.entry.get())
+        self.process.status = "NUOVO"
+        self.process.date_start = None
+        self.process.date_end = None
+        self.process.files = []
+
+        super().ok(event=event)
+
+    def apply(self):
+        self.result = self.process
+
+
+class ShowProcessDialog(simpledialog.Dialog):
+    def __init__(self, parent, process):
+        self.result = None
+        self.parent = parent
+        self.process = process
+
+        super().__init__(parent, title="Dettagli elaborazione")
+
+    def body(self, master):
+        master.columnconfigure(1, minsize=300)
+        l = ttk.Label(master=master, text="Tipo elaborazione")
+        l.grid(column=0, row=1, padx=30, pady=5, sticky=(E))
+        l = ttk.Label(master=master, text=self.process.kind)
+        l.grid(column=1, row=1, padx=30, pady=5, sticky=(W))
+        l = ttk.Label(master=master, text="Numero di cicli")
+        l.grid(column=0, row=2, padx=30, pady=5, sticky=(E))
+        l = ttk.Label(master=master, text=str(self.process.cycles))
+        l.grid(column=1, row=2, padx=30, pady=5, sticky=(W))
+        l = ttk.Label(master=master, text="Stato")
+        l.grid(column=0, row=3, padx=30, pady=5, sticky=(E))
+        l = ttk.Label(master=master, text=self.process.status)
+        l.grid(column=1, row=3, padx=30, pady=5, sticky=(W))
+
+        date_start = '-' if self.process.date_start is None else \
+            self.process.date_start.strftime('%Y-%m-%d_%H-%M-%S')
+        date_end = '-' if self.process.date_end is None else \
+            self.process.date_end.strftime('%Y-%m-%d_%H-%M-%S')
+        l = ttk.Label(master=master, text="Avviato")
+        l.grid(column=0, row=10, padx=30, pady=5, sticky=(E))
+        l = ttk.Label(master=master, text=date_start)
+        l.grid(column=1, row=10, padx=30, pady=5, sticky=(W))
+        l = ttk.Label(master=master, text="Completato")
+        l.grid(column=0, row=11, padx=30, pady=5, sticky=(E))
+        l = ttk.Label(master=master, text=date_end)
+        l.grid(column=1, row=11, padx=30, pady=5, sticky=(W))
+
+    def buttonbox(self):
+        box = ttk.Frame(self)
+        ok_button = ttk.Button(box, text="OK", width=10, command=self.ok)
+        ok_button.grid(column=0, row=2, sticky=(N, W, E, S))
+
+        box.pack()
+
+        self.bind("<Return>", self.ok)

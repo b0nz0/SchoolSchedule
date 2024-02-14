@@ -1,12 +1,14 @@
 import logging
 import tkinter.messagebox
 import tkinter.simpledialog
+from datetime import datetime
 from operator import itemgetter
 from tkinter import END
 
 import db.model
 import db.query
 import engine.struct
+from engine import simple_engine, simple_engine_rand, local_optimal, process_coordinator
 import gui.constraint_dialog
 import gui.dialog
 import gui.screen
@@ -26,7 +28,7 @@ persons_dict = {}
 assignment_dict = {}
 assignment_list = []
 restriction_list = []
-
+process_list = []
 
 def treeview_sort_column(tv, col, text, reverse):
     l = [(tv.set(k, col), k) for k in tv.get_children('')]
@@ -231,6 +233,30 @@ def populate_timetable_combo():
         timetable_dict[plan.identifier] = plan.id
     ui.widgets['timetables_combo']['values'] = list(timetable_dict.keys())
 
+def populate_process_configuration():
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    processes = db.query.get_processes(school_year_id=schoolyear_selected_dict['id'])
+    global process_list
+    process_list = []
+
+    # Clear the treeview list items
+    for item in ui.widgets['process_listbox'].get_children():
+        ui.widgets['process_listbox'].delete(item)
+
+    for process in processes:
+        status = process.status
+        type_ = process.kind
+        date_start = '-' if process.date_start is None else \
+            process.date_start.strftime('%Y-%m-%d_%H-%M-%S')
+        date_end = '-' if process.date_end is None else \
+            process.date_end.strftime('%Y-%m-%d_%H-%M-%S')
+        dates = f'{date_start} -- {date_end}'
+        process_list.append((process.id, dates, type_, status))
+
+    for res in process_list:
+        ui.widgets['process_listbox'].insert(parent="", index="end", iid=res[0],
+                                                 values=res[1:])
 
 def school_selected(event):
     ui = gui.setup.SchoolSchedulerGUI()
@@ -287,6 +313,7 @@ def schoolyear_selected(event):
     ui.widgets['person_mgmt_button'].state(['!disabled'])
     ui.widgets['assignment_mgmt_button'].state(['!disabled'])
     ui.widgets['restriction_mgmt_button'].state(['!disabled'])
+    ui.widgets['process_mgmt_button'].state(['!disabled'])
 
 
 def schoolyear_delete():
@@ -871,6 +898,36 @@ def restriction_duplicate():
         populate_restriction_configuration()
 
 
+def process_detail(event=None):
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    process_ids = ui.widgets['process_listbox'].selection()
+    if len(process_ids) != 1:
+        tkinter.messagebox.showwarning("Dettagli elaborazione", "Selezionare una elaborazione")
+        return None
+
+    process = db.query.get(db.model.Process, int(process_ids[0]))
+
+    dialog = gui.dialog.ShowProcessDialog(parent=ui.root, process=process)
+
+
+def process_new():
+    ui = gui.setup.SchoolSchedulerGUI()
+
+    options = {"Simple Engine": simple_engine.SimpleEngine,
+               "Randomized Engine": simple_engine_rand.SimpleEngineRand,
+               "Local Optimal Engine": local_optimal.LocalOptimalEngine}
+
+    dialog = gui.dialog.NewProcessDialog(parent=ui.root, options=options)
+
+    process = dialog.result
+    if process is not None:
+        process.school_year_id = schoolyear_selected_dict['id']
+        db.query.save(process)
+        pc = process_coordinator.ProcessCoordinator()
+        pc.start(process)
+        populate_process_configuration()
+
 def return_home():
     switch_frame(None, 'school_select_frame')
 
@@ -900,4 +957,10 @@ def switch_frame(from_name, to_name):
             gui.screen.configure_assignment_screen()
         elif to_name == "restriction_configure_frame":
             gui.screen.configure_restriction_screen()
+        elif to_name == "process_configure_frame":
+            gui.screen.process_screen()
     ui.root.geometry(gui.screen.geometries[to_name])
+
+
+
+

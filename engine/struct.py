@@ -336,7 +336,9 @@ class EngineSupport:
                             wstr = wstr + f'{subject} ({persons_string});'
                 ff.write(wstr + '\n')
 
-        with open('debug_' + filename, 'w') as ff:
+        path, ext = filename.split('.')
+        newfilename = path + '_debug' + '.' + ext
+        with open(newfilename, 'w') as ff:
             for class_id in self.get_calendar_ids():
                 wstr = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
                 for hour in range(1, 11):

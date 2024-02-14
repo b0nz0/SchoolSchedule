@@ -394,6 +394,24 @@ def get_constraints(school_year_id: int) -> List[engine.struct.Constraint]:
     except (Exception) as error:
         traceback.print_exc()
 
+def get_processes(school_year_id: int) -> List[Process]:
+    try:
+        with db.connection.active_session() as session:
+            if school_year_id is not None:
+                stmt = select(Process).where(Process.school_year_id == school_year_id).order_by(Process.id.desc())
+            else:
+                stmt = select(Process).order_by(Process.id)
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
+
+def get_running_processes() -> List[Process]:
+    try:
+        with db.connection.active_session() as session:
+            stmt = select(Process).where(Process.status == "ESECUZIONE")
+            return session.execute(stmt).scalars().all()
+    except (Exception) as error:
+        traceback.print_exc()
 
 def dump_school_year(id: int) -> str:
     try:
@@ -456,4 +474,5 @@ def dump_subject_in_class(id: int) -> str:
 
     except (Exception) as error:
         traceback.print_exc()
+
 

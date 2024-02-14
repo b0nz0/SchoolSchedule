@@ -269,3 +269,33 @@ class Constraint(Base):
 
     def __repr__(self) -> str:
         return f"{self.identifier} of kind {self.kind}"
+
+class File(Base):
+    __tablename__ = "file"
+
+    process_id: Mapped[int] = mapped_column(ForeignKey("process.id"))
+    process: Mapped["Process"] = relationship(back_populates="files")
+
+    filename: Mapped[str]
+
+    def __repr__(self) -> str:
+        return f"{self.filename}"
+
+class Process(Base):
+    __tablename__ = "process"
+
+    school_year_id: Mapped[int] = mapped_column(ForeignKey("school_year.id"))
+    school_year: Mapped["SchoolYear"] = relationship()
+
+    status: Mapped[str]
+    date_start: Mapped[datetime]
+    date_end: Mapped[datetime]
+    kind: Mapped[str]
+    cycles: Mapped[int]
+
+    files: Mapped[List["File"]] = relationship(
+        back_populates="process", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"process {self.id} of kind {self.kind} ({self.status})"
+

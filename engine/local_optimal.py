@@ -59,7 +59,7 @@ class LocalOptimalEngine(Engine):
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):
                         if self.engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day,
-                                                                   hour_ordinal=hour) == Calendar.AVAILABLE:
+                                                                          hour_ordinal=hour) == Calendar.AVAILABLE:
                             for assignment in [a for a in assignments_remaining.keys() \
                                                if assignments_remaining[a] > 0 and a.data['class_id'] == calendar_id]:
                                 subject = assignment.data['subject']
@@ -94,7 +94,7 @@ class LocalOptimalEngine(Engine):
                         logging.debug(
                             f'impossibile trovare un candidato, provo una riassegnazione della classe {class_id}@{sugg_day} - ora {sugg_hour}')
                         candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=sugg_day,
-                                                                            hour_ordinal=sugg_hour)
+                                                                                   hour_ordinal=sugg_hour)
                         if type(candidate) == Assignment:
                             self.engine_support.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
                             assignments_remaining[candidate] = assignments_remaining[candidate] + 1
@@ -115,8 +115,8 @@ class LocalOptimalEngine(Engine):
                     f'assign best candidate: class={calendar_id}, score={max_score}, day={day.value}, \
                         hour={hour} out of {len(candidates)}')
                 self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
-                                    class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score,
-                                    constraint_scores=constraint_scores)
+                                           class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score,
+                                           constraint_scores=constraint_scores)
                 assignments_remaining[assignment] = assignments_remaining[assignment] - 1
 
         self._closed = working
@@ -139,7 +139,8 @@ class LocalOptimalEngine(Engine):
                 continue
             for person in [x['person_id'] for x in assignment.data['persons']]:
                 if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
-                    score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
+                    score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day,
+                                   hour=hour)
                     constraint_scores.append((c, score))
                     overall_score = overall_score + score
                     continue

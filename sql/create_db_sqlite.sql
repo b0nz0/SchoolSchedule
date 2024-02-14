@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS "class_" (
 	"id"	INTEGER,
 	"start_datetime"	DATETIME,
 	"log_user"	VARCHAR,
-	PRIMARY KEY("id" AUTOINCREMENT),
+	FOREIGN KEY("school_year_id") REFERENCES "school_year"("id"),
 	FOREIGN KEY("year_id") REFERENCES "year"("id"),
 	FOREIGN KEY("section_id") REFERENCES "section"("id"),
-	FOREIGN KEY("school_year_id") REFERENCES "school_year"("id")
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 DROP TABLE IF EXISTS "daily_hour";
 CREATE TABLE IF NOT EXISTS "daily_hour" (
@@ -104,9 +104,9 @@ CREATE TABLE IF NOT EXISTS "daily_hour" (
 	"id"	INTEGER,
 	"start_datetime"	DATETIME,
 	"log_user"	VARCHAR,
-	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("hour_id") REFERENCES "hour"("id"),
-	FOREIGN KEY("plan_id") REFERENCES "plan"("id")
+	FOREIGN KEY("plan_id") REFERENCES "plan"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 DROP TABLE IF EXISTS "constraint";
 CREATE TABLE IF NOT EXISTS "constraint" (
@@ -119,8 +119,8 @@ CREATE TABLE IF NOT EXISTS "constraint" (
 	"id"	INTEGER,
 	"start_datetime"	DATETIME,
 	"log_user"	VARCHAR,
-	PRIMARY KEY("id" AUTOINCREMENT),
-	FOREIGN KEY("school_year_id") REFERENCES "school_year"("id")
+	FOREIGN KEY("school_year_id") REFERENCES "school_year"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 DROP TABLE IF EXISTS "subject_in_class";
 CREATE TABLE IF NOT EXISTS "subject_in_class" (
@@ -132,10 +132,10 @@ CREATE TABLE IF NOT EXISTS "subject_in_class" (
 	"id"	INTEGER,
 	"start_datetime"	DATETIME,
 	"log_user"	VARCHAR,
-	PRIMARY KEY("id" AUTOINCREMENT),
-	FOREIGN KEY("room_id") REFERENCES "room"("id"),
+	FOREIGN KEY("class_id") REFERENCES "class_"("id"),
 	FOREIGN KEY("subject_id") REFERENCES "subject"("id"),
-	FOREIGN KEY("class_id") REFERENCES "class_"("id")
+	FOREIGN KEY("room_id") REFERENCES "room"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 DROP TABLE IF EXISTS "class_plan";
 CREATE TABLE IF NOT EXISTS "class_plan" (
@@ -144,9 +144,9 @@ CREATE TABLE IF NOT EXISTS "class_plan" (
 	"id"	INTEGER,
 	"start_datetime"	DATETIME,
 	"log_user"	VARCHAR,
-	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("plan_id") REFERENCES "plan"("id"),
-	FOREIGN KEY("class_id") REFERENCES "class_"("id")
+	FOREIGN KEY("class_id") REFERENCES "class_"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 DROP TABLE IF EXISTS "person_to_subject_in_class";
 CREATE TABLE IF NOT EXISTS "person_to_subject_in_class" (
@@ -155,9 +155,9 @@ CREATE TABLE IF NOT EXISTS "person_to_subject_in_class" (
 	"id"	INTEGER,
 	"start_datetime"	DATETIME,
 	"log_user"	VARCHAR,
-	PRIMARY KEY("id" AUTOINCREMENT),
+	FOREIGN KEY("person_id") REFERENCES "person"("id"),
 	FOREIGN KEY("subject_in_class_id") REFERENCES "subject_in_class"("id"),
-	FOREIGN KEY("person_id") REFERENCES "person"("id")
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 DROP TABLE IF EXISTS "subject";
 CREATE TABLE IF NOT EXISTS "subject" (
@@ -168,7 +168,30 @@ CREATE TABLE IF NOT EXISTS "subject" (
 	"id"	INTEGER,
 	"start_datetime"	DATETIME,
 	"log_user"	VARCHAR,
-	PRIMARY KEY("id" AUTOINCREMENT),
-	FOREIGN KEY("school_id") REFERENCES "school"("id")
+	FOREIGN KEY("school_id") REFERENCES "school"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+DROP TABLE IF EXISTS "file";
+CREATE TABLE IF NOT EXISTS "file" (
+	"filename"	VARCHAR(500) NOT NULL,
+	"process_id"	INTEGER NOT NULL,
+	"id"	INTEGER,
+	"start_datetime"	DATETIME,
+	"log_user"	VARCHAR,
+	FOREIGN KEY("process_id") REFERENCES "process"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+DROP TABLE IF EXISTS "process";
+CREATE TABLE IF NOT EXISTS "process" (
+	"school_year_id"	INTEGER NOT NULL,
+	"status"	VARCHAR(30),
+	"kind"	VARCHAR(150),
+	"date_start"	TIME NOT NULL,
+	"date_end"	TIME NOT NULL,
+	"id"	INTEGER,
+	"start_datetime"	DATETIME,
+	"log_user"	VARCHAR,
+	FOREIGN KEY("school_year_id") REFERENCES "school_year"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
 );
 COMMIT;

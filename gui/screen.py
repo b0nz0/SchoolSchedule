@@ -65,6 +65,9 @@ ADD_RESTRICTION_LABEL = "Aggiungi restrizione"
 DELETE_RESTRICTION_LABEL = "Elimina restrizione"
 DUPLICATE_RESTRICTION_LABEL = "Duplica restrizione"
 
+PROCESS_SELECT_LABEL = "Elaborazioni"
+PROCESS_DETAIL_LABEL = "Dettagio elaborazione"
+PROCESS_START_LABEL = "Avvia nuova elaborazione"
 
 def school_select_screen():
     ui = gui.setup.SchoolSchedulerGUI()
@@ -161,7 +164,8 @@ def school_select_screen():
     ass_mgmt_button.grid(column=0, row=13, columnspan=2, sticky=(N, E, W, S))
     ass_mgmt_button.state(['disabled'])
 
-    proc_mgmt_button = ttk.Button(frame, text=PROCESS_LABEL)
+    proc_mgmt_button = ttk.Button(frame, text=PROCESS_LABEL, command=lambda: gui.event.switch_frame(
+        "school_select_frame", "process_configure_frame"))
     proc_mgmt_button.grid(column=11, row=13, columnspan=2, sticky=(N, E, W, S))
     proc_mgmt_button.state(['disabled'])
 
@@ -209,6 +213,7 @@ def school_select_screen():
     ui.widgets['person_mgmt_button'] = pers_mgmt_button
     ui.widgets['assignment_mgmt_button'] = ass_mgmt_button
     ui.widgets['restriction_mgmt_button'] = rest_mgmt_button
+    ui.widgets['process_mgmt_button'] = proc_mgmt_button
 
     gui.event.populate_school_combo()
 
@@ -748,3 +753,65 @@ def configure_restriction_screen():
     ui.widgets['restriction_duplicate_button'] = restriction_duplicate_button
 
     gui.event.populate_restriction_configuration()
+
+
+def process_screen():
+    ui = gui.setup.SchoolSchedulerGUI()
+    root = ui.root
+    global geometries
+    geometries['process_configure_frame'] = '1300x600'
+    root.geometry('1300x600')
+
+    frame = ttk.Frame(root, padding="3 3 12 12")
+    frame.grid(column=0, row=0)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+
+    # past processes selection
+    processes_label = ttk.Label(frame, text=PROCESS_SELECT_LABEL)
+    processes_label.grid(column=0, row=0, rowspan=3, padx=30, sticky=(W, E))
+
+    process_listbox = ttk.Treeview(frame, show="headings", column=("c1", "c2", "c3"),
+                                   selectmode=BROWSE, height=20)
+    process_listbox.grid(column=1, row=0, rowspan=4, sticky=(N, W, E, S))
+    # bind double-click to details
+    process_listbox.bind("<Double-1>", gui.event.process_detail)
+
+    scrollbary = ttk.Scrollbar(frame, orient=VERTICAL, command=process_listbox.yview)
+    process_listbox.configure(yscroll=scrollbary.set)
+    scrollbary.configure(command=process_listbox.yview)
+    scrollbary.grid(column=2, row=0, rowspan=4, sticky=(N, S))
+    scrollbarx = ttk.Scrollbar(frame, orient=HORIZONTAL, command=process_listbox.xview)
+    process_listbox.configure(xscroll=scrollbarx.set)
+    scrollbarx.configure(command=process_listbox.xview)
+    scrollbarx.grid(column=1, row=4, rowspan=1, sticky=(E, W))
+
+    process_listbox.column("#1", anchor=W, stretch=NO, width=360)
+    process_listbox.heading("#1", text="Inizio-Fine", command=lambda _col="#1": \
+        gui.event.treeview_sort_column(process_listbox, _col, "Inizio-Fine", False))
+    process_listbox.column("#2", anchor=CENTER, stretch=NO, width=300)
+    process_listbox.heading("#2", text="Tipo", command=lambda _col="#2": \
+        gui.event.treeview_sort_column(process_listbox, _col, "Tipo", False))
+    process_listbox.column("#3", anchor=CENTER, stretch=NO, width=100)
+    process_listbox.heading("#3", text="Stato", command=lambda _col="#3": \
+        gui.event.treeview_sort_column(process_listbox, _col, "Stato", False))
+
+    process_detail_button = ttk.Button(frame, text=PROCESS_DETAIL_LABEL, command=gui.event.process_detail)
+    process_detail_button.grid(column=11, row=0, padx=30, sticky=(E, W))
+    process_detail_button.state(['!disabled'])
+
+    process_new_button = ttk.Button(frame, text=PROCESS_START_LABEL, command=gui.event.process_new)
+    process_new_button.grid(column=11, row=1, padx=30, sticky=(E, W))
+    process_new_button.state(['!disabled'])
+
+    return_button = ttk.Button(frame, text=RETURN_HOME, command=lambda: gui.event.switch_frame(
+        "process_configure_frame", "school_select_frame"))
+    return_button.grid(column=0, row=10, columnspan=20, pady=30, sticky=(N, S))
+    return_button.state(['!disabled'])
+
+    ui.frames['process_configure_frame'] = frame
+    ui.widgets['process_listbox'] = process_listbox
+    ui.widgets['process_detail_button'] = process_detail_button
+    ui.widgets['process_new_button'] = process_new_button
+
+    gui.event.populate_process_configuration()
