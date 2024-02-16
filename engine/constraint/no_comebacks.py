@@ -8,7 +8,7 @@ class NoComebacks(Constraint):
 
     def __init__(self) -> None:
         super().__init__()
-        self.score = -50
+        self.score = -10
         self.weight = 20
         self.register_trigger(None)
 

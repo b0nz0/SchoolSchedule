@@ -11,7 +11,7 @@ from engine import simple_engine, simple_engine_rand, local_optimal
 
 def _run(process, engine):
     logger = mp.get_logger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     handler = logging.handlers.RotatingFileHandler(
         filename='school_schedule.log', maxBytes=10000000, backupCount=5)
     bf = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -33,8 +33,17 @@ def _run(process, engine):
     else:
         process.status = "APERTO"
 
-    filename = 'elaborazioni/calendario_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.csv'
-    engine.write_calendars_to_csv(filename=filename)
+    path = 'elaborazioni/calendario_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    filename = path + '.csv'
+    filename_debug = path + '_debug' + '.csv'
+    engine.write_calendars_to_csv(filename=filename, filename_debug=filename_debug)
+
+    file = db.model.File()
+    file.filename = filename
+    file_debug = db.model.File()
+    file_debug.filename = filename_debug
+    process.files.append(file)
+    process.files.append(file_debug)
     process.date_end = datetime.now()
     db.query.save(process)
     db.connection.unconnect()
@@ -64,6 +73,8 @@ class ProcessCoordinator(object):
         assert engine_class is not None, f'engine class unavailable for process kind {self.process.kind}'
         self.engine = engine_class()
         self.engine.load(school_year_id=self.process.school_year_id)
+        for c in db.query.get_constraints(school_year_id=self.process.school_year_id):
+            self.engine.add_constraint(c)
         self.process.status = "ESECUZIONE"
         self.proc = mp.Process(target=_run, args=(self.process, self.engine,))
         self.proc.start()

@@ -315,11 +315,11 @@ class EngineSupport:
     def get_calendar_ids(self):
         return self._calendars.keys()
 
-    def write_calendars_to_csv(self, filename):
+    def write_calendars_to_csv(self, filename, filename_debug):
         with open(filename, 'w') as ff:
             for class_id in self.get_calendar_ids():
-                wstr = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: \
-                    {self.get_overall_score(class_id=class_id)}'
+                class_ = db.query.get(db.model.Class, class_id)
+                wstr = f'\nclasse {class_};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
                 for hour in range(1, 11):
                     wstr = wstr + f'\n{hour};'
                     for day in db.model.WeekDayEnum:
@@ -335,27 +335,63 @@ class EngineSupport:
                             persons_string = ",".join(persons_list)
                             wstr = wstr + f'{subject} ({persons_string});'
                 ff.write(wstr + '\n')
-
-        path, ext = filename.split('.')
-        newfilename = path + '_debug' + '.' + ext
-        with open(newfilename, 'w') as ff:
-            for class_id in self.get_calendar_ids():
-                wstr = f'\nclasse {class_id};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
-                for hour in range(1, 11):
-                    wstr = wstr + f'\n{hour};'
-                    for day in db.model.WeekDayEnum:
-                        assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
-                        if assignment == Calendar.UNAIVALABLE:
-                            continue
-                        elif assignment == Calendar.AVAILABLE:
-                            wstr = wstr + f'---;'
-                        else:
-                            subject = assignment.data['subject']
-                            (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
-                            persons_list = [x['person'] for x in assignment.data['persons']]
-                            persons_string = ",".join(persons_list)
-                            wstr = wstr + f'{subject} ({persons_string}) <{score}><{constraint_scores}>;'
+            ff.write('\nDocenti\n')
+            for pid in self._persons.keys():
+                person = db.query.get(db.model.Person, pid)
+                wstr = str(person) + ';'
+                for day in db.model.WeekDayEnum:
+                    for hour in range(1, 11):
+                        for class_id in self.get_calendar_ids():
+                            assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                            if assignment == Calendar.UNAIVALABLE or assignment == Calendar.AVAILABLE:
+                                continue
+                            else:
+                                subject = assignment.data['subject']
+                                persons_list = [x['person'] for x in assignment.data['persons']]
+                                if person.fullname in persons_list:
+                                    year = str(assignment.data['year'])
+                                    section = str(assignment.data['section'])
+                                    wstr = wstr + f'{day.value} {hour} ( {year} {section});'
                 ff.write(wstr + '\n')
+
+        if filename_debug is not None:
+            with open(filename_debug, 'w') as ff:
+                for class_id in self.get_calendar_ids():
+                    class_ = db.query.get(db.model.Class, class_id)
+                    wstr = f'\nclasse {class_};lunedì;martedì;mercoledì;giovedì;venerdì;sabato;domenica;SCORE: {self.get_overall_score(class_id=class_id)}'
+                    for hour in range(1, 11):
+                        wstr = wstr + f'\n{hour};'
+                        for day in db.model.WeekDayEnum:
+                            assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                            if assignment == Calendar.UNAIVALABLE:
+                                continue
+                            elif assignment == Calendar.AVAILABLE:
+                                wstr = wstr + f'---;'
+                            else:
+                                subject = assignment.data['subject']
+                                (score, constraint_scores) = self.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                                persons_list = [x['person'] for x in assignment.data['persons']]
+                                persons_string = ",".join(persons_list)
+                                wstr = wstr + f'{subject} ({persons_string}) <{score}><{constraint_scores}>;'
+                    ff.write(wstr + '\n')
+                ff.write('\nDocenti\n')
+                for pid in self._persons.keys():
+                    person = db.query.get(db.model.Person, pid)
+                    wstr = str(person.fullname) + ';'
+                    for day in db.model.WeekDayEnum:
+                        for hour in range(1, 11):
+                            for class_id in self.get_calendar_ids():
+                                assignment = self.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                                if assignment == Calendar.UNAIVALABLE or assignment == Calendar.AVAILABLE:
+                                    continue
+                                else:
+                                    subject = assignment.data['subject']
+                                    persons_list = [x['person'] for x in assignment.data['persons']]
+                                    if person.fullname in persons_list:
+                                        year = str(assignment.data['year'])
+                                        section = str(assignment.data['section'])
+                                        wstr = wstr + f'{day.value} {hour} ( {year} {section});'
+                    ff.write(wstr + '\n')
 
     @property
     def constraints(self):
@@ -394,8 +430,8 @@ class Engine:
     def run(self):
         pass
 
-    def write_calendars_to_csv(self, filename):
-        self.engine_support.write_calendars_to_csv(filename=filename)
+    def write_calendars_to_csv(self, filename, filename_debug):
+        self.engine_support.write_calendars_to_csv(filename=filename, filename_debug=filename_debug)
 
     @property
     def closed(self):

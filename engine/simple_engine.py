@@ -139,8 +139,8 @@ class SimpleEngine(Engine):
         else:
             return lowest_score
     
-    def write_calendars_to_csv(self, filename):
-        self.engine_support.write_calendars_to_csv(filename=filename)
+    def write_calendars_to_csv(self, filename, filename_debug):
+        self.engine_support.write_calendars_to_csv(filename=filename, filename_debug=filename_debug)
             
     @property
     def closed(self):

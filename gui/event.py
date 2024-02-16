@@ -247,11 +247,11 @@ def populate_process_configuration():
     for process in processes:
         status = process.status
         type_ = process.kind
-        date_start = '-' if process.date_start is None else \
-            process.date_start.strftime('%Y-%m-%d_%H-%M-%S')
-        date_end = '-' if process.date_end is None else \
-            process.date_end.strftime('%Y-%m-%d_%H-%M-%S')
-        dates = f'{date_start} -- {date_end}'
+        date_start = '<>' if process.date_start is None else \
+            process.date_start.strftime('%d/%m/%Y %H:%M:%S')
+        date_end = '<>' if process.date_end is None else \
+            process.date_end.strftime('%d/%m/%Y %H:%M:%S')
+        dates = f'{date_start} - {date_end}'
         process_list.append((process.id, dates, type_, status))
 
     for res in process_list:

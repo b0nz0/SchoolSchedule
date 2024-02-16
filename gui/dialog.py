@@ -853,9 +853,9 @@ class ShowProcessDialog(simpledialog.Dialog):
         l.grid(column=1, row=3, padx=30, pady=5, sticky=(W))
 
         date_start = '-' if self.process.date_start is None else \
-            self.process.date_start.strftime('%Y-%m-%d_%H-%M-%S')
+            self.process.date_start.strftime('%d/%m/%Y %H:%M:%S')
         date_end = '-' if self.process.date_end is None else \
-            self.process.date_end.strftime('%Y-%m-%d_%H-%M-%S')
+            self.process.date_end.strftime('%d/%m/%Y %H:%M:%S')
         l = ttk.Label(master=master, text="Avviato")
         l.grid(column=0, row=10, padx=30, pady=5, sticky=(E))
         l = ttk.Label(master=master, text=date_start)

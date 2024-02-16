@@ -17,12 +17,16 @@ class LocalOptimalEngine(Engine):
         for row in rows:
             subject_in_class = db.query.get(db.model.SubjectInClass, int(row))
             self.engine_support.load_assignment_from_subject_in_class(subject_in_class)
-            subject = db.query.get(db.model.Subject, subject_in_class.subject_id)
+
+        school_year = db.query.get(db.model.SchoolYear, school_year_id)
+        subjects = db.query.get_subjects(school_id=school_year.school_id)
+        for subject in subjects:
             if subject.preferred_consecutive_hours is not None:
                 constraint = MaximumConsecutiveForSubject()
                 constraint.identifier = 'max consecutive ' + subject.identifier
                 constraint.configure(subject_id=subject.id, consecutive_hours=subject.preferred_consecutive_hours)
                 self.engine_support.constraints.add(constraint)
+
         constraint = NonDuplicateConstraint()
         constraint.identifier = "non-duplicate"
         self.engine_support.constraints.add(constraint)
@@ -90,26 +94,39 @@ class LocalOptimalEngine(Engine):
             # get the highest score between possible candidates and assign it to the hour
             if len(candidates) == 0:
                 if reassignments < LocalOptimalEngine.MAX_REASSIGNMENTS:
-                    for (score, class_id, sugg_day, sugg_hour) in self.suggest_substitution():
+                    (score, sugg_day, sugg_hour, sugg_class_id) = self._suggest_substitution()
+                    if sugg_day != Calendar.UNAIVALABLE:
                         logging.debug(
-                            f'impossibile trovare un candidato, provo una riassegnazione della classe {class_id}@{sugg_day} - ora {sugg_hour}')
-                        candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=sugg_day,
-                                                                                   hour_ordinal=sugg_hour)
-                        if type(candidate) == Assignment:
-                            self.engine_support.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
-                            assignments_remaining[candidate] = assignments_remaining[candidate] + 1
-                            reassignments = reassignments + 1
+                            f'impossibile trovare un candidato, provo una riassegnazione del {sugg_day} - ora {sugg_hour}')
+                        candidate = self.engine_support.get_assignment_in_calendar(class_id=sugg_class_id, day=sugg_day,
+                                                                            hour_ordinal=sugg_hour)
+                        self.engine_support.deassign(class_id=sugg_class_id, day=sugg_day, hour_ordinal=sugg_hour)
+                        assignments_remaining[candidate] = assignments_remaining[candidate] + 1
+                        reassignments = reassignments + 1
+                    # for (score, class_id, sugg_day, sugg_hour) in self.suggest_substitution():
+                    #     logging.debug(
+                    #         f'impossibile trovare un candidato, provo una riassegnazione della classe {class_id}@{sugg_day} - ora {sugg_hour}')
+                    #     candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=sugg_day,
+                    #                                                                hour_ordinal=sugg_hour)
+                    #     if type(candidate) == Assignment:
+                    #         self.engine_support.deassign(class_id=class_id, day=sugg_day, hour_ordinal=sugg_hour)
+                    #         assignments_remaining[candidate] = assignments_remaining[candidate] + 1
+                    #         reassignments = reassignments + 1
                 else:
                     subjects = ",".join(
-                        [a.data['subject'] for a in assignments_remaining.keys() if assignments_remaining[a] > 0])
+                        [a.data['subject'] + ' ' + str(a.data['year']) + ' ' + str(a.data['section']) +
+                         ' (' + ",".join([x['person'] for x in a.data['persons']]) + ') '
+                         for a in assignments_remaining.keys()
+                         if assignments_remaining[a] > 0]
+                    )
                     logging.error(
                         f'impossibile trovare un candidato, già provate {reassignments} riassegnazioni. \
                             Rimangono fuori: {subjects}')
                     working = False
                     break
             else:
-                (calendar_id, assignment, day, hour, constraint_scores) = self.evaluate_candidates(candidates,
-                                                                                                   assignments_remaining)
+                (calendar_id, assignment, day, hour, constraint_scores) = (
+                    self.evaluate_candidates(candidates, assignments_remaining))
                 self.last_assignments[calendar_id].append((calendar_id, assignment, day, hour, constraint_scores))
                 logging.debug(
                     f'assign best candidate: class={calendar_id}, score={max_score}, day={day.value}, \
@@ -129,19 +146,22 @@ class LocalOptimalEngine(Engine):
         for c in self.engine_support.constraints:
             if c.has_trigger(None):
                 score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                constraint_scores.append((c, score))
+                if score != 0:
+                    constraint_scores.append((c, score))
                 overall_score = overall_score + score
                 continue
             if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
                 score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                constraint_scores.append((c, score))
+                if score != 0:
+                    constraint_scores.append((c, score))
                 overall_score = overall_score + score
                 continue
             for person in [x['person_id'] for x in assignment.data['persons']]:
                 if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
                     score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day,
                                    hour=hour)
-                    constraint_scores.append((c, score))
+                    if score != 0:
+                        constraint_scores.append((c, score))
                     overall_score = overall_score + score
                     continue
         return (overall_score, constraint_scores)
@@ -205,8 +225,34 @@ class LocalOptimalEngine(Engine):
         return ret
         '''
 
-    def write_calendars_to_csv(self, filename):
-        self.engine_support.write_calendars_to_csv(filename=filename)
+    def _suggest_substitution(self):
+        MAX = 1000000000
+        lowest_score = (MAX, None, 0, 0)
+        for class_id in self.engine_support.get_calendar_ids():
+            for day in db.model.WeekDayEnum:
+                for hour in range(1, 11):
+                    candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
+                    if candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
+                        (score, constraint_scores) = self.engine_support.get_score(class_id=class_id, day=day, hour_ordinal=hour)
+                        # if score < lowest_score[0]:
+                        #     lowest_score = (score, day, hour)
+                        # if score == lowest_score[0] and random.choice(
+                        #         [True, False, False, False, False, False, False, False]):
+                        #     lowest_score = (score, day, hour)
+                        if score < 11:
+                            if lowest_score[1] is None:
+                                lowest_score = (score, day, hour, class_id)
+                            else:
+                                if random.choice(
+                                 [True, False, False, False, False, False, False, False]):
+                                    lowest_score = (score, day, hour, class_id)
+        if lowest_score[0] == MAX:
+            return (MAX, Calendar.UNAIVALABLE, 0, 0)
+        else:
+            return lowest_score
+
+    def write_calendars_to_csv(self, filename, filename_debug):
+        self.engine_support.write_calendars_to_csv(filename=filename, filename_debug=filename_debug)
 
     @property
     def closed(self):

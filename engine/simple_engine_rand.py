@@ -18,12 +18,16 @@ class SimpleEngineRand(Engine):
         for row in rows:
             subject_in_class = db.query.get(db.model.SubjectInClass, int(row))
             self.engine_support.load_assignment_from_subject_in_class(subject_in_class)
-            subject = db.query.get(db.model.Subject, subject_in_class.subject_id)
+
+        school_year = db.query.get(db.model.SchoolYear, school_year_id)
+        subjects = db.query.get_subjects(school_id=school_year.school_id)
+        for subject in subjects:
             if subject.preferred_consecutive_hours is not None:
                 constraint = MaximumConsecutiveForSubject()
                 constraint.identifier = 'max consecutive ' + subject.identifier
                 constraint.configure(subject_id=subject.id, consecutive_hours=subject.preferred_consecutive_hours)
                 self.engine_support.constraints.add(constraint)
+
         constraint = NonDuplicateConstraint()
         constraint.identifier = "non-duplicate"
         self.engine_support.constraints.add(constraint)
@@ -88,15 +92,19 @@ class SimpleEngineRand(Engine):
                         assignments_remaining[candidate] = assignments_remaining[candidate] + 1
                         reassignments = reassignments + 1
                 else:
-                    subjects = ",".join([a.data['subject'] for a in assignments_remaining.keys()
-                                         if assignments_remaining[a] > 0])
+                    subjects = ",".join(
+                        [a.data['subject'] + ' ' + str(a.data['year']) + ' ' + str(a.data['section']) +
+                         ' (' + ",".join([x['person'] for x in a.data['persons']]) + ') '
+                         for a in assignments_remaining.keys()
+                         if assignments_remaining[a] > 0]
+                    )
                     logging.error(f'impossibile trovare un candidato, già provate {reassignments} riassegnazioni. \
                         Rimangono fuori: {subjects}')
                     working = False
                     break
             else:
-                (score, constraint_scores, day, hour, continuing) = sorted(candidates, key=itemgetter(0), reverse=True)[
-                    0]
+                (score, constraint_scores, day, hour, continuing) = (
+                    sorted(candidates, key=itemgetter(0), reverse=True))[0]
                 logging.debug(f'best candidate: class={class_id}, score={score}, day={day.value}, hour={hour}')
                 self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
                                     class_id=class_id, day=day, hour_ordinal=hour, score=score,
@@ -125,16 +133,19 @@ class SimpleEngineRand(Engine):
         for c in self.engine_support.constraints:
             if c.has_trigger(None):
                 score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                constraint_scores.append((c, score))
+                if score != 0:
+                    constraint_scores.append((c, score))
                 overall_score = overall_score + score
             if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
                 score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                constraint_scores.append((c, score))
+                if score != 0:
+                    constraint_scores.append((c, score))
                 overall_score = overall_score + score
             for person in [x['person_id'] for x in assignment.data['persons']]:
                 if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
                     score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                    constraint_scores.append((c, score))
+                    if score != 0:
+                        constraint_scores.append((c, score))
                     overall_score = overall_score + score
             suggest_continuing = suggest_continuing or c.suggest_continuing()
         self._suggest_continuing = suggest_continuing
@@ -150,18 +161,25 @@ class SimpleEngineRand(Engine):
                 candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
                 if candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
                     (score, constraint_scores) = self.engine_support.get_score(class_id=class_id, day=day, hour_ordinal=hour)
-                    if score < lowest_score[0]:
-                        lowest_score = (score, day, hour)
-                    if score == lowest_score[0] and random.choice(
-                            [True, False, False, False, False, False, False, False]):
-                        lowest_score = (score, day, hour)
+                    # if score < lowest_score[0]:
+                    #     lowest_score = (score, day, hour)
+                    # if score == lowest_score[0] and random.choice(
+                    #         [True, False, False, False, False, False, False, False]):
+                    #     lowest_score = (score, day, hour)
+                    if score < 11:
+                        if lowest_score[1] is None:
+                            lowest_score = (score, day, hour)
+                        else:
+                            if random.choice(
+                             [True, False, False, False, False, False, False, False]):
+                                lowest_score = (score, day, hour)
         if lowest_score[0] == MAX:
             return (MAX, Calendar.UNAIVALABLE, 0)
         else:
             return lowest_score
 
-    def write_calendars_to_csv(self, filename):
-        self.engine_support.write_calendars_to_csv(filename=filename)
+    def write_calendars_to_csv(self, filename, filename_debug):
+        self.engine_support.write_calendars_to_csv(filename=filename, filename_debug=filename_debug)
 
     @property
     def closed(self):
