@@ -338,7 +338,7 @@ class EngineSupport:
             ff.write('\nDocenti\n')
             for pid in self._persons.keys():
                 person = db.query.get(db.model.Person, pid)
-                wstr = str(person) + ';'
+                wstr = str(person.fullname) + ';'
                 for day in db.model.WeekDayEnum:
                     for hour in range(1, 11):
                         for class_id in self.get_calendar_ids():

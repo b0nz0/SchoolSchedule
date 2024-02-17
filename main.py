@@ -761,3 +761,11 @@ if __name__ == '__main__':
     root.resizable(width=TRUE, height=TRUE)
     ui.show()
     shutdown()
+
+'''
+TODO:
+- inserire totale ore per classe e per docente nelle assegnazioni
+- di default tutti devono stare 5 gg su 5
+- aggiungere vincoli su palestre
+- mostrare indice di complessità
+'''
