@@ -16,6 +16,8 @@ from db.model import *
 from engine.local_optimal import LocalOptimalEngine
 from engine.simple_engine_rand import SimpleEngineRand
 from engine.process_coordinator import ProcessCoordinator
+from engine.simple_planning import SimplePlanningEngine
+
 
 def populate_DB():
     # one school
@@ -672,36 +674,52 @@ def test():
     logging.debug(s)
     logging.debug(db.query.dump_school_year(id=1))
 
-    eng = SimpleEngineRand()
-    for c in db.query.get_constraints(school_year_id=1):
-        eng.add_constraint(c)
-    c = engine.constraint.Boost()
-    c.identifier = "lettore mai martedì"
-    c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
-    eng.add_constraint(c)
-    eng.load(1)
-    for x in range(1, 10):
-        logging.info(f'eseguo SimpleEngineRand (run {x})')
-        print(f'eseguo SimpleEngineRand (run {x})')
-        eng.run()
-        if eng.closed: break
-    if eng.closed:
-        print('Calendario chiuso')
-    else:
-        print('Calendario non chiuso')
-    eng.write_calendars_to_csv('calendari.csv')
+    # eng = SimpleEngineRand()
+    # for c in db.query.get_constraints(school_year_id=1):
+    #     eng.add_constraint(c)
+    # c = engine.constraint.Boost()
+    # c.identifier = "lettore mai martedì"
+    # c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
+    # eng.add_constraint(c)
+    # eng.load(1)
+    # for x in range(1, 10):
+    #     logging.info(f'eseguo SimpleEngineRand (run {x})')
+    #     print(f'eseguo SimpleEngineRand (run {x})')
+    #     eng.run()
+    #     if eng.closed: break
+    # if eng.closed:
+    #     print('Calendario chiuso')
+    # else:
+    #     print('Calendario non chiuso')
+    # eng.write_calendars_to_csv('calendari.csv')
+    #
+    # eng = LocalOptimalEngine()
+    # for c in db.query.get_constraints(school_year_id=1):
+    #     eng.add_constraint(c)
+    # c = engine.constraint.Boost()
+    # c.identifier = "lettore mai martedì"
+    # c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
+    # eng.add_constraint(c)
+    # eng.load(1)
+    # for x in range(1, 10):
+    #     logging.info(f'eseguo LocalOptimalEngine (run {x})')
+    #     print(f'eseguo LocalOptimalEngine (run {x})')
+    #     eng.run()
+    #     if eng.closed:
+    #         break
+    # if eng.closed:
+    #     print('Calendario chiuso')
+    # else:
+    #     print('Calendario non chiuso')
+    # eng.write_calendars_to_csv('calendari_lo.csv')
 
-    eng = LocalOptimalEngine()
+    eng = SimplePlanningEngine()
     for c in db.query.get_constraints(school_year_id=1):
         eng.add_constraint(c)
-    c = engine.constraint.Boost()
-    c.identifier = "lettore mai martedì"
-    c.configure(person_id=15, subject_id=None, class_id=None, day=WeekDayEnum.TUESDAY, hour=None, score=-2000)
-    eng.add_constraint(c)
     eng.load(1)
     for x in range(1, 10):
-        logging.info(f'eseguo LocalOptimalEngine (run {x})')
-        print(f'eseguo LocalOptimalEngine (run {x})')
+        logging.info(f'eseguo SimplePlanning (run {x})')
+        print(f'eseguo SimplePlanning (run {x})')
         eng.run()
         if eng.closed:
             break
@@ -709,12 +727,12 @@ def test():
         print('Calendario chiuso')
     else:
         print('Calendario non chiuso')
-    eng.write_calendars_to_csv('calendari_lo.csv')
+    eng.write_calendars_to_csv('calendari_sp.csv', 'calendari_sp_debug.csv')
 
-    with open("test_ser_school.ser", "wb") as outfile:
-        pickle.dump(s, outfile)
-    with open("test_ser_eng.ser", "wb") as outfile:
-        pickle.dump(eng, outfile)
+    # with open("test_ser_school.ser", "wb") as outfile:
+    #     pickle.dump(s, outfile)
+    # with open("test_ser_eng.ser", "wb") as outfile:
+    #     pickle.dump(eng, outfile)
 
 
 def startup():
@@ -752,7 +770,7 @@ def shutdown():
 if __name__ == '__main__':
     startup()
     # populate_DB()
-    # test()
+    test()
     # temp_load()
     ui = gui.setup.SchoolSchedulerGUI()
     gui.screen.school_select_screen()

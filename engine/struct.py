@@ -238,6 +238,7 @@ class EngineSupport:
         assignment.data['subject_id'] = subject_in_class.subject.id
         assignment.data['subject'] = subject_in_class.subject.identifier
         assignment.data['hours_total'] = subject_in_class.hours_total
+        assignment.data['max_hours_per_day'] = subject_in_class.max_hours_per_day
         assignment.data['persons'] = []
         # add all persons to the assignment
         for p in subject_in_class.persons:
@@ -248,7 +249,7 @@ class EngineSupport:
             # link the identifier to each person, for later use
             if p.id not in self._persons.keys():
                 self._persons[p.id] = []
-            self._persons[p.id].append(subject_in_class.id)
+            self._persons[p.id].append(assignment)
         if subject_in_class.room is not None:
             assignment.data['room_id'] = subject_in_class.room.id
             assignment.data['room'] = subject_in_class.room.identifier
@@ -404,6 +405,10 @@ class EngineSupport:
     @property
     def assignments(self):
         return self._assignments
+
+    @property
+    def persons(self):
+        return self._persons
 
 
 class Engine:

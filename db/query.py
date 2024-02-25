@@ -468,7 +468,7 @@ def dump_subject_in_class(id: int) -> str:
             sic = get(SubjectInClass, id=id)
             session.add(sic)
             out = out + f'{sic.subject.identifier} ('
-            out = out + ','.join([person.fullname for person in sic.persons])
+            out = out + ','.join([person.fullname for person in sic._persons])
             out = out + f') {sic.hours_total} ore\n'
             return out
 
