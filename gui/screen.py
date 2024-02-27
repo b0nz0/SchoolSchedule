@@ -640,15 +640,15 @@ def configure_assignment_screen():
     assignment_listbox.heading("#1", text="Docenti", command=lambda _col="#1": \
         gui.event.treeview_sort_column(assignment_listbox, _col, "Docenti", False))
     assignment_listbox.column("#2", anchor=CENTER, stretch=NO, width=100)
-    assignment_listbox.heading("#2", text="Materia", command=lambda _col="#2": \
-        gui.event.treeview_sort_column(assignment_listbox, _col, "Materia", False))
-    assignment_listbox.column("#3", anchor=CENTER, stretch=NO, width=80)
-    assignment_listbox.heading("#3", text="Classe", command=lambda _col="#3": \
-        gui.event.treeview_sort_column(assignment_listbox, _col, "Classe", False))
+    assignment_listbox.heading("#2", text="Materia (ore tot)", command=lambda _col="#2": \
+        gui.event.treeview_sort_column(assignment_listbox, _col, "Materia (ore tot)", False))
+    assignment_listbox.column("#3", anchor=CENTER, stretch=NO, width=120)
+    assignment_listbox.heading("#3", text="Classe (ore tot)", command=lambda _col="#3": \
+        gui.event.treeview_sort_column(assignment_listbox, _col, "Classe (ore tot)", False))
     assignment_listbox.column("#4", anchor=CENTER, stretch=NO, width=80)
     assignment_listbox.heading("#4", text="Ore sett.", command=lambda _col="#4": \
         gui.event.treeview_sort_column(assignment_listbox, _col, "Ore sett.", False))
-    assignment_listbox.column("#5", anchor=CENTER, stretch=NO, width=100)
+    assignment_listbox.column("#5", anchor=CENTER, stretch=NO, width=50)
     assignment_listbox.heading("#5", text="Aula", command=lambda _col="#5": \
         gui.event.treeview_sort_column(assignment_listbox, _col, "Aula", False))
 

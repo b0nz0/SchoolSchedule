@@ -121,8 +121,8 @@ class SimplePlanningEngine(Engine):
 
         # 2nd round:
         tot_remaining = sum(self.assignments_remaining.values())
-        for i in range(1, 500):
-            print('inizio 2nd round')
+        for i in range(1, 100):
+            print(f'inizio 2nd round ({i})')
             for (assignment, remaining) in copy.copy(self.assignments_remaining).items():
                 if remaining == 0:
                     self.assignments_remaining.pop(assignment)
@@ -134,18 +134,26 @@ class SimplePlanningEngine(Engine):
             candidates = list()
             for assignment in [x for (x, r) in self.assignments_remaining.items() if r > 0]:
                 candidates.extend(self.find_candidate(assignment))
+            if len(candidates) == 0:
+                print('chiuso')
+                break
 
-            candidates = sorted(candidates, key=itemgetter(3), reverse=True)
+            # candidates = sorted(candidates, key=itemgetter(3), reverse=True)
+            candidates_free = [c for c in candidates if c[3] > 1]
+            candidates_blocked = [c for c in candidates if c[3] <= 1]
             moved = False
-            for assignment, day, hour, score in candidates:
+            for assignment, day, hour, score in candidates_free:
                 persons_str = ",".join([x['person'] for x in assignment.data['persons']])
                 logging.debug(f'candidato per {persons_str} in classe ' +
                               self.class_support[assignment.data['class_id']]['identifier'] +
                               f': {day.value}  {hour} ora \t({score})')
                 if score > 1:
+                    logging.debug(f'provo ad assegnare per score {score}')
                     if self.manage_assignment(assignment, day=day, hour=hour):
                         moved = True
-                else:
+            random.shuffle(candidates_blocked)
+            for assignment, day, hour, score in candidates_blocked:
+                if score <= 1:
                     to_swap_assignment = self.engine_support.get_assignment_in_calendar(
                         class_id=assignment.data['class_id'], day=day, hour_ordinal=hour)
                     self.remove_assignment(assignment=to_swap_assignment, day=day, hour=hour)
@@ -159,6 +167,7 @@ class SimplePlanningEngine(Engine):
 
             # let's see if we moved on
             new_remaining = sum(self.assignments_remaining.values())
+            print(f'remaining {new_remaining}')
             # if not moved:
             #     print(f'impossibile procedere, rimangono {tot_remaining} assegnazioni fuori')
             #     break
@@ -177,13 +186,12 @@ class SimplePlanningEngine(Engine):
                                        day=day, hour_ordinal=hour, score=1,
                                        constraint_scores=list((None, 0)))
 
-            if assignment in self.assignments_remaining.keys():
-                self.assignments_remaining[assignment] -= 1
+            self.assignments_remaining[assignment] -= 1
 
             for pid in pids:
                 self.person_support[pid]['busy'][day].append(hour)
 
-            print('assegno classe ' + self.class_support[class_id]['identifier'] +
+            logging.debug('assegno classe ' + self.class_support[class_id]['identifier'] +
                   f', giorno: {day.value}, ora: {hour}')
             return True
         else:
@@ -224,6 +232,20 @@ class SimplePlanningEngine(Engine):
 
         # check #3: still have hours to assign
         if check_availability and self.assignments_remaining[assignment] < 1:
+            return False
+
+        # check #4: sum up all assignments for same subject in the day
+        if assignment.data['max_hours_per_day'] is None:
+            max_hours_per_day = 1
+        else:
+            max_hours_per_day = assignment.data['max_hours_per_day']
+        count_hours = 0
+        for xhour in range(1, 11):
+            if self.engine_support.get_assignment_in_calendar(class_id=assignment.data['class_id'],
+                                                                day=day, hour_ordinal=xhour) \
+                                                                    == assignment:
+                count_hours += 1
+        if count_hours >= max_hours_per_day:
             return False
 
         # checks over, we can assign!
@@ -272,9 +294,9 @@ class SimplePlanningEngine(Engine):
 
                 logging.debug(f'in {day} evaluating {len(assignments)} assignments')
 
-                hour = 1
                 assigned = False
                 for assignment in assignments:
+                    hour = 1
                     # change day, assignment done
                     if assigned:
                         break
@@ -337,8 +359,9 @@ class SimplePlanningEngine(Engine):
                                                                                         hour_ordinal=other_hour)
                         if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
                             if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
-                                if other_hour - hour > 1 or hour - other_hour < 1:
+                                if other_hour - hour > 1 or hour - other_hour > 1:
                                     # no holes
+                                    candidate = (False, 0)
                                     break
                                 else:
                                     in_class += 1
@@ -432,199 +455,6 @@ class SimplePlanningEngine(Engine):
                         if consecutive == 0:
                             hour += 1
 
-    def ___backup(self):
-
-        # save remaining hours per assignment in class
-        for assignment in self.engine_support.assignments.values():
-            assignments_remaining[assignment] = assignment.data['hours_total']
-
-        odd = True
-        # while we still have assignments with remaining hours
-        while len([a for a in assignments_remaining.keys() if assignments_remaining[a] > 0]) > 0 and working:
-            # cycle thru all free hours in each calendar to find a best score
-            max_score = -1
-            candidates = []
-            odd = not odd
-            for calendar_id in sorted(self.engine_support.get_calendar_ids(), reverse=odd):
-                for day in db.model.WeekDayEnum:
-                    for hour in range(1, 11):
-                        if self.engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day,
-                                                                          hour_ordinal=hour) == Calendar.AVAILABLE:
-                            for assignment in [a for a in assignments_remaining.keys() \
-                                               if assignments_remaining[a] > 0 and a.data['class_id'] == calendar_id]:
-                                subject = assignment.data['subject']
-                                persons_list = [x['person'] for x in assignment.data['persons']]
-                                persons_string = ",".join(persons_list)
-                                if reassignments > 80:
-                                    pass
-                                # find all non-exhausted assignments for this class
-                                (score, constraint_scores) = self.evaluate_constraints(calendar_id=calendar_id,
-                                                                                       assignment=assignment, day=day,
-                                                                                       hour=hour)
-                                if score > max_score:
-                                    max_score = score
-                                    candidates = [(calendar_id, assignment, day, hour, constraint_scores)]
-                                    logging.debug(
-                                        f'candidato: score now = {score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')
-                                elif score == max_score:
-                                    candidates.append((calendar_id, assignment, day, hour, constraint_scores))
-                                    logging.debug(
-                                        f'candidato pari: score now = {score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')
-                                else:
-                                    logging.debug(
-                                        f'non candidato: score now = {score} < {max_score} (class {calendar_id}, prof. {persons_string}, day {day.value}, hour {hour})')
-
-            # get the highest score between possible candidates and assign it to the hour
-            if len(candidates) == 0:
-                if reassignments < SimplePlanningEngine.MAX_REASSIGNMENTS:
-                    (score, sugg_day, sugg_hour, sugg_class_id) = self._suggest_substitution()
-                    if sugg_day != Calendar.UNAIVALABLE:
-                        logging.debug(
-                            f'impossibile trovare un candidato, provo una riassegnazione del {sugg_day} - ora {sugg_hour}')
-                        candidate = self.engine_support.get_assignment_in_calendar(class_id=sugg_class_id, day=sugg_day,
-                                                                                   hour_ordinal=sugg_hour)
-                        self.engine_support.deassign(class_id=sugg_class_id, day=sugg_day, hour_ordinal=sugg_hour)
-                        assignments_remaining[candidate] = assignments_remaining[candidate] + 1
-                        reassignments = reassignments + 1
-                else:
-                    subjects = ",".join(
-                        [a.data['subject'] + ' ' + str(a.data['year']) + ' ' + str(a.data['section']) +
-                         ' (' + ",".join([x['person'] for x in a.data['persons']]) + ') '
-                         for a in assignments_remaining.keys()
-                         if assignments_remaining[a] > 0]
-                    )
-                    logging.error(
-                        f'impossibile trovare un candidato, già provate {reassignments} riassegnazioni. \
-                            Rimangono fuori: {subjects}')
-                    working = False
-                    break
-            else:
-                (calendar_id, assignment, day, hour, constraint_scores) = (
-                    self.evaluate_candidates(candidates, assignments_remaining))
-                logging.debug(
-                    f'assign best candidate: class={calendar_id}, score={max_score}, day={day.value}, \
-                        hour={hour} out of {len(candidates)}')
-                self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,
-                                           class_id=calendar_id, day=day, hour_ordinal=hour, score=max_score,
-                                           constraint_scores=constraint_scores)
-                assignments_remaining[assignment] = assignments_remaining[assignment] - 1
-
-        self._closed = working
-
-    def evaluate_constraints(self, calendar_id, assignment, day, hour):
-        overall_score = 0
-        constraint_scores = []
-        # if the constraint suggests to append a hour after the current one
-        suggest_continuing = False
-        for c in self.engine_support.constraints:
-            if c.has_trigger(None):
-                score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                if score != 0:
-                    constraint_scores.append((c, score))
-                overall_score = overall_score + score
-                continue
-            if c.has_trigger(trigger=assignment.data['subject_id'], trigger_type=Constraint.TRIGGER_SUBJECT):
-                score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                if score != 0:
-                    constraint_scores.append((c, score))
-                overall_score = overall_score + score
-                continue
-            for person in [x['person_id'] for x in assignment.data['persons']]:
-                if c.has_trigger(trigger=person, trigger_type=Constraint.TRIGGER_PERSON):
-                    score = c.fire(self.engine_support, calendar_id=calendar_id, assignment=assignment, day=day,
-                                   hour=hour)
-                    if score != 0:
-                        constraint_scores.append((c, score))
-                    overall_score = overall_score + score
-                    continue
-        return (overall_score, constraint_scores)
-
-    def evaluate_candidates(self, candidates, assignments_remaining):
-        assert len(candidates) > 0, 'no candidates left'
-        return random.choice(candidates)
-
-    '''        for prop in candidates:
-            # enough assignments to backtrack?
-            if len(self.last_assignments[prop[0]]) < 5: return prop
-            if prop[1] not in [x[1] for x in self.last_assignments[prop[0]][-5:]]:
-                return prop
-        logging.info('cycling thru backtracking')
-        return candidates[0]
-
-        for (class_id_cand, assignment, day_cand, hour_cand, constraint_scores_cand) in candidates:
-            # evaluate only assignments with remaining hours
-            if assignments_remaining[assignment] == 1:
-                return (class_id_cand, assignment, day_cand, hour_cand, constraint_scores_cand)
-            # try assigning and let's see what happens to further assignments
-            self.engine_support.assign(subject_in_class_id=assignment.subject_in_class_id,\
-                                    class_id=class_id_cand, day=day_cand, hour_ordinal=hour_cand, score=1, constraint_scores=constraint_scores_cand)
-            positives = 0
-            for calendar_id in self.engine_support.get_calendar_ids():
-                for day in db.model.WeekDayEnum:
-                    for hour in range(1, 11):  
-                        if self.engine_support.get_assignment_in_calendar(class_id=calendar_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE:
-                            (score, constraint_scores) = self.evaluate_constraints(calendar_id=calendar_id, assignment=assignment, day=day, hour=hour)
-                            if score > 0: positives = positives + 1
-            self.engine_support.deassign(class_id=class_id_cand, day=day_cand, hour_ordinal=hour_cand)
-            # at least another assignment is possible
-            if positives > 0: 
-                return (class_id_cand, assignment, day_cand, hour_cand, constraint_scores_cand)
-        
-        logging.info('no candidates with score < 0')
-        return candidates[0]
-    '''
-
-    def suggest_substitution(self):
-        ret = []
-        for calendar_id in self.engine_support.get_calendar_ids():
-            for (class_id, assignment, day, hour, constraint_scores) in self.last_assignments[calendar_id][-5:]:
-                ret.append((0, class_id, day, hour))
-        return ret
-        '''# a simple backtracking
-        (calendar_id, assignment, day, hour, constraint_scores) = self.last_assignments[-1]
-        return [(0, calendar_id, day, hour)]
-        MAX = 1000000000
-        lowest_score = MAX
-        ret = []
-        for class_id in self.engine_support.get_calendar_ids():
-            for day in db.model.WeekDayEnum:
-                for hour in range(1, 11):  
-                    candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day, hour_ordinal=hour)
-                    if  candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
-                        (score, constraint_scores) = self.engine_support.get_score(class_id=class_id, day=day, hour_ordinal=hour)
-                        if score <= lowest_score:
-                            ret.append((score, class_id, day, hour))
-                            lowest_score = score
-        return ret
-        '''
-
-    def _suggest_substitution(self):
-        MAX = 1000000000
-        lowest_score = (MAX, None, 0, 0)
-        for class_id in self.engine_support.get_calendar_ids():
-            for day in db.model.WeekDayEnum:
-                for hour in range(1, 11):
-                    candidate = self.engine_support.get_assignment_in_calendar(class_id=class_id, day=day,
-                                                                               hour_ordinal=hour)
-                    if candidate != Calendar.UNAIVALABLE and candidate != Calendar.AVAILABLE:
-                        (score, constraint_scores) = self.engine_support.get_score(class_id=class_id, day=day,
-                                                                                   hour_ordinal=hour)
-                        # if score < lowest_score[0]:
-                        #     lowest_score = (score, day, hour)
-                        # if score == lowest_score[0] and random.choice(
-                        #         [True, False, False, False, False, False, False, False]):
-                        #     lowest_score = (score, day, hour)
-                        if score < 11:
-                            if lowest_score[1] is None:
-                                lowest_score = (score, day, hour, class_id)
-                            else:
-                                if random.choice(
-                                        [True, False, False, False, False, False, False, False]):
-                                    lowest_score = (score, day, hour, class_id)
-        if lowest_score[0] == MAX:
-            return (MAX, Calendar.UNAIVALABLE, 0, 0)
-        else:
-            return lowest_score
 
     def write_calendars_to_csv(self, filename, filename_debug):
         self.engine_support.write_calendars_to_csv(filename=filename, filename_debug=filename_debug)

@@ -178,6 +178,14 @@ def populate_assignment_configuration():
     global assignment_list
     assignment_list = []
 
+    tot_hours_in_class = dict()
+    for subj_in_class_id in subj_in_classes:
+        subj_in_class = db.query.get(db.model.SubjectInClass, subj_in_class_id)
+        class_id = subj_in_class.class_id
+        if class_id not in tot_hours_in_class.keys():
+            tot_hours_in_class[class_id] = 0
+        tot_hours_in_class[class_id] += subj_in_class.hours_total
+        
     # Clear the treeview list items
     for item in ui.widgets['assignment_listbox'].get_children():
         ui.widgets['assignment_listbox'].delete(item)
@@ -186,7 +194,7 @@ def populate_assignment_configuration():
         subj_in_class = db.query.get(db.model.SubjectInClass, subj_in_class_id)
         persons = ','.join(list([x.fullname for x in subj_in_class.persons]))
         subject = subj_in_class.subject.identifier
-        classe = f'{subj_in_class.class_.year.identifier} {subj_in_class.class_.section.identifier}'
+        classe = f'{subj_in_class.class_.year.identifier} {subj_in_class.class_.section.identifier} ({tot_hours_in_class[subj_in_class.class_id]})'
         hours = subj_in_class.hours_total
         if subj_in_class.room is not None:
             room = subj_in_class.room.identifier
