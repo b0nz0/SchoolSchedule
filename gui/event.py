@@ -184,7 +184,7 @@ def populate_assignment_configuration():
 
     for subj_in_class_id in subj_in_classes:
         subj_in_class = db.query.get(db.model.SubjectInClass, subj_in_class_id)
-        persons = ','.join(list([x.fullname for x in subj_in_class._persons]))
+        persons = ','.join(list([x.fullname for x in subj_in_class.persons]))
         subject = subj_in_class.subject.identifier
         classe = f'{subj_in_class.class_.year.identifier} {subj_in_class.class_.section.identifier}'
         hours = subj_in_class.hours_total

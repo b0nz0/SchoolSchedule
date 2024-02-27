@@ -672,7 +672,7 @@ def temp_load():
 def test():
     s = db.query.get(School, 1)
     logging.debug(s)
-    logging.debug(db.query.dump_school_year(id=1))
+    # logging.debug(db.query.dump_school_year(id=1))
 
     # eng = SimpleEngineRand()
     # for c in db.query.get_constraints(school_year_id=1):
@@ -717,7 +717,7 @@ def test():
     for c in db.query.get_constraints(school_year_id=1):
         eng.add_constraint(c)
     eng.load(1)
-    for x in range(1, 10):
+    for x in range(1, 2):
         logging.info(f'eseguo SimplePlanning (run {x})')
         print(f'eseguo SimplePlanning (run {x})')
         eng.run()

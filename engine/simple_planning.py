@@ -1,6 +1,7 @@
 import copy
 import logging
 import random
+from operator import itemgetter
 
 import engine.constraint
 from engine.constraint import *
@@ -12,9 +13,13 @@ class SimplePlanningEngine(Engine):
 
     def __init__(self) -> None:
         super().__init__()
+        self.assignments_out = None
+        self.all_days = None
         self.working = None
         self.engine_support_base = None
         self.person_support = None
+        self.class_support = None
+        self.subject_support = None
 
     def load(self, school_year_id: int):
         rows = db.query.get_subjects_in_class_per_school_year(school_year_id=school_year_id)
@@ -22,9 +27,13 @@ class SimplePlanningEngine(Engine):
             subject_in_class = db.query.get(db.model.SubjectInClass, int(row))
             self.engine_support.load_assignment_from_subject_in_class(subject_in_class)
 
+        # fill in a support structure for subjects and create specific constraints for preferred consecutive hours
+        self.subject_support = dict()
         school_year = db.query.get(db.model.SchoolYear, school_year_id)
         subjects = db.query.get_subjects(school_id=school_year.school_id)
         for subject in subjects:
+            self.subject_support[subject.id] = dict()
+            self.subject_support[subject.id]['identifier'] = subject.identifier
             if subject.preferred_consecutive_hours is not None:
                 constraint = MaximumConsecutiveForSubject()
                 constraint.identifier = 'max consecutive ' + subject.identifier
@@ -40,6 +49,37 @@ class SimplePlanningEngine(Engine):
         constraint = FillFirstHours()
         constraint.identifier = "riempi prime ore"
         self.engine_support.constraints.add(constraint)
+
+        # all available days in assignments
+        self.all_days = set()
+        for calendar in self.engine_support.calendars:
+            for day in db.model.WeekDayEnum:
+                if self.engine_support.get_assignment_in_calendar(
+                        class_id=calendar, day=day, hour_ordinal=1) == Calendar.AVAILABLE:
+                    self.all_days.add(day)
+
+        # fill in a support structure for persons
+        self.person_support = dict()
+        for pid in self.engine_support.persons.keys():
+            self.person_support[pid] = dict()
+            person = db.query.get(db.model.Person, id=pid)
+            self.person_support[pid]['fullname'] = person.fullname
+            self.person_support[pid]['days'] = list(self.all_days)
+            self.person_support[pid]['assignments'] = self.engine_support.persons[pid]
+
+            # in case not all days are available
+            for constraint in self.engine_support.constraints:
+                if isinstance(constraint, engine.constraint.CalendarDays) and constraint.person_id == pid:
+                    days = set()
+                    for allowed_hour in constraint.allowed_hours_list:
+                        days.add(allowed_hour[0])
+                    self.person_support[pid]['days'] = list(days)
+
+        self.class_support = dict()
+        classes = db.query.get_classes(schoolyear_id=school_year_id)
+        for class_ in classes:
+            self.class_support[class_.id] = dict()
+            self.class_support[class_.id]['identifier'] = str(class_)
 
     def run(self):
         logging.info('trying to plan a simple calendar')
@@ -58,37 +98,188 @@ class SimplePlanningEngine(Engine):
 
         self.clear_assignments()
 
-        all_days = set()
-        for calendar in self.engine_support.calendars:
-            for day in db.model.WeekDayEnum:
-                if self.engine_support.get_assignment_in_calendar(
-                        class_id=calendar, day=day, hour_ordinal=1) == Calendar.AVAILABLE:
-                    all_days.add(day)
-
-        self.person_support = dict()
-        for pid in self.engine_support.persons.keys():
-            self.person_support[pid] = dict()
-            self.person_support[pid]['assignments'] = self.engine_support.persons[pid]
-            self.person_support[pid]['days'] = list(all_days)
+        for pid in self.person_support.keys():
             self.person_support[pid]['busy'] = dict()
-
-            for constraint in self.engine_support.constraints:
-                if isinstance(constraint, engine.constraint.CalendarDays) and constraint.person_id == pid:
-                    days = set()
-                    for allowed_hour in constraint.allowed_hours_list:
-                        days.add(allowed_hour[0])
-                    self.person_support[pid]['days'] = list(days)
-
             for day in self.person_support[pid]['days']:
                 self.person_support[pid]['busy'][day] = list()
 
         self.working = True
+        self.assignments_out = dict()
         for pid in self.person_support.keys():
             self.plan_person(pid=pid)
+        #let's try who has days constraints before others
+        # for pid in [k for k in self.person_support.keys() if len(self.person_support[k]['days']) < len(self.all_days)]:
+        #     self.plan_person(pid=pid)
+        # for pid in [k for k in self.person_support.keys() if len(self.person_support[k]['days']) == len(self.all_days)]:
+        #     self.plan_person(pid=pid)
+
+        # 2nd round:
+        tot_remaining = sum(self.assignments_out.values())
+        while True:
+            for (assignment, remaining) in self.assignments_out.items():
+                if remaining == 0:
+                    self.assignments_out.pop(assignment)
+                persons = ",".join([x['person'] for x in assignment.data['persons']])
+                print('per ' + persons + ' rimangono ' + str(remaining) + ' ore in ' +
+                      self.class_support[assignment.data['class_id']]['identifier'])
+
+            candidates = list()
+            for (assignment, remaining) in self.assignments_out.items():
+                candidates.extend(self.find_candidate(assignment))
+
+            candidates = sorted(candidates, key=itemgetter(3), reverse=True)
+            for assignment, day, hour, score in candidates:
+                persons_str = ",".join([x['person'] for x in assignment.data['persons']])
+                print(f'candidato per {persons_str} in classe ' +
+                      self.class_support[assignment.data['class_id']]['identifier'] +
+                      f': {day.value}  {hour} ora \t({score})')
+                if score > 1:
+                    if self.manage_assignment(assignment, day=day, hour=hour):
+                        self.assignments_out[assignment] -= 1
+
+            # let's see if we moved on
+            new_remaining = sum(self.assignments_out.values())
+            if new_remaining == tot_remaining:
+                print(f'impossibile procedere, rimangono {tot_remaining} assegnazioni fuori')
+                break
+            else:
+                tot_remaining = new_remaining
 
         self._closed = self.working
 
+    def manage_assignment(self, assignment, day, hour):
+        class_id = assignment.data['class_id']
+        pids = [x['person_id'] for x in assignment.data['persons']]
+        available = True
+        for pid in pids:
+            if hour in self.person_support[pid]['busy'][day]:
+                available = False
+                break
+        if self.engine_support.get_assignment_in_calendar(
+                class_id=class_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE and available:
+            self.engine_support.assign(assignment.subject_in_class_id,
+                                       class_id=class_id,
+                                       day=day, hour_ordinal=hour, score=1,
+                                       constraint_scores=list((None, 0)))
+            for pid in pids:
+                self.person_support[pid]['busy'][day].append(hour)
+            logging.debug('assegno classe ' + self.class_support[class_id]['identifier'] +
+                          f', giorno: {day}, ora: {hour}')
+            return True
+
     def plan_person(self, pid):
+
+        # save remaining hours per assignment in class
+        assignments_remaining = dict()
+        for assignment in self.person_support[pid]['assignments']:
+            assignments_remaining[assignment] = assignment.data['hours_total']
+
+        print('person ' + self.person_support[pid]['fullname'])
+
+        while True:
+            # let's see if we have still room for any assignment
+            available = False
+
+            assignments = [assignment for assignment in assignments_remaining.keys()
+                           if assignments_remaining[assignment] > 0]
+            if len(assignments) == 0:
+                # no more assignments to do
+                available = True
+                logging.debug('done')
+                break
+
+            for day in self.person_support[pid]['days']:
+
+                logging.debug(f'in {day} evaluating {len(assignments)} assignments')
+
+                hour = 1
+                assigned = False
+                for assignment in assignments:
+                    # change day, assignment done
+                    if assigned:
+                        break
+                    if assignments_remaining[assignment] == 0:
+                        continue
+                    class_id = assignment.data['class_id']
+                    if assignment.data['max_hours_per_day']:
+                        max_hours_per_day = assignment.data['max_hours_per_day']
+                    else:
+                        max_hours_per_day = 1
+                    while hour < 11:
+                        consecutive = 0
+                        while consecutive < max_hours_per_day and assignments_remaining[assignment] > 0 and hour < 11:
+                            if self.manage_assignment(assignment, day=day, hour=hour):
+                                assigned = True
+                                available = True
+                                assignments_remaining[assignment] -= 1
+                                consecutive += 1
+                            hour += 1
+                        if assigned:
+                            break
+
+            # no hour available on candidate days, the calendar does not close
+            if not available:
+                self.working = False
+                logging.info('unable to find availability for person ' + self.person_support[pid]['fullname'])
+                for assignment in assignments:
+                    self.assignments_out[assignment] = assignments_remaining[assignment]
+                return
+            else:
+                logging.debug('continuing')
+
+    def find_candidate(self, assignment):
+        pids = [x['person_id'] for x in assignment.data['persons']]
+        candidates = list()
+
+        for day in self.all_days:
+            for hour in range(1, 11):
+                candidate = (False, 0)
+                for pid in pids:
+                    if hour in self.person_support[pid]['busy'][day]:
+                        candidate = (False, 0)
+                        continue
+                    if self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
+                                                                      day=day,
+                                                                      hour_ordinal=hour) == Calendar.UNAIVALABLE:
+                        candidate = (False, 0)
+                        continue
+
+                    # let's see if he/she is present in the class the same day
+                    in_class = 0
+                    for other_hour in range(1, 11):
+                        if other_hour == hour:
+                            continue
+                        alt_assignment = self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
+                                                                      day=day, hour_ordinal=other_hour)
+                        if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
+                            if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
+                                if other_hour - hour > 1 or hour - other_hour < 1:
+                                    # no holes
+                                    break
+                                else:
+                                    in_class += 1
+
+                    if assignment.data['max_hours_per_day'] is None:
+                        max_hours_per_day = 1
+                    else:
+                        max_hours_per_day = assignment.data['max_hours_per_day']
+                    if in_class < max_hours_per_day:
+                        # still room to assign this day in this class
+                        if self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
+                                                                          day=day,
+                                                                          hour_ordinal=hour) == Calendar.AVAILABLE:
+                            candidate = (True, 10)
+                        else:
+                            candidate = (True, candidate[1] + 1)
+                    else:
+                        candidate = (False, 0)
+
+                if candidate[0]:
+                    candidates.append((assignment, day, hour, candidate[1]))
+
+        return candidates
+
+    def __plan_person(self, pid):
 
         # save remaining hours per assignment in class
         assignments_remaining = dict()
@@ -99,6 +290,28 @@ class SimplePlanningEngine(Engine):
         while True:
             assignments = [assignment for assignment in assignments_remaining.keys()
                            if assignments_remaining[assignment] > 0]
+
+            # let's see if we have still room for any assignment
+            available = False
+            for assignment in assignments:
+                for day in self.person_support[pid]['days']:
+                    for hour in range(1, 11):
+                        if self.engine_support.get_assignment_in_calendar(
+                                class_id=assignment.data['class_id'], day=day, hour_ordinal=hour) == Calendar.AVAILABLE:
+                            print('found availability')
+                            available = True
+                            break
+                    if available:
+                        break
+                if available:
+                    break
+
+            # no hour available on candidate days, the calendar does not close
+            if not available:
+                self.working = False
+                print(f'unable to find availability for person {pid}')
+                return
+
             if len(assignments) == 0:
                 # no more assignments to do
                 break
