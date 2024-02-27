@@ -13,7 +13,8 @@ class SimplePlanningEngine(Engine):
 
     def __init__(self) -> None:
         super().__init__()
-        self.assignments_out = None
+        self.assignments_remaining = None
+        self.assignments_remaining = None
         self.all_days = None
         self.working = None
         self.engine_support_base = None
@@ -93,7 +94,6 @@ class SimplePlanningEngine(Engine):
         self._struct = copy.copy(self.engine_support_base)
 
     def run_planner(self):
-        assignments_remaining = {}
         reassignments = 0
 
         self.clear_assignments()
@@ -103,76 +103,156 @@ class SimplePlanningEngine(Engine):
             for day in self.person_support[pid]['days']:
                 self.person_support[pid]['busy'][day] = list()
 
+        # save remaining hours per assignment in class
+        self.assignments_remaining = dict()
+        for assignment in self.engine_support.assignments.values():
+            self.assignments_remaining[assignment] = assignment.data['hours_total']
+
+        # 1st round
         self.working = True
-        self.assignments_out = dict()
         for pid in self.person_support.keys():
             self.plan_person(pid=pid)
-        #let's try who has days constraints before others
+        print('fine 1 round')
+        # let's try who has days constraints before others
         # for pid in [k for k in self.person_support.keys() if len(self.person_support[k]['days']) < len(self.all_days)]:
         #     self.plan_person(pid=pid)
         # for pid in [k for k in self.person_support.keys() if len(self.person_support[k]['days']) == len(self.all_days)]:
         #     self.plan_person(pid=pid)
 
         # 2nd round:
-        tot_remaining = sum(self.assignments_out.values())
-        while True:
-            for (assignment, remaining) in self.assignments_out.items():
+        tot_remaining = sum(self.assignments_remaining.values())
+        for i in range(1, 500):
+            print('inizio 2nd round')
+            for (assignment, remaining) in copy.copy(self.assignments_remaining).items():
                 if remaining == 0:
-                    self.assignments_out.pop(assignment)
+                    self.assignments_remaining.pop(assignment)
+                    continue
                 persons = ",".join([x['person'] for x in assignment.data['persons']])
-                print('per ' + persons + ' rimangono ' + str(remaining) + ' ore in ' +
+                print('per ' + persons + ' rimangono ' + str(self.assignments_remaining[assignment]) + ' ore in ' +
                       self.class_support[assignment.data['class_id']]['identifier'])
 
             candidates = list()
-            for (assignment, remaining) in self.assignments_out.items():
+            for assignment in [x for (x, r) in self.assignments_remaining.items() if r > 0]:
                 candidates.extend(self.find_candidate(assignment))
 
             candidates = sorted(candidates, key=itemgetter(3), reverse=True)
+            moved = False
             for assignment, day, hour, score in candidates:
                 persons_str = ",".join([x['person'] for x in assignment.data['persons']])
-                print(f'candidato per {persons_str} in classe ' +
-                      self.class_support[assignment.data['class_id']]['identifier'] +
-                      f': {day.value}  {hour} ora \t({score})')
+                logging.debug(f'candidato per {persons_str} in classe ' +
+                              self.class_support[assignment.data['class_id']]['identifier'] +
+                              f': {day.value}  {hour} ora \t({score})')
                 if score > 1:
                     if self.manage_assignment(assignment, day=day, hour=hour):
-                        self.assignments_out[assignment] -= 1
+                        moved = True
+                else:
+                    to_swap_assignment = self.engine_support.get_assignment_in_calendar(
+                        class_id=assignment.data['class_id'], day=day, hour_ordinal=hour)
+                    self.remove_assignment(assignment=to_swap_assignment, day=day, hour=hour)
+                    # to_swap_day, to_swap_hour = self.get_all_slots_for_assignment(assignment)[0]
+                    if self.manage_assignment(assignment, day=day, hour=hour):
+                        moved = True
+                        break
+                    else:
+                        assert self.manage_assignment(to_swap_assignment, day=day, hour=hour) is True, \
+                            'unhandled problem in restoring assignment'
 
             # let's see if we moved on
-            new_remaining = sum(self.assignments_out.values())
-            if new_remaining == tot_remaining:
-                print(f'impossibile procedere, rimangono {tot_remaining} assegnazioni fuori')
-                break
-            else:
-                tot_remaining = new_remaining
+            new_remaining = sum(self.assignments_remaining.values())
+            # if not moved:
+            #     print(f'impossibile procedere, rimangono {tot_remaining} assegnazioni fuori')
+            #     break
+            # else:
+            #     tot_remaining = new_remaining
 
         self._closed = self.working
 
-    def manage_assignment(self, assignment, day, hour):
+    def manage_assignment(self, assignment, day, hour) -> bool:
         class_id = assignment.data['class_id']
         pids = [x['person_id'] for x in assignment.data['persons']]
-        available = True
-        for pid in pids:
-            if hour in self.person_support[pid]['busy'][day]:
-                available = False
-                break
-        if self.engine_support.get_assignment_in_calendar(
-                class_id=class_id, day=day, hour_ordinal=hour) == Calendar.AVAILABLE and available:
+
+        if self.can_assign(assignment, day, hour):
             self.engine_support.assign(assignment.subject_in_class_id,
                                        class_id=class_id,
                                        day=day, hour_ordinal=hour, score=1,
                                        constraint_scores=list((None, 0)))
+
+            if assignment in self.assignments_remaining.keys():
+                self.assignments_remaining[assignment] -= 1
+
             for pid in pids:
                 self.person_support[pid]['busy'][day].append(hour)
-            logging.debug('assegno classe ' + self.class_support[class_id]['identifier'] +
-                          f', giorno: {day}, ora: {hour}')
+
+            print('assegno classe ' + self.class_support[class_id]['identifier'] +
+                  f', giorno: {day.value}, ora: {hour}')
             return True
+        else:
+            return False
+
+    def remove_assignment(self, assignment, day, hour):
+        class_id = assignment.data['class_id']
+        pids = [x['person_id'] for x in assignment.data['persons']]
+
+        self.engine_support.deassign(class_id=class_id,
+                                     day=day, hour_ordinal=hour)
+        if assignment in self.assignments_remaining.keys():
+            self.assignments_remaining[assignment] += 1
+        else:
+            self.assignments_remaining[assignment] = 1
+
+        for pid in pids:
+            self.person_support[pid]['busy'][day].remove(hour)
+
+        logging.debug('rimossa assegnazione classe ' + self.class_support[class_id]['identifier'] +
+                      f', giorno: {day}, ora: {hour}')
+
+    def can_assign(self, assignment, day, hour, check_availability=True) -> bool:
+        class_id = assignment.data['class_id']
+        pids = [x['person_id'] for x in assignment.data['persons']]
+
+        # can assign?
+
+        # check #1: no other assignments for persons
+        for pid in pids:
+            if hour in self.person_support[pid]['busy'][day]:
+                return False
+
+        # check #2: slot is free. Check only if parameter is True
+        if check_availability and self.engine_support.get_assignment_in_calendar(
+                class_id=class_id, day=day, hour_ordinal=hour) != Calendar.AVAILABLE:
+            return False
+
+        # check #3: still have hours to assign
+        if check_availability and self.assignments_remaining[assignment] < 1:
+            return False
+
+        # checks over, we can assign!
+        return True
+
+    def swap_assign(self, assignment_from, day_from, hour_from, assignment_to, day_to, hour_to) -> bool:
+        if self.can_assign(assignment_from, day_to, hour_to, check_availability=False) and \
+                self.can_assign(assignment_to, day_from, hour_from, check_availability=False):
+            self.remove_assignment(assignment_from, day_from, hour_from)
+            self.remove_assignment(assignment_to, day_to, hour_to)
+            assert self.manage_assignment(assignment_from, day_to, hour_to) is True, 'unhandled problem in assignment'
+            assert self.manage_assignment(assignment_to, day_from, hour_from) is True, 'unhandled problem in assignment'
+            return True
+        else:
+            return False
+
+    def get_all_slots_for_assignment(self, assignment, perform_random=False):
+        class_id = assignment.data['class_id']
+        slots = list()
+        for day in db.model.WeekDayEnum:
+            for hour in range(1, 11):
+                if self.engine_support.get_assignment_in_calendar(class_id=class_id,
+                                                                  day=day, hour_ordinal=hour) == assignment:
+                    slots.append((day, hour))
+        if perform_random:
+            random.shuffle(slots)
+        return slots
 
     def plan_person(self, pid):
-
-        # save remaining hours per assignment in class
-        assignments_remaining = dict()
-        for assignment in self.person_support[pid]['assignments']:
-            assignments_remaining[assignment] = assignment.data['hours_total']
 
         print('person ' + self.person_support[pid]['fullname'])
 
@@ -180,8 +260,8 @@ class SimplePlanningEngine(Engine):
             # let's see if we have still room for any assignment
             available = False
 
-            assignments = [assignment for assignment in assignments_remaining.keys()
-                           if assignments_remaining[assignment] > 0]
+            assignments = [assignment for (assignment, remaining) in self.assignments_remaining.items()
+                           if remaining > 0 and pid in [x['person_id'] for x in assignment.data['persons']]]
             if len(assignments) == 0:
                 # no more assignments to do
                 available = True
@@ -198,7 +278,7 @@ class SimplePlanningEngine(Engine):
                     # change day, assignment done
                     if assigned:
                         break
-                    if assignments_remaining[assignment] == 0:
+                    if self.assignments_remaining[assignment] == 0:
                         continue
                     class_id = assignment.data['class_id']
                     if assignment.data['max_hours_per_day']:
@@ -207,11 +287,11 @@ class SimplePlanningEngine(Engine):
                         max_hours_per_day = 1
                     while hour < 11:
                         consecutive = 0
-                        while consecutive < max_hours_per_day and assignments_remaining[assignment] > 0 and hour < 11:
+                        while consecutive < max_hours_per_day and self.assignments_remaining[
+                            assignment] > 0 and hour < 11:
                             if self.manage_assignment(assignment, day=day, hour=hour):
                                 assigned = True
                                 available = True
-                                assignments_remaining[assignment] -= 1
                                 consecutive += 1
                             hour += 1
                         if assigned:
@@ -221,8 +301,8 @@ class SimplePlanningEngine(Engine):
             if not available:
                 self.working = False
                 logging.info('unable to find availability for person ' + self.person_support[pid]['fullname'])
-                for assignment in assignments:
-                    self.assignments_out[assignment] = assignments_remaining[assignment]
+                # for assignment in assignments:
+                #    self.assignments_out[assignment] = assignments_remaining[assignment]
                 return
             else:
                 logging.debug('continuing')
@@ -235,6 +315,9 @@ class SimplePlanningEngine(Engine):
             for hour in range(1, 11):
                 candidate = (False, 0)
                 for pid in pids:
+                    if day not in self.person_support[pid]['days']:
+                        candidate = (False, 0)
+                        continue
                     if hour in self.person_support[pid]['busy'][day]:
                         candidate = (False, 0)
                         continue
@@ -250,7 +333,8 @@ class SimplePlanningEngine(Engine):
                         if other_hour == hour:
                             continue
                         alt_assignment = self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
-                                                                      day=day, hour_ordinal=other_hour)
+                                                                                        day=day,
+                                                                                        hour_ordinal=other_hour)
                         if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
                             if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
                                 if other_hour - hour > 1 or hour - other_hour < 1:
