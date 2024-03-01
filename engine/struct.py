@@ -10,6 +10,15 @@ class Assignment:
         self._data = dict()
         self._score = 0
 
+    def __repr__(self):
+        ret = str()
+        ret = ret + self._data['subject'] + ' in '
+        ret = ret + self._data['year'] + ' '
+        ret = ret + self._data['section'] + ' '
+        persons_list = [x['person'] for x in self._data['persons']]
+        ret = ret + '(' + ",".join(persons_list) + ')'
+        return ret
+
     @property
     def id(self):
         return self._id
