@@ -114,6 +114,7 @@ class SimplePlanningEngine(Engine):
         for pid in sorted(self.person_support.keys()):
             self.plan_person(pid=pid)
         print('fine 1 round')
+        self.engine_support.write_calendars_to_csv('primo_round.csv', 'primo_round_debug.csv')
         # let's try who has days constraints before others
         # for pid in [k for k in self.person_support.keys() if len(self.person_support[k]['days']) < len(self.all_days)]:
         #     self.plan_person(pid=pid)
@@ -280,16 +281,22 @@ class SimplePlanningEngine(Engine):
                 class_id=class_id, day=day, hour_ordinal=hour) != Calendar.AVAILABLE:
             return False
 
+        # check #3.1: slot is unavailable
+        if check_availability and self.engine_support.get_assignment_in_calendar(
+                class_id=class_id, day=day, hour_ordinal=hour) == Calendar.UNAIVALABLE:
+            return False
+
         # check #4: still have hours to assign
         if check_availability and self.assignments_remaining[assignment] < 1:
             return False
 
         # check #5: not creating too many holes in class
-        if self.creates_holes(assignment, day, hour, max_holes=0, all_calendars=False):
+        if self.creates_holes(assignment, day, hour, max_holes=0, classes=[assignment.data['class_id']]):
             return False
 
         # check #6: not creating too many holes in day
-        if self.creates_holes(assignment, day, hour, max_holes=SimplePlanningEngine.MAX_HOLES, all_calendars=True):
+        if self.creates_holes(assignment, day, hour, max_holes=SimplePlanningEngine.MAX_HOLES,
+                              classes=self.engine_support.get_calendar_ids()):
             return False
 
         # checks over, we can assign!
@@ -373,8 +380,8 @@ class SimplePlanningEngine(Engine):
                         max_hours_per_day = 1
                     while hour < 11:
                         consecutive = 0
-                        while consecutive < max_hours_per_day and self.assignments_remaining[
-                            assignment] > 0 and hour < 11:
+                        while (consecutive < max_hours_per_day and self.assignments_remaining[assignment] > 0
+                               and hour < 11):
                             if self.manage_assignment(assignment, day=day, hour=hour):
                                 assigned = True
                                 available = True
@@ -393,49 +400,62 @@ class SimplePlanningEngine(Engine):
             else:
                 logging.debug('continuing')
 
-    def creates_holes(self, assignment, day, hour, max_holes=1, all_calendars=False):
+    def creates_holes(self, assignment, day, hour, max_holes=1, classes=None):
         pids = [x['person_id'] for x in assignment.data['persons']]
         if assignment.data['max_hours_per_day'] is None:
             max_assignments = 1
         else:
             max_assignments = assignment.data['max_hours_per_day']
+        if classes is None:
+            classes = [assignment.data['class_id']]
         candidate = dict()
-        for pid in pids:
-            candidate[pid] = True
-            in_class = list()
-            for other_hour in range(1, 11):
-                if other_hour == hour:
-                    continue
-                alt_assignment = self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
-                                                                                day=day,
-                                                                                hour_ordinal=other_hour)
-                if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
-                    if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
-                        in_class.append(other_hour)
+        in_day = list()
+        for class_id in classes:
+            for pid in pids:
+                candidate[pid] = True
+                in_class = list()
+                for other_hour in range(1, 11):
+                    if other_hour == hour:
+                        continue
+                    alt_assignment = self.engine_support.get_assignment_in_calendar(class_id,
+                                                                                    day=day,
+                                                                                    hour_ordinal=other_hour)
+                    if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
+                        if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
+                            in_class.append(other_hour)
+                            in_day.append(other_hour)
 
-            # hour adjacent ?
-            lesser_hours = [x for x in in_class if x < hour]
-            high_hours = [x for x in in_class if x > hour]
-            if len(in_class) > 0:
-                if (len(lesser_hours) > 0 and hour - max(lesser_hours) >= max_holes + 1 or
-                        len(high_hours) > 0 and min(high_hours) - hour >= max_holes + 1):
-                    candidate[pid] = False
-                # single class
-                elif not all_calendars:
-                    if len(in_class) < max_assignments:
-                        candidate[pid] = True
-                    else:
+                # hour adjacent ? - this class
+                lesser_hours = [x for x in in_class if x < hour]
+                high_hours = [x for x in in_class if x > hour]
+                if len(in_class) > 0:
+                    if ((len(lesser_hours) > 0 and hour - max(lesser_hours) > max_holes + 1) or
+                            (len(high_hours) > 0 and min(high_hours) - hour > max_holes + 1)):
                         candidate[pid] = False
-                # all classes
+                    # in this class, no more hours than assigned
+                    elif class_id == assignment.data['class_id']:
+                        if len(in_class) < max_assignments:
+                            candidate[pid] = True
+                        else:
+                            candidate[pid] = False
+                    else:  # not the given class
+                        candidate[pid] = True
                 else:
                     candidate[pid] = True
-            else:
-                candidate[pid] = True
+            # all pids verified. do we create too many holes?
+            if False in candidate.values():
+                return True
 
-        if False not in candidate.values():
-            return False
-        else:
-            return True
+        # hour adjacent ? whole day
+        lesser_hours = [x for x in in_day if x < hour]
+        high_hours = [x for x in in_day if x > hour]
+        if len(in_day) > 0:
+            if ((len(lesser_hours) > 0 and hour - max(lesser_hours) > max_holes + 1) or
+                    (len(high_hours) > 0 and min(high_hours) - hour > max_holes + 1)):
+                return True
+
+        # no holes created
+        return False
 
     def find_candidate(self, assignment):
         candidates = list()

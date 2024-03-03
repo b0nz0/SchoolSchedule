@@ -737,6 +737,8 @@ def _assignment_create(pperson1=None, pperson2=None, pperson3=None, psubject=Non
         subject_in_class.class_id = class_id
         subject_in_class.room_id = room_id
         subject_in_class.hours_total = hours
+        subject = db.query.get(db.model.Subject, subject_id)
+        subject_in_class.max_hours_per_day = subject.preferred_consecutive_hours
         subject_in_class.persons = ass_persons
 
         if db.query.get_subject_in_class(subject_in_class) is not None:
