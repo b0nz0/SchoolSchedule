@@ -136,7 +136,7 @@ class SimplePlanningEngine(Engine):
 
             completed = False
             count = 0
-            while not completed and count < 500:
+            while not completed and count < 2:
                 count += 1
                 assignments_to_fix = [x for (x, r) in self.assignments_remaining.items() if r > 0]
                 hours_to_do = sum(self.assignments_remaining.values())
@@ -162,55 +162,55 @@ class SimplePlanningEngine(Engine):
         self._closed = self.working
 
     def manage_free_assignments_recursion(self, assignment, checked, day_from=None, hour_from=None, level=0):
-        print(f'elaborazione assignment {assignment}. LEVEL: {level}')
+        print('\t'*level + f'elaborazione assignment {assignment}. LEVEL: {level}')
         for assignment_from, day, hour, score in (
                 sorted(self.find_candidate(assignment), key=itemgetter(3), reverse=True)):
             # try to swap and push new orphan in the stack. higher values go first
             assignment_to = self.engine_support.get_assignment_in_calendar(
                 class_id=assignment.data['class_id'], day=day, hour_ordinal=hour)
-            print(f'\tentro su assignment {assignment_to} il {day.value} alla {hour} ora. LEVEL: {level}')
+            print('\t'*level + f'\tentro su assignment {assignment_to} il {day.value} alla {hour} ora. LEVEL: {level}')
             if assignment_to == Calendar.AVAILABLE:
                 if day_from is not None and hour_from is not None:
                     if self.swap_assign(class_id=assignment.data['class_id'], day_from=day_from, hour_from=hour_from,
                                         day_to=day, hour_to=hour):
-                        print(f'\triuscito swap tra {assignment} e se stesso. LEVEL: {level}')
+                        print('\t'*level + f'\triuscito swap tra {assignment} e se stesso. LEVEL: {level}')
                         return True
                     else:
-                        print(f'\tnon riuscito swap tra {assignment} e se stesso')
+                        print('\t'*level + f'\tnon riuscito swap tra {assignment} e se stesso')
                 elif self.manage_assignment(assignment, day=day, hour=hour):
                     # free slot, don't consider this assignment anymore
-                    print(f'\ttrovato slot libero il {day.value} alla {hour} ora. LEVEL: {level}')
+                    print('\t'*level + f'\ttrovato slot libero il {day.value} alla {hour} ora. LEVEL: {level}')
                     return True
             else:
-                print(f'\tnon disponibile il {day.value} alla {hour} ora. LEVEL: {level}')
+                print('\t'*level + f'\tnon disponibile il {day.value} alla {hour} ora. LEVEL: {level}')
             if assignment_to == Calendar.AVAILABLE:
-                print(f'\ttrovato slot libero. non dovrebbe succedere ({day.value} alla {hour} ora)')
+                print('\t'*level + f'\ttrovato slot libero. non dovrebbe succedere ({day.value} alla {hour} ora)')
                 continue
             assert assignment_to != Calendar.AVAILABLE, 'unexpected availale assignment'
             if assignment_to == Calendar.UNAIVALABLE:
-                print(f'\tunavialable. ignoro')
+                print('\t'*level + f'\tunavialable. ignoro')
                 continue
             if (assignment_to, day, hour) in checked:
-                print(f'\tchecked {assignment_to}. continuo')
+                print('\t'*level + f'\tchecked {assignment_to}. continuo')
                 continue
 
             # must recur
             checked.append((assignment_to, day, hour))
-            print(f'rimaste {self.assignments_remaining[assignment]} ore. LEVEL: {level} ')
+            print('\t'*level + f'rimaste {self.assignments_remaining[assignment]} ore. LEVEL: {level} ')
             # print(f'provo ricorsione su assignment {assignment_to}')
             if self.manage_free_assignments_recursion(assignment_to, checked=checked, day_from=day, hour_from=hour, level=level+1):
-                print(f'ricorsione riuscita su {assignment_to}')
-                print(f'rimaste {self.assignments_remaining[assignment]} ore dopo ricorsione')
+                print('\t'*level + f'ricorsione riuscita su {assignment_to}')
+                print('\t'*level + f'rimaste {self.assignments_remaining[assignment]} ore dopo ricorsione')
                 if day_from is not None and hour_from is not None:
                     if self.swap_assign(class_id=assignment.data['class_id'], day_from=day_from, hour_from=hour_from,
                                         day_to=day, hour_to=hour):
-                        print(f'riuscito swap tra {assignment} e {assignment_to}. LEVEL: {level}')
+                        print('\t'*level + f'riuscito swap tra {assignment} e {assignment_to}. LEVEL: {level}')
                         checked.pop()
                         return True
                     pass
                 if self.manage_assignment(assignment, day=day, hour=hour):
                     # free slot, don't consider this assignment anymore
-                    print(f'trovato slot libero dopo ricorsione il {day.value} alla {hour} ora. LEVEL: {level}')
+                    print('\t'*level + f'trovato slot libero dopo ricorsione il {day.value} alla {hour} ora. LEVEL: {level}')
                     checked.pop()
                     return True
                 else:
