@@ -161,51 +161,56 @@ class SimplePlanningEngine(Engine):
 
         self._closed = self.working
 
-    def manage_free_assignments_recursion(self, assignment, checked, day_from=None, hour_from=None):
-        print(f'elaborazione assignment {assignment}')
+    def manage_free_assignments_recursion(self, assignment, checked, day_from=None, hour_from=None, level=0):
+        print(f'elaborazione assignment {assignment}. LEVEL: {level}')
         for assignment_from, day, hour, score in (
                 sorted(self.find_candidate(assignment), key=itemgetter(3), reverse=True)):
             # try to swap and push new orphan in the stack. higher values go first
             assignment_to = self.engine_support.get_assignment_in_calendar(
                 class_id=assignment.data['class_id'], day=day, hour_ordinal=hour)
+            print(f'\tentro su assignment {assignment_to} il {day.value} alla {hour} ora. LEVEL: {level}')
             if assignment_to == Calendar.AVAILABLE:
                 if day_from is not None and hour_from is not None:
                     if self.swap_assign(class_id=assignment.data['class_id'], day_from=day_from, hour_from=hour_from,
                                         day_to=day, hour_to=hour):
-                        print(f'riuscito swap tra {assignment} e se stesso')
+                        print(f'\triuscito swap tra {assignment} e se stesso. LEVEL: {level}')
                         return True
                     else:
-                        print(f'non riuscito swap tra {assignment} e se stesso')
-            elif self.manage_assignment(assignment, day=day, hour=hour):
-                # free slot, don't consider this assignment anymore
-                print(f'trovato slot libero il {day.value} alla {hour} ora')
-                return True
+                        print(f'\tnon riuscito swap tra {assignment} e se stesso')
+                elif self.manage_assignment(assignment, day=day, hour=hour):
+                    # free slot, don't consider this assignment anymore
+                    print(f'\ttrovato slot libero il {day.value} alla {hour} ora. LEVEL: {level}')
+                    return True
+            else:
+                print(f'\tnon disponibile il {day.value} alla {hour} ora. LEVEL: {level}')
             if assignment_to == Calendar.AVAILABLE:
+                print(f'\ttrovato slot libero. non dovrebbe succedere ({day.value} alla {hour} ora)')
                 continue
-                self.can_assign(assignment_to, day=day, hour=hour, check_availability=True)
             assert assignment_to != Calendar.AVAILABLE, 'unexpected availale assignment'
             if assignment_to == Calendar.UNAIVALABLE:
+                print(f'\tunavialable. ignoro')
                 continue
-            if assignment_to in checked:
+            if (assignment_to, day, hour) in checked:
+                print(f'\tchecked {assignment_to}. continuo')
                 continue
 
             # must recur
-            checked.append(assignment_to)
-            print(f'rimaste {self.assignments_remaining[assignment]} ore ')
+            checked.append((assignment_to, day, hour))
+            print(f'rimaste {self.assignments_remaining[assignment]} ore. LEVEL: {level} ')
             # print(f'provo ricorsione su assignment {assignment_to}')
-            if self.manage_free_assignments_recursion(assignment_to, checked=checked, day_from=day, hour_from=hour):
+            if self.manage_free_assignments_recursion(assignment_to, checked=checked, day_from=day, hour_from=hour, level=level+1):
                 print(f'ricorsione riuscita su {assignment_to}')
                 print(f'rimaste {self.assignments_remaining[assignment]} ore dopo ricorsione')
                 if day_from is not None and hour_from is not None:
                     if self.swap_assign(class_id=assignment.data['class_id'], day_from=day_from, hour_from=hour_from,
                                         day_to=day, hour_to=hour):
-                        print(f'riuscito swap tra {assignment} e {assignment_to}')
+                        print(f'riuscito swap tra {assignment} e {assignment_to}. LEVEL: {level}')
                         checked.pop()
                         return True
                     pass
                 if self.manage_assignment(assignment, day=day, hour=hour):
                     # free slot, don't consider this assignment anymore
-                    print(f'trovato slot libero dopo ricorsione il {day.value} alla {hour} ora')
+                    print(f'trovato slot libero dopo ricorsione il {day.value} alla {hour} ora. LEVEL: {level}')
                     checked.pop()
                     return True
                 else:
@@ -214,6 +219,7 @@ class SimplePlanningEngine(Engine):
             else:
                 pass
                 # print(f'ricorsione non riuscita su {assignment_to}')
+            checked.pop()
         return False
 
     def manage_assignment(self, assignment, day, hour) -> bool:
@@ -258,7 +264,7 @@ class SimplePlanningEngine(Engine):
         for pid in pids:
             self.person_support[pid]['busy'][day].remove(hour)
 
-        print(f'rimossa assegnazione {assignment}, giorno: {day}, ora: {hour}')
+        print(f'rimossa assegnazione {assignment}, giorno: {day.value}, ora: {hour}')
 
     def can_assign(self, assignment, day, hour, check_availability=True) -> bool:
         class_id = assignment.data['class_id']
@@ -282,7 +288,7 @@ class SimplePlanningEngine(Engine):
             return False
 
         # check #3.1: slot is unavailable
-        if check_availability and self.engine_support.get_assignment_in_calendar(
+        if self.engine_support.get_assignment_in_calendar(
                 class_id=class_id, day=day, hour_ordinal=hour) == Calendar.UNAIVALABLE:
             return False
 
@@ -290,7 +296,7 @@ class SimplePlanningEngine(Engine):
         if check_availability and self.assignments_remaining[assignment] < 1:
             return False
 
-        # check #5: not creating too many holes in class
+        # check #5: not creating comebacks in class
         if self.creates_holes(assignment, day, hour, max_holes=0, classes=[assignment.data['class_id']]):
             return False
 
