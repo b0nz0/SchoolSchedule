@@ -10,6 +10,7 @@ from engine.struct import *
 
 class SimplePlanningEngine(Engine):
     MAX_REASSIGNMENTS = 200
+    MAX_HOLES = 2
 
     def __init__(self) -> None:
         super().__init__()
@@ -110,7 +111,7 @@ class SimplePlanningEngine(Engine):
 
         # 1st round
         self.working = True
-        for pid in self.person_support.keys():
+        for pid in sorted(self.person_support.keys()):
             self.plan_person(pid=pid)
         print('fine 1 round')
         # let's try who has days constraints before others
@@ -127,9 +128,10 @@ class SimplePlanningEngine(Engine):
                 # if remaining == 0:
                 #     self.assignments_remaining.pop(assignment)
                 #     continue
-                persons = ",".join([x['person'] for x in assignment.data['persons']])
-                print('per ' + persons + ' rimangono ' + str(self.assignments_remaining[assignment]) + ' ore in ' +
-                      self.class_support[assignment.data['class_id']]['identifier'])
+                if self.assignments_remaining[assignment] > 0:
+                    persons = ",".join([x['person'] for x in assignment.data['persons']])
+                    print('per ' + persons + ' rimangono ' + str(self.assignments_remaining[assignment]) + ' ore in ' +
+                          self.class_support[assignment.data['class_id']]['identifier'])
 
             completed = False
             count = 0
@@ -282,6 +284,14 @@ class SimplePlanningEngine(Engine):
         if check_availability and self.assignments_remaining[assignment] < 1:
             return False
 
+        # check #5: not creating too many holes in class
+        if self.creates_holes(assignment, day, hour, max_holes=0, all_calendars=False):
+            return False
+
+        # check #6: not creating too many holes in day
+        if self.creates_holes(assignment, day, hour, max_holes=SimplePlanningEngine.MAX_HOLES, all_calendars=True):
+            return False
+
         # checks over, we can assign!
         return True
 
@@ -383,63 +393,63 @@ class SimplePlanningEngine(Engine):
             else:
                 logging.debug('continuing')
 
-    def find_candidate(self, assignment):
+    def creates_holes(self, assignment, day, hour, max_holes=1, all_calendars=False):
         pids = [x['person_id'] for x in assignment.data['persons']]
+        if assignment.data['max_hours_per_day'] is None:
+            max_assignments = 1
+        else:
+            max_assignments = assignment.data['max_hours_per_day']
+        candidate = dict()
+        for pid in pids:
+            candidate[pid] = True
+            in_class = list()
+            for other_hour in range(1, 11):
+                if other_hour == hour:
+                    continue
+                alt_assignment = self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
+                                                                                day=day,
+                                                                                hour_ordinal=other_hour)
+                if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
+                    if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
+                        in_class.append(other_hour)
+
+            # hour adjacent ?
+            lesser_hours = [x for x in in_class if x < hour]
+            high_hours = [x for x in in_class if x > hour]
+            if len(in_class) > 0:
+                if (len(lesser_hours) > 0 and hour - max(lesser_hours) >= max_holes + 1 or
+                        len(high_hours) > 0 and min(high_hours) - hour >= max_holes + 1):
+                    candidate[pid] = False
+                # single class
+                elif not all_calendars:
+                    if len(in_class) < max_assignments:
+                        candidate[pid] = True
+                    else:
+                        candidate[pid] = False
+                # all classes
+                else:
+                    candidate[pid] = True
+            else:
+                candidate[pid] = True
+
+        if False not in candidate.values():
+            return False
+        else:
+            return True
+
+    def find_candidate(self, assignment):
         candidates = list()
 
         for day in self.all_days:
             for hour in range(1, 11):
-                candidate = (False, 0)
-                for pid in pids:
-                    # if day not in self.person_support[pid]['days']:
-                    #     candidate = (False, 0)
-                    #     continue
-                    # if hour in self.person_support[pid]['busy'][day]:
-                    #     candidate = (False, 0)
-                    #     continue
-                    # if self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
-                    #                                                   day=day,
-                    #                                                   hour_ordinal=hour) == Calendar.UNAIVALABLE:
-                    #     candidate = (False, 0)
-                    #     continue
-                    #
-                    # let's see if he/she is present in the class the same day
-
-                    # TODO non funziona: sta assegnando classi a nastro, probabilmente perché è sempre True se ci sono
-                    #  altre ore in quel giorno
-
-                    in_class = 0
-                    for other_hour in range(1, 11):
-                        if other_hour == hour:
-                            continue
-                        alt_assignment = self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
-                                                                                        day=day,
-                                                                                        hour_ordinal=other_hour)
-                        if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
-                            if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
-                                if other_hour - hour > 1 or hour - other_hour > 1:
-                                    # no holes
-                                    break
-                                else:
-                                    in_class += 1
-
-                    if assignment.data['max_hours_per_day'] is None:
-                        max_hours_per_day = 1
+                if self.can_assign(assignment, day, hour, check_availability=False):
+                    # still room to assign this day in this class
+                    if self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
+                                                                      day=day,
+                                                                      hour_ordinal=hour) == Calendar.AVAILABLE:
+                        candidates.append((assignment, day, hour, 10))
                     else:
-                        max_hours_per_day = assignment.data['max_hours_per_day']
-                    if in_class < max_hours_per_day:
-                        # still room to assign this day in this class
-                        if self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
-                                                                          day=day,
-                                                                          hour_ordinal=hour) == Calendar.AVAILABLE:
-                            candidate = (True, 10)
-                        else:
-                            candidate = (True, candidate[1] + 1)
-                    else:
-                        candidate = (False, 0)
-
-                if candidate[0] and self.can_assign(assignment, day, hour, check_availability=False):
-                    candidates.append((assignment, day, hour, candidate[1]))
+                        candidates.append((assignment, day, hour, 1))
 
         print(f'trovati {len(candidates)} candidati per l\'assegnazione {assignment}')
         return candidates
