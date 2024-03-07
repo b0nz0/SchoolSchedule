@@ -1,8 +1,10 @@
 import copy
 import logging
 import random
+import sys
 from operator import itemgetter
 
+import db.model
 import engine.constraint
 from engine.constraint import *
 from engine.struct import *
@@ -149,7 +151,7 @@ class SimplePlanningEngine(Engine):
                 for assignment in assignments_to_fix:
                     if self.assignments_remaining[assignment] < 1:
                         continue
-                    if self.manage_free_assignments_recursion(assignment, checked=[assignment]):
+                    if self.manage_free_assignments_recursion(assignment):
                         print(f'riuscito ad assegnare {assignment}')
                         riuscito = True
                     else:
@@ -161,8 +163,18 @@ class SimplePlanningEngine(Engine):
 
         self._closed = self.working
 
-    def manage_free_assignments_recursion(self, assignment, checked, day_from=None, hour_from=None, level=0):
+    def manage_free_assignments_recursion(self, assignment, checked=None, day_from=None, hour_from=None, level=0):
+        if level == 10:
+            sys.exit(0)
         print('\t'*level + f'elaborazione assignment {assignment}. LEVEL: {level}')
+        if day_from is None and hour_from is None:
+            checked = []
+            for day in self.all_days:
+                for hour in range(1, 11):
+                    checked.append((assignment, day, hour))
+        if checked is None:
+            checked = []
+        # FIND_CANDIDATES NOW RETURNS MULTIPLE CLASSES
         for assignment_from, day, hour, score in (
                 sorted(self.find_candidate(assignment), key=itemgetter(3), reverse=True)):
             # try to swap and push new orphan in the stack. higher values go first
@@ -191,7 +203,7 @@ class SimplePlanningEngine(Engine):
                 print('\t'*level + f'\tunavialable. ignoro')
                 continue
             if (assignment_to, day, hour) in checked:
-                print('\t'*level + f'\tchecked {assignment_to}. continuo')
+                print('\t'*level + f'\tchecked {assignment_to} il {day.value} alla {hour} ora. continuo')
                 continue
 
             # must recur
@@ -464,18 +476,24 @@ class SimplePlanningEngine(Engine):
         return False
 
     def find_candidate(self, assignment):
+        class_id = assignment.data['class_id']
+        pids = [x['person_id'] for x in assignment.data['persons']]
         candidates = list()
-
-        for day in self.all_days:
-            for hour in range(1, 11):
-                if self.can_assign(assignment, day, hour, check_availability=False):
-                    # still room to assign this day in this class
-                    if self.engine_support.get_assignment_in_calendar(assignment.data['class_id'],
-                                                                      day=day,
-                                                                      hour_ordinal=hour) == Calendar.AVAILABLE:
-                        candidates.append((assignment, day, hour, 10))
-                    else:
-                        candidates.append((assignment, day, hour, 1))
+        for all_assignment in self.engine_support.assignments.values():
+            all_pids = [x['person_id'] for x in all_assignment.data['persons']]
+            for pid in pids:
+                if pid not in all_pids:
+                    continue
+            for day in self.all_days:
+                for hour in range(1, 11):
+                    if self.can_assign(all_assignment, day, hour, check_availability=False):
+                        # still room to assign this day in this class
+                        if self.engine_support.get_assignment_in_calendar(all_assignment.data['class_id'],
+                                                                          day=day,
+                                                                          hour_ordinal=hour) == Calendar.AVAILABLE:
+                            candidates.append((all_assignment, day, hour, 10))
+                        else:
+                            candidates.append((all_assignment, day, hour, 1))
 
         print(f'trovati {len(candidates)} candidati per l\'assegnazione {assignment}')
         return candidates
