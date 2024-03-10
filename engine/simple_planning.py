@@ -164,7 +164,7 @@ class SimplePlanningEngine(Engine):
         self._closed = self.working
 
     def manage_free_assignments_recursion(self, assignment, checked=None, day_from=None, hour_from=None, level=0):
-        if level == 10:
+        if level == 12:
             sys.exit(0)
         print('\t'*level + f'elaborazione assignment {assignment}. LEVEL: {level}')
         if day_from is None and hour_from is None:
@@ -183,7 +183,9 @@ class SimplePlanningEngine(Engine):
             print('\t'*level + f'\tentro su assignment {assignment_to} il {day.value} alla {hour} ora. LEVEL: {level}')
             if assignment_to == Calendar.AVAILABLE:
                 if day_from is not None and hour_from is not None:
-                    if self.swap_assign(class_id=assignment.data['class_id'], day_from=day_from, hour_from=hour_from,
+                    if self.swap_assign(class_from=assignment_from.data['class_id'],
+                                        day_from=day_from, hour_from=hour_from,
+                                        class_to=assignment.data['class_id'],
                                         day_to=day, hour_to=hour):
                         print('\t'*level + f'\triuscito swap tra {assignment} e se stesso. LEVEL: {level}')
                         return True
@@ -198,7 +200,7 @@ class SimplePlanningEngine(Engine):
             if assignment_to == Calendar.AVAILABLE:
                 print('\t'*level + f'\ttrovato slot libero. non dovrebbe succedere ({day.value} alla {hour} ora)')
                 continue
-            assert assignment_to != Calendar.AVAILABLE, 'unexpected availale assignment'
+            assert assignment_to != Calendar.AVAILABLE, 'unexpected available assignment'
             if assignment_to == Calendar.UNAIVALABLE:
                 print('\t'*level + f'\tunavialable. ignoro')
                 continue
@@ -214,8 +216,8 @@ class SimplePlanningEngine(Engine):
                 print('\t'*level + f'ricorsione riuscita su {assignment_to}')
                 print('\t'*level + f'rimaste {self.assignments_remaining[assignment]} ore dopo ricorsione')
                 if day_from is not None and hour_from is not None:
-                    if self.swap_assign(class_id=assignment.data['class_id'], day_from=day_from, hour_from=hour_from,
-                                        day_to=day, hour_to=hour):
+                    if self.swap_assign(class_from=assignment.data['class_id'], day_from=day_from, hour_from=hour_from,
+                                        class_to=assignment_to.data['class_id'], day_to=day, hour_to=hour):
                         print('\t'*level + f'riuscito swap tra {assignment} e {assignment_to}. LEVEL: {level}')
                         checked.pop()
                         return True
@@ -320,9 +322,9 @@ class SimplePlanningEngine(Engine):
         # checks over, we can assign!
         return True
 
-    def swap_assign(self, class_id, day_from, hour_from, day_to, hour_to) -> bool:
-        assignment_to = self.engine_support.get_assignment_in_calendar(class_id, day_to, hour_to)
-        assignment_from = self.engine_support.get_assignment_in_calendar(class_id, day_from, hour_from)
+    def swap_assign(self, class_from, day_from, hour_from, class_to, day_to, hour_to) -> bool:
+        assignment_to = self.engine_support.get_assignment_in_calendar(class_to, day_to, hour_to)
+        assignment_from = self.engine_support.get_assignment_in_calendar(class_from, day_from, hour_from)
         if assignment_to != Calendar.AVAILABLE and assignment_from == Calendar.AVAILABLE:
             print(f'provo swap {assignment_to} con se stesso 1')
             if self.can_assign(assignment_to, day_from, hour_from, check_availability=False):
@@ -481,9 +483,12 @@ class SimplePlanningEngine(Engine):
         candidates = list()
         for all_assignment in self.engine_support.assignments.values():
             all_pids = [x['person_id'] for x in all_assignment.data['persons']]
+            in_class = True
             for pid in pids:
                 if pid not in all_pids:
-                    continue
+                    in_class = False
+            if not in_class:
+                continue
             for day in self.all_days:
                 for hour in range(1, 11):
                     if self.can_assign(all_assignment, day, hour, check_availability=False):
