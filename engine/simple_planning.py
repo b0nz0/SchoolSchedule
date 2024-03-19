@@ -125,20 +125,19 @@ class SimplePlanningEngine(Engine):
 
         # 2nd round:
         tot_remaining = sum(self.assignments_remaining.values())
-        for i in range(1, 500):
+        for i in range(1, 2):
             print('inizio 2nd round')
             for (assignment, remaining) in copy.copy(self.assignments_remaining).items():
                 # if remaining == 0:
                 #     self.assignments_remaining.pop(assignment)
                 #     continue
                 if self.assignments_remaining[assignment] > 0:
-                    persons = ",".join([x['person'] for x in assignment.data['persons']])
-                    print('per ' + persons + ' rimangono ' + str(self.assignments_remaining[assignment]) + ' ore in ' +
-                          self.class_support[assignment.data['class_id']]['identifier'])
+                    print('per ' + assignment.persons + ' rimangono ' + str(self.assignments_remaining[assignment]) +
+                          ' ore in ' + self.class_support[assignment.class_id]['identifier'])
 
             completed = False
             count = 0
-            while not completed and count < 2:
+            while not completed and count < 20:
                 count += 1
                 assignments_to_fix = [x for (x, r) in self.assignments_remaining.items() if r > 0]
                 hours_to_do = sum(self.assignments_remaining.values())
@@ -156,24 +155,36 @@ class SimplePlanningEngine(Engine):
                         riuscito = True
                     else:
                         print(f'non riuscito ad assegnare {assignment}')
-                    sys.exit(0)
+                    # sys.exit(0)
                 if not riuscito:
                     print('nessuna assegnazione fatta. rinuncio')
                     break
-            return
+
+        for (assignment, remaining) in copy.copy(self.assignments_remaining).items():
+            if self.assignments_remaining[assignment] > 0:
+                print('per ' + assignment.persons + ' rimangono ' + str(self.assignments_remaining[assignment]) +
+                      ' ore in ' + self.class_support[assignment.class_id]['identifier'])
+        assignments_to_fix = [x for (x, r) in self.assignments_remaining.items() if r > 0]
+        hours_to_do = sum(self.assignments_remaining.values())
+        print(f'\n\nrimangono {len(assignments_to_fix)} assegnazioni da fare per  un totale di {hours_to_do} ore')
 
         self._closed = self.working
 
-    def manage_free_assignments_recursion(self, assignment, checked=None, day_from=None, hour_from=None, level=0):
+    def manage_free_assignments_recursion(self, assignment: Assignment,
+                                          checked=None, day_from=None, hour_from=None, level=0):
         if level == 15:
-            sys.exit(0)
-        print('\t'*level + f'elaborazione assignment {assignment}. LEVEL: {level}')
+            print('\t' * level + f'troppe ricorsioni per assignment {assignment}, day {day_from.value}, hour {hour_from}')
+            return False
         if day_from is None and hour_from is None:
+            print(
+                '\t' * level + f'elaborazione assignment {assignment}')
             checked = []
             for day in self.all_days:
                 for hour in range(1, 11):
-                    pass
-#                    checked.append((assignment, day, hour))
+                    #                    pass
+                    checked.append((assignment, day, hour))
+        else:
+            print('\t' * level + f'elaborazione assignment {assignment}, day {day_from.value}, hour {hour_from}. LEVEL: {level}')
         if checked is None:
             checked = []
         # FIND_CANDIDATES NOW RETURNS MULTIPLE CLASSES
@@ -182,7 +193,7 @@ class SimplePlanningEngine(Engine):
                 sorted(candidates, key=itemgetter(3), reverse=True)):
             # try to swap and push new orphan in the stack. higher values go first
             assignment_to = self.engine_support.get_assignment_in_calendar(
-                class_id=assignment_from.data['class_id'], day=day, hour_ordinal=hour)
+                class_id=assignment_from.class_id, day=day, hour_ordinal=hour)
             # print('\t'*level + f'\tentro su assignment {assignment_to} il {day.value} alla {hour} ora. LEVEL: {level}')
             if assignment_to == Calendar.AVAILABLE:
                 if day_from is not None and hour_from is not None:
@@ -190,28 +201,28 @@ class SimplePlanningEngine(Engine):
                                         day_from=day_from, hour_from=hour_from,
                                         orig_assignment_to=assignment,
                                         day_to=day, hour_to=hour):
-                        print('\t'*level + f'\triuscito swap tra {assignment} e se stesso. LEVEL: {level}')
+                        print('\t' * level + f'\triuscito swap tra {assignment} e se stesso. LEVEL: {level}')
                         return True
                     else:
                         pass
-                        #print('\t'*level + f'\tnon riuscito swap tra {assignment} e se stesso')
+                        # print('\t'*level + f'\tnon riuscito swap tra {assignment} e se stesso')
                 elif self.manage_assignment(assignment, day=day, hour=hour):
                     # free slot, don't consider this assignment anymore
-                    print('\t'*level + f'\ttrovato slot libero il {day.value} alla {hour} ora. LEVEL: {level}')
+                    print('\t' * level + f'\ttrovato slot libero il {day.value} alla {hour} ora. LEVEL: {level}')
                     return True
                 else:
                     pass
-                    #print('\t'*level + f'\timpossibile assegnare uno slot libero!!! LEVEL: {level}')
+                    # print('\t'*level + f'\timpossibile assegnare uno slot libero!!! LEVEL: {level}')
             else:
                 pass
-                #print('\t'*level + f'\tnon disponibile il {day.value} alla {hour} ora. LEVEL: {level}')
+                # print('\t'*level + f'\tnon disponibile il {day.value} alla {hour} ora. LEVEL: {level}')
 
             if score > 1:
                 continue
-            
+
             assert assignment_to != Calendar.AVAILABLE, 'unexpected available assignment'
             if assignment_to == Calendar.UNAIVALABLE:
-                print('\t'*level + f'\tunavialable. ignoro')
+                print('\t' * level + f'\tunavialable. ignoro')
                 continue
             if (assignment_to, day, hour) in checked:
                 # print('\t'*level + f'\tchecked {assignment_to} il {day.value} alla {hour} ora. continuo')
@@ -221,19 +232,21 @@ class SimplePlanningEngine(Engine):
             checked.append((assignment_to, day, hour))
             # print('\t'*level + f'rimaste {self.assignments_remaining[assignment]} ore. LEVEL: {level} ')
             # print(f'provo ricorsione su assignment {assignment_to}')
-            if self.manage_free_assignments_recursion(assignment_to, checked=checked, day_from=day, hour_from=hour, level=level+1):
+            if self.manage_free_assignments_recursion(assignment_to, checked=checked, day_from=day, hour_from=hour,
+                                                      level=level + 1):
                 # print('\t'*level + f'ricorsione riuscita su {assignment_to}')
                 # print('\t'*level + f'rimaste {self.assignments_remaining[assignment]} ore dopo ricorsione')
                 if day_from is not None and hour_from is not None:
                     if self.swap_assign(orig_assignment_from=assignment, day_from=day_from, hour_from=hour_from,
                                         orig_assignment_to=assignment_to, day_to=day, hour_to=hour):
-                        # print('\t'*level + f'riuscito swap tra {assignment} e {assignment_to}. LEVEL: {level}')
+                        print('\t' * level + f'riuscito swap tra {assignment} e {assignment_to}. LEVEL: {level}')
                         checked.pop()
                         return True
                     pass
                 if self.manage_assignment(assignment, day=day, hour=hour):
                     # free slot, don't consider this assignment anymore
-                    # print('\t'*level + f'trovato slot libero dopo ricorsione il {day.value} alla {hour} ora. LEVEL: {level}')
+                    print(
+                        '\t' * level + f'trovato slot libero dopo ricorsione il {day.value} alla {hour} ora. LEVEL: {level}')
                     checked.pop()
                     return True
                 else:
@@ -246,8 +259,8 @@ class SimplePlanningEngine(Engine):
         return False
 
     def manage_assignment(self, assignment, day, hour) -> bool:
-        class_id = assignment.data['class_id']
-        pids = [x['person_id'] for x in assignment.data['persons']]
+        class_id = assignment.class_id
+        pids = assignment.person_ids
 
         if self.can_assign(assignment, day, hour):
             self.engine_support.assign(assignment.subject_in_class_id,
@@ -267,9 +280,9 @@ class SimplePlanningEngine(Engine):
         else:
             return False
 
-    def remove_assignment(self, assignment, day, hour):
-        class_id = assignment.data['class_id']
-        pids = [x['person_id'] for x in assignment.data['persons']]
+    def remove_assignment(self, assignment: Assignment, day, hour):
+        class_id = assignment.class_id
+        pids = assignment.person_ids
 
         old_assignment = self.engine_support.get_assignment_in_calendar(
             class_id=class_id, day=day, hour_ordinal=hour)
@@ -277,21 +290,24 @@ class SimplePlanningEngine(Engine):
             logging.info('tried to unassign free slot')
             return
 
+        if assignment != old_assignment:
+            print(f'unexpected {assignment} <> {old_assignment}')
+
         self.engine_support.deassign(class_id=class_id,
                                      day=day, hour_ordinal=hour)
-        if assignment in self.assignments_remaining.keys():
-            self.assignments_remaining[assignment] += 1
+        if old_assignment in self.assignments_remaining.keys():
+            self.assignments_remaining[old_assignment] += 1
         else:
-            self.assignments_remaining[assignment] = 1
+            self.assignments_remaining[old_assignment] = 1
 
-        for pid in pids:
+        for pid in old_assignment.person_ids:
             self.person_support[pid]['busy'][day].remove(hour)
 
-        print(f'rimossa assegnazione {assignment}, giorno: {day.value}, ora: {hour}')
+        print(f'rimossa assegnazione {old_assignment}, giorno: {day.value}, ora: {hour}')
 
-    def can_assign(self, assignment, day, hour, check_availability=True) -> bool:
-        class_id = assignment.data['class_id']
-        pids = [x['person_id'] for x in assignment.data['persons']]
+    def can_assign(self, assignment: Assignment, day, hour, check_availability=True) -> bool:
+        class_id = assignment.class_id
+        pids = assignment.person_ids
 
         # can assign?
 
@@ -320,7 +336,7 @@ class SimplePlanningEngine(Engine):
             return False
 
         # check #5: not creating comebacks in class
-        if self.creates_holes(assignment, day, hour, max_holes=0, classes=[assignment.data['class_id']]):
+        if self.creates_holes(assignment, day, hour, max_holes=0, classes=[assignment.class_id]):
             return False
 
         # check #6: not creating too many holes in day
@@ -332,22 +348,23 @@ class SimplePlanningEngine(Engine):
         return True
 
     def swap_assign(self, orig_assignment_from, day_from, hour_from, orig_assignment_to, day_to, hour_to) -> bool:
-        assignment_to = self.engine_support.get_assignment_in_calendar(orig_assignment_to.data['class_id'], day_to, hour_to)
-        assignment_from = self.engine_support.get_assignment_in_calendar(orig_assignment_from.data['class_id'], day_from, hour_from)
+        assignment_to = self.engine_support.get_assignment_in_calendar(orig_assignment_to.class_id, day_to, hour_to)
+        assignment_from = self.engine_support.get_assignment_in_calendar(orig_assignment_from.class_id, day_from,
+                                                                         hour_from)
         if orig_assignment_from == orig_assignment_to:
             if assignment_to != Calendar.AVAILABLE and assignment_from == Calendar.AVAILABLE:
                 # print(f'provo swap {assignment_to} con se stesso 1')
                 if self.can_assign(assignment_to, day_from, hour_from, check_availability=False):
                     self.remove_assignment(assignment_to, day_to, hour_to)
                     assert self.manage_assignment(assignment_from, day_from,
-                                                hour_from) is True, 'unhandled problem in assignment'
+                                                  hour_from) is True, 'unhandled problem in assignment'
                     return True
             elif assignment_from != Calendar.AVAILABLE and assignment_to == Calendar.AVAILABLE:
                 # print(f'provo swap {assignment_from} con se stesso 2')
                 if self.can_assign(assignment_from, day_to, hour_to, check_availability=False):
                     self.remove_assignment(assignment_from, day_from, hour_from)
                     assert self.manage_assignment(assignment_from, day_to,
-                                                hour_to) is True, 'unhandled problem in assignment'
+                                                  hour_to) is True, 'unhandled problem in assignment'
                     return True
         elif assignment_from != Calendar.AVAILABLE and assignment_to != Calendar.AVAILABLE:
             # print(f'provo swap {assignment_to} con {assignment_from}')
@@ -364,7 +381,7 @@ class SimplePlanningEngine(Engine):
             return False
 
     def get_all_slots_for_assignment(self, assignment, perform_random=False):
-        class_id = assignment.data['class_id']
+        class_id = assignment.class_id
         slots = list()
         for day in db.model.WeekDayEnum:
             for hour in range(1, 11):
@@ -384,7 +401,7 @@ class SimplePlanningEngine(Engine):
             available = False
 
             assignments = [assignment for (assignment, remaining) in self.assignments_remaining.items()
-                           if remaining > 0 and pid in [x['person_id'] for x in assignment.data['persons']]]
+                           if remaining > 0 and pid in assignment.person_ids]
             if len(assignments) == 0:
                 # no more assignments to do
                 available = True
@@ -430,14 +447,14 @@ class SimplePlanningEngine(Engine):
             else:
                 logging.debug('continuing')
 
-    def creates_holes(self, assignment, day, hour, max_holes=1, classes=None):
-        pids = [x['person_id'] for x in assignment.data['persons']]
+    def creates_holes(self, assignment: Assignment, day, hour, max_holes=1, classes=None) -> bool:
+        pids = assignment.person_ids
         if assignment.data['max_hours_per_day'] is None:
             max_assignments = 1
         else:
             max_assignments = assignment.data['max_hours_per_day']
         if classes is None:
-            classes = [assignment.data['class_id']]
+            classes = [assignment.class_id]
         candidate = dict()
         in_day = list()
         for class_id in classes:
@@ -451,7 +468,7 @@ class SimplePlanningEngine(Engine):
                                                                                     day=day,
                                                                                     hour_ordinal=other_hour)
                     if alt_assignment != Calendar.AVAILABLE and alt_assignment != Calendar.UNAIVALABLE:
-                        if pid in [x['person_id'] for x in alt_assignment.data['persons']]:
+                        if pid in alt_assignment.person_ids:
                             in_class.append(other_hour)
                             in_day.append(other_hour)
 
@@ -463,7 +480,7 @@ class SimplePlanningEngine(Engine):
                             (len(high_hours) > 0 and min(high_hours) - hour > max_holes + 1)):
                         candidate[pid] = False
                     # in this class, no more hours than assigned
-                    elif class_id == assignment.data['class_id']:
+                    elif class_id == assignment.class_id:
                         if len(in_class) < max_assignments:
                             candidate[pid] = True
                         else:
@@ -487,13 +504,13 @@ class SimplePlanningEngine(Engine):
         # no holes created
         return False
 
-    def find_candidate(self, assignment):
-        class_id = assignment.data['class_id']
-        pids = [x['person_id'] for x in assignment.data['persons']]
+    def find_candidate(self, assignment: Assignment):
+        class_id = assignment.class_id
+        pids = assignment.person_ids
         candidates = list()
         for all_assignment in [assignment]:
-#        for all_assignment in self.engine_support.assignments.values():
-            all_pids = [x['person_id'] for x in all_assignment.data['persons']]
+            #        for all_assignment in self.engine_support.assignments.values():
+            all_pids = all_assignment.person_ids
             in_class = True
             for pid in pids:
                 if pid not in all_pids:
@@ -504,7 +521,7 @@ class SimplePlanningEngine(Engine):
                 for hour in range(1, 11):
                     if self.can_assign(all_assignment, day, hour, check_availability=False):
                         # still room to assign this day in this class
-                        if self.engine_support.get_assignment_in_calendar(all_assignment.data['class_id'],
+                        if self.engine_support.get_assignment_in_calendar(all_assignment.class_id,
                                                                           day=day,
                                                                           hour_ordinal=hour) == Calendar.AVAILABLE:
                             candidates.append((all_assignment, day, hour, 10))

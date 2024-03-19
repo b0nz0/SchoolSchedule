@@ -15,8 +15,7 @@ class Assignment:
         ret = ret + self._data['subject'] + ' in '
         ret = ret + self._data['year'] + ' '
         ret = ret + self._data['section'] + ' '
-        persons_list = [x['person'] for x in self._data['persons']]
-        ret = ret + '(' + ",".join(persons_list) + ')'
+        ret = ret + '(' + self.persons + ')'
         return ret
 
     @property
@@ -42,6 +41,18 @@ class Assignment:
     @score.setter
     def score(self, score):
         self._score = score
+
+    @property
+    def persons(self) -> str:
+        return ",".join([x['person'] for x in self._data['persons']])
+
+    @property
+    def person_ids(self):
+        return [x['person_id'] for x in self._data['persons']]
+
+    @property
+    def class_id(self) -> int:
+        return self._data['class_id']
 
 
 class Calendar:
