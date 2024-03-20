@@ -70,6 +70,7 @@ class SimplePlanningEngine(Engine):
             self.person_support[pid]['fullname'] = person.fullname
             self.person_support[pid]['days'] = list(self.all_days)
             self.person_support[pid]['assignments'] = self.engine_support.persons[pid]
+            self.person_support[pid]['weight'] = person.weight
 
             # in case not all days are available
             for constraint in self.engine_support.constraints:
@@ -113,7 +114,10 @@ class SimplePlanningEngine(Engine):
 
         # 1st round
         self.working = True
-        for pid in sorted(self.person_support.keys()):
+        to_sort = []
+        for pid in self.person_support.keys():
+            to_sort.append((pid, self.person_support[pid]['weight']))
+        for (pid, weight) in sorted(to_sort, key=itemgetter(1), reverse=True):
             self.plan_person(pid=pid)
         print('fine 1 round')
         self.engine_support.write_calendars_to_csv('primo_round.csv', 'primo_round_debug.csv')
@@ -217,8 +221,8 @@ class SimplePlanningEngine(Engine):
                 pass
                 # print('\t'*level + f'\tnon disponibile il {day.value} alla {hour} ora. LEVEL: {level}')
 
-            if score > 1:
-                continue
+            #if score > 1:
+            #    continue
 
             assert assignment_to != Calendar.AVAILABLE, 'unexpected available assignment'
             if assignment_to == Calendar.UNAIVALABLE:
@@ -252,6 +256,8 @@ class SimplePlanningEngine(Engine):
                 else:
                     pass
                     # print(f'slot non libero dopo ricorsione')
+                checked.pop()
+                return True
             else:
                 pass
                 # print(f'ricorsione non riuscita su {assignment_to}')
@@ -412,7 +418,6 @@ class SimplePlanningEngine(Engine):
 
                 logging.debug(f'in {day} evaluating {len(assignments)} assignments')
 
-                hour = 1
                 assigned = False
                 for assignment in assignments:
                     # change day, assignment done
@@ -420,11 +425,12 @@ class SimplePlanningEngine(Engine):
                         break
                     if self.assignments_remaining[assignment] == 0:
                         continue
-                    class_id = assignment.data['class_id']
+                    class_id = assignment.class_id
                     if assignment.data['max_hours_per_day']:
                         max_hours_per_day = assignment.data['max_hours_per_day']
                     else:
                         max_hours_per_day = 1
+                    hour = 1
                     while hour < 11:
                         consecutive = 0
                         while (consecutive < max_hours_per_day and self.assignments_remaining[assignment] > 0

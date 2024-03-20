@@ -130,6 +130,7 @@ class Person(Base):
     title: Mapped[str]
     is_impersonal: Mapped[bool]
     person_type: Mapped[PersonEnum]
+    weight: Mapped[int]
     school_id: Mapped[int] = mapped_column(ForeignKey("school.id"))
     school: Mapped["School"] = relationship(back_populates="persons")
 
